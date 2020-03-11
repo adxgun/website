@@ -1,4 +1,4 @@
-baseURL = "http://lekan.wtf/"
+baseURL = "https://lekan.wtf/"
 languageCode = "en-us"
 title = "Lekan Adigun"
 theme = "hyde"
