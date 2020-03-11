@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-us" lang="en-us">
+<head>
+  <link href="https://gmpg.org/xfn/11" rel="profile">
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <meta name="generator" content="Hugo 0.66.0" />
+
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>How to resize images for better upload/download performance. Android Development. &middot; Lekan Adigun</title>
+  <meta name="description" content="" />
+
+  
+  <link type="text/css" rel="stylesheet" href="https://lekan.wtf/css/print.css" media="print">
+  <link type="text/css" rel="stylesheet" href="https://lekan.wtf/css/poole.css">
+  <link type="text/css" rel="stylesheet" href="https://lekan.wtf/css/syntax.css">
+  <link type="text/css" rel="stylesheet" href="https://lekan.wtf/css/hyde.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Abril+Fatface|PT+Sans:400,400i,700">
+
+
+  
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/apple-touch-icon-144-precomposed.png">
+  <link rel="shortcut icon" href="/favicon.png">
+
+  
+  
+</head>
+
+  <body class=" ">
+  <aside class="sidebar">
+  <div class="container sidebar-sticky">
+    <div class="sidebar-about">
+      <a href="https://lekan.wtf/"><h1>Lekan Adigun</h1></a>
+      <p class="lead">
+       Welcome to my blog! I will be writing about Golang, backend engineering, cloud native and sometimes, what I am currently working on. 
+      </p>
+    </div>
+
+    <nav>
+      <ul class="sidebar-nav">
+        <li><a href="https://lekan.wtf/">Home</a> </li>
+        <li><a href="https://github.com/adigunhammedolalekan/"> Github </a></li><li><a href="https://twitter.com/L3kanAdigun/"> Twitter </a></li>
+      </ul>
+    </nav>
+
+    <p>&copy; 2020. All rights reserved. </p>
+  </div>
+</aside>
+
+    <main class="content container">
+    <div class="post">
+  <h1>How to resize images for better upload/download performance. Android Development.</h1>
+  <time datetime=2017-09-04T00:00:00Z class="post-date">Mon, Sep 4, 2017</time>
+  <p>Its not very common to see a project that doesn’t require photo upload in one form or the other. Most high end android device today create a photo as big as 2MB. This is a problem, How? Imagine you are building a mobile app that require your users to have a profile picture, having scalabilty in mind, each photo must not be &gt; 100KB, am i right?. You dont want to save a 1MB photo for each user. It will not only affect your UX, your server would suffer as well. Uploading large photo to remote server can cause one or all of the following problems</p>
+<ul>
+<li>
+<p>Slow upload/download operation on devices with low network bandwidth</p>
+</li>
+<li>
+<p>Affect product scalability</p>
+</li>
+<li>
+<p>And MORE…</p>
+</li>
+</ul>
+<h3 id="solution">SOLUTION</h3>
+<p>The real obvious solution is to have the photo resized before sending to remote server. Good!. But, how? Thats what i am trying to show.</p>
+<p>I had little problem figuring out how i would solve this when i started writting apps for android, so i just decided to share it today. I am looking forward to seeing someone that will show me a better way of doing it. Lets go!</p>
+<h3 id="assumption"><strong>Assumption</strong></h3>
+<ul>
+<li>
+<p>I assume you are convenient with Java programming language(Thats what i’ll be using, you can easily grab it if you have experience with other programming languages too.)</p>
+</li>
+<li>
+<p>Have android studio and SDK installed and ready.</p>
+</li>
+<li>
+<p>Create a new android studio project. I call mine EasyPhotoUpload</p>
+</li>
+</ul>
+<p><img src="https://cdn-images-1.medium.com/max/2732/1*YuJYPjO6KHQv4zCprHlEHA.png" alt=""></p>
+<p>Project name — EasyPhotoUpload</p>
+<p>Min SDK — 4.0.3, API 15</p>
+<p>Basically, we are trying to</p>
+<ul>
+<li>
+<p>Let user select photo from Gallery</p>
+</li>
+<li>
+<p>Get the selected photo path</p>
+</li>
+<li>
+<p>Resize the selected photo on a background thread and return the result to the main thread — As you’ll see, resizing image is an expensive operation and must not be performed on the main thread</p>
+</li>
+</ul>
+<p>The final code for this article is available on github — <a href="https://github.com/adigunhammedolalekan/easyphotoupload">https://github.com/adigunhammedolalekan/easyphotoupload</a></p>
+<p>Once android studio finished building the project and you are all ready, create these packages — core, listeners, utils</p>
+<p><img src="https://cdn-images-1.medium.com/max/2732/1*DyCVICAyc6rdKEEUzStL1Q.png" alt=""></p>
+<p>Under util package, create a new class, Util.java, the following is the content of the file.</p>
+<p>‘public class Util {</p>
+<p>//SDF to generate a unique name for the compressed file.
+public static final SimpleDateFormat SDF = new SimpleDateFormat(“yyyymmddhhmmss”, Locale.getDefault());</p>
+<p>/*
+compress the file/photo from <a href="http://twitter.com/param">@param</a> <!-- raw HTML omitted -->path<!-- raw HTML omitted --> to a private location on the current device and return the compressed file.
+<a href="http://twitter.com/param">@param</a> path = The original image path
+<a href="http://twitter.com/param">@param</a> context = Current android Context
+*/
+public static File getCompressed(Context context, String path) throws IOException {</p>
+<p>if(context == null)
+throw new NullPointerException(“Context must not be null.”);
+//getting device external cache directory, might not be available on some devices,
+// so our code fall back to internal storage cache directory, which is always available but in smaller quantity
+File cacheDir = context.getExternalCacheDir();
+if(cacheDir == null)
+//fall back
+cacheDir = context.getCacheDir();</p>
+<p>String rootDir = cacheDir.getAbsolutePath() + “/ImageCompressor”;
+File root = new File(rootDir);</p>
+<p>//Create ImageCompressor folder if it doesnt already exists.
+if(!root.exists())
+root.mkdirs();</p>
+<p>//decode and resize the original bitmap from <a href="http://twitter.com/param">@param</a> path.
+Bitmap bitmap = decodeImageFromFiles(path, /* your desired width*/300, /*your desired height*/ 300);</p>
+<p>//create placeholder for the compressed image file
+File compressed = new File(root, SDF.format(new Date()) + “.jpg” /<em>Your desired format</em>/);</p>
+<p>//convert the decoded bitmap to stream
+ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();</p>
+<p>/*compress bitmap into byteArrayOutputStream
+Bitmap.compress(Format, Quality, OutputStream)</p>
+<p>Where Quality ranges from 1–100.
+*/
+bitmap.compress(Bitmap.CompressFormat.JPEG, 80, byteArrayOutputStream);</p>
+<p>/*
+Right now, we have our bitmap inside byteArrayOutputStream Object, all we need next is to write it to the compressed file we created earlier,
+java.io.FileOutputStream can help us do just That!</p>
+<p>*/
+FileOutputStream fileOutputStream = new FileOutputStream(compressed);
+fileOutputStream.write(byteArrayOutputStream.toByteArray());
+fileOutputStream.flush();</p>
+<p>fileOutputStream.close();</p>
+<p>//File written, return to the caller. Done!
+return compressed;
+}</p>
+<p>public static Bitmap decodeImageFromFiles(String path, int width, int height) {
+BitmapFactory.Options scaleOptions = new BitmapFactory.Options();
+scaleOptions.inJustDecodeBounds = true;
+BitmapFactory.decodeFile(path, scaleOptions);
+int scale = 1;
+while (scaleOptions.outWidth / scale / 2 &gt;= width
+&amp;&amp; scaleOptions.outHeight / scale / 2 &gt;= height) {
+scale *= 2;
+}
+// decode with the sample size
+BitmapFactory.Options outOptions = new BitmapFactory.Options();
+outOptions.inSampleSize = scale;
+return BitmapFactory.decodeFile(path, outOptions);
+}
+}’</p>
+<p>The method that handles photo compression and storage is ‘static File getCompressed(Context, String)’, as you’ve seen from the code above, this method takes a path to a photo existing on the device, resize it, store it in a private location on the device and returns the newly compressed file. Voila!</p>
+<p>The next file we’ll examine is called ImageCompressTask.java, this class implements a Runnable, with a three arguments constructor and in its run() method, the compression happens all in the background thread, it then post the final result to the main thread with the help of android.os.Handler or report the error otherwise.</p>
+<p>ImageCompressTask.java</p>
+<p>‘**public class **ImageCompressTask **implements **Runnable {</p>
+<p>**private **Context <strong>mContext</strong>;
+**private **List<!-- raw HTML omitted --> **originalPaths **= **new **ArrayList&lt;&gt;();
+**private **Handler **mHandler **= **new **Handler(Looper.<em>getMainLooper</em>());
+**private **List<!-- raw HTML omitted --> **result **= **new **ArrayList&lt;&gt;();
+**private **IImageCompressTaskListener <strong>mIImageCompressTaskListener</strong>;</p>
+<p>**public **ImageCompressTask(Context context, String path, IImageCompressTaskListener compressTaskListener) {</p>
+<p><strong>originalPaths</strong>.add(path);
+**mContext **= context;</p>
+<p>**mIImageCompressTaskListener **= compressTaskListener;
+}
+**public **ImageCompressTask(Context context, List<!-- raw HTML omitted --> paths, IImageCompressTaskListener compressTaskListener) {
+**originalPaths **= paths;
+**mContext **= context;
+**mIImageCompressTaskListener **= compressTaskListener;
+}
+@Override
+**public void **run() {</p>
+<p>**try **{</p>
+<p>*//Loop through all the given paths and collect the compressed file from Util.getCompressed(Context, String)
+***for **(String path : <strong>originalPaths</strong>) {
+File file = Util.<em>getCompressed</em>(<strong>mContext</strong>, path);
+*//add it!
+*<strong>result</strong>.add(file);
+}
+*//use Handler to post the result back to the main Thread
+*<strong>mHandler</strong>.post(**new **Runnable() {
+@Override
+**public void **run() {</p>
+<p><strong>if</strong>(**mIImageCompressTaskListener **!= <strong>null</strong>)
+<strong>mIImageCompressTaskListener</strong>.onComplete(<strong>result</strong>);
+}
+});
+}**catch **(**final **IOException ex) {
+*//There was an error, report the error back through the callback
+*<strong>mHandler</strong>.post(**new **Runnable() {
+@Override
+**public void **run() {
+<strong>if</strong>(**mIImageCompressTaskListener **!= <strong>null</strong>)
+<strong>mIImageCompressTaskListener</strong>.onError(ex);
+}
+});
+}
+}
+}’</p>
+<p>Finally, create MainActivity.java, the UI for the whole sample App.</p>
+<p>MainActivity.java</p>
+<p>‘
+public class MainActivity extends AppCompatActivity {</p>
+<p>Button selectImage;
+ImageView selectedImage;</p>
+<p>private static final int REQUEST_STORAGE_PERMISSION = 100;
+private static final int REQUEST_PICK_PHOTO = 101;</p>
+<p>//create a single thread pool to our image compression class.
+private ExecutorService mExecutorService = Executors.newFixedThreadPool(1);</p>
+<p>private ImageCompressTask imageCompressTask;</p>
+<p><a href="http://twitter.com/Override">@Override</a>
+protected void onCreate(Bundle savedInstanceState) {
+super.onCreate(savedInstanceState);
+setContentView(R.layout.activity_main);</p>
+<p>selectedImage = (ImageView) findViewById(R.id.iv_selected_photo);
+selectImage = (Button) findViewById(R.id.btn_select_image);</p>
+<p>selectImage.setOnClickListener(new View.OnClickListener() {
+<a href="http://twitter.com/Override">@Override</a>
+public void onClick(View view) {
+requestPermission();
+}
+});
+}</p>
+<p>void requestPermission() {</p>
+<p>if(PackageManager.PERMISSION_GRANTED !=
+ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+if(ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+REQUEST_STORAGE_PERMISSION);
+}else {
+//Yeah! I want both block to do the same thing, you can write your own logic, but this works for me.
+ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+REQUEST_STORAGE_PERMISSION);
+}
+}else {
+//Permission Granted, lets go pick photo
+Intent intent = <strong>new <strong>Intent(Intent.<em><strong>ACTION_PICK</strong></em>);
+intent.setAction(Intent.<em><strong>ACTION_GET_CONTENT</strong></em>);
+intent.setType(</strong>“image/*”</strong>);
+startActivityForResult(intent, <em><strong>REQUEST_PICK_PHOTO</strong></em>);
+}</p>
+<p>}</p>
+<p><a href="http://twitter.com/Override">@Override</a>
+protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+super.onActivityResult(requestCode, resultCode, data);
+if(requestCode == REQUEST_PICK_PHOTO &amp;&amp; resultCode == RESULT_OK &amp;&amp;
+data != null) {
+//extract absolute image path from Uri
+Uri uri = data.getData();
+Cursor cursor = MediaStore.Images.Media.query(getContentResolver(), uri, new String[]{MediaStore.Images.Media.DATA});
+if(cursor != null) {
+String path = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA));</p>
+<p>//Create ImageCompressTask and execute with Executor.
+imageCompressTask = new ImageCompressTask(this, path, iImageCompressTaskListener);</p>
+<p>mExecutorService.execute(imageCompressTask);
+}
+}
+}</p>
+<p>//image compress task callback
+private IImageCompressTaskListener iImageCompressTaskListener = new IImageCompressTaskListener() {
+<a href="http://twitter.com/Override">@Override</a>
+public void onComplete(List<!-- raw HTML omitted --> compressed) {
+//photo compressed. Yay!</p>
+<p>//prepare for uploads.</p>
+<p>File file = compressed.get(0);</p>
+<p>selectedImage.setImageBitmap(BitmapFactory.decodeFile(file.getAbsolutePath()));
+}</p>
+<p><a href="http://twitter.com/Override">@Override</a>
+public void onError(Throwable error) {
+//very unlikely, but it might happen on a device with extremely low storage.
+//log it, log.WhatTheFuck?, or show a dialog asking the user to delete some files….etc, etc
+Log.wtf(“ImageCompressor”, “Error occurred”, error);
+}
+};</p>
+<p><a href="http://twitter.com/Override">@Override</a>
+protected void onDestroy() {
+super.onDestroy();</p>
+<p>//clean up!
+mExecutorService.shutdown();</p>
+<p>mExecutorService = null;
+imageCompressTask = null;
+}
+}’</p>
+<p>All the codes are well commented, but if you have problem with any part. Do let me know! All the codes are on github, visit it for better view. The screenshoot from the final result.</p>
+<p>I’ll love your contribution to this. Thanks!</p>
+<p><img src="https://cdn-images-1.medium.com/max/2000/1*Ft4n6WXie7yij3_bEghHIQ.png" alt=""></p>
+<h3 id="about-me">About Me</h3>
+<p>I am a passionate mobile app developer with 2.5+ experience building great apps for the android platform. If you need my talent, feel free to contact me!</p>
+<p>Github — <a href="http://www.github.com/adigunhammedolalekan">www.github.com/adigunhammedolalekan</a></p>
+<p>Mail — <a href="mailto:adigunhammed.lekan@gmail.com">adigunhammed.lekan@gmail.com</a></p>
+<p>Contact — 07035452307</p>
+
+</div>
+
+
+    </main>
+
+    
+      
+    
+  </body>
+</html>

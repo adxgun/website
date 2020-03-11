@@ -1,7 +1,7 @@
 ---
 title: "How to resize images for better upload/download performance. Android Development."
 date: 2017-09-04 00:00:00 +0000
-draft: true
+draft: false
 ---
 
 Its not very common to see a project that doesn’t require photo upload in one form or the other. Most high end android device today create a photo as big as 2MB. This is a problem, How? Imagine you are building a mobile app that require your users to have a profile picture, having scalabilty in mind, each photo must not be > 100KB, am i right?. You dont want to save a 1MB photo for each user. It will not only affect your UX, your server would suffer as well. Uploading large photo to remote server can cause one or all of the following problems

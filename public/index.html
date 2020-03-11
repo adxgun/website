@@ -51,7 +51,53 @@
 
     <main class="content container">
     <div class="posts">
-
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://lekan.wtf/posts/a_create_docker_auth/">Creating Docker Registry Token Authentication Server with Go</a>
+  </h1>
+  <time datetime="2020-02-19T00:00:00Z" class="post-date">Wed, Feb 19, 2020</time>
+  Creating Docker Registry Token Authentication Server with Go
+Recently, I was working on a project that uses a private docker registry to store docker images produced by users. The access to these images needs to be controlled so that user foo MUST not be able to access(pull/push) images that belongs to user bar . Also, a user should be able to authenticate with the private docker registry from their local or remote development machine with the famous docker login command, additionally users should be able to perform basic docker operations — docker push, pull etc with proper authentication and authorization.
+  
+  <div class="read-more-link">
+    <a href="/posts/a_create_docker_auth/">Read More…</a>
+  </div>
+  
+</article><article class="post">
+  <h1 class="post-title">
+    <a href="https://lekan.wtf/posts/b_create_dynamic_image/">Building Docker Images Dynamically with Go</a>
+  </h1>
+  <time datetime="2019-08-22T00:00:00Z" class="post-date">Thu, Aug 22, 2019</time>
+  I recently started looking into ways of automating microservices app deployment and one of the many things i needed to automate is the famous docker build command. I understand that i could take advantage of the installed Docker client on the host computer by using os/exec package, but my idea isn’t that simple and its not really fun compared to using github.com/docker/docker/client — refer to as goDockerClient henceforth. This post contains the steps i followed to building docker images successfully with goDockerClient
+  
+  <div class="read-more-link">
+    <a href="/posts/b_create_dynamic_image/">Read More…</a>
+  </div>
+  
+</article><article class="post">
+  <h1 class="post-title">
+    <a href="https://lekan.wtf/posts/c_build_api_with_go/">Build and Deploy a secure REST API with Go, Postgresql, JWT and GORM</a>
+  </h1>
+  <time datetime="2018-05-04T00:00:00Z" class="post-date">Fri, May 4, 2018</time>
+  In this tutorial, we are going to learn how to develop and deploy a secure REST api using Go Programming language.
+Why Go? Go is a very interesting programming language, it is a strongly typed language which compiles very fast, it performance is likened to that of C++, go has goroutines — a much more efficient replacement for Threads, and also go give you the freedom to static type on the web — I understand this is not new, i just love Go’s way.
+  
+  <div class="read-more-link">
+    <a href="/posts/c_build_api_with_go/">Read More…</a>
+  </div>
+  
+</article><article class="post">
+  <h1 class="post-title">
+    <a href="https://lekan.wtf/posts/img_rzer/">How to resize images for better upload/download performance. Android Development.</a>
+  </h1>
+  <time datetime="2017-09-04T00:00:00Z" class="post-date">Mon, Sep 4, 2017</time>
+  Its not very common to see a project that doesn’t require photo upload in one form or the other. Most high end android device today create a photo as big as 2MB. This is a problem, How? Imagine you are building a mobile app that require your users to have a profile picture, having scalabilty in mind, each photo must not be &gt; 100KB, am i right?. You dont want to save a 1MB photo for each user.
+  
+  <div class="read-more-link">
+    <a href="/posts/img_rzer/">Read More…</a>
+  </div>
+  
+</article>
 </div>
     </main>
 
