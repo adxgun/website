@@ -86,8 +86,6 @@
 </ul>
 <p>Firstly, let’s configure a bare minimum docker registry server using docker-compose</p>
 <!-- raw HTML omitted -->
-<p>When you run docker-compose up , a docker registry will start running on localhost:5010 . Note: i choose port :5010 for my new docker registry, you can use any available port on your machine.
-Let’s perform some operations to make sure our local docker registry works as expected.</p>
 <p><em>docker pull ubuntu</em>
 <em>docker tag localhost:5010/ubuntu</em>
 <em>docker push localhost:5010/ubuntu</em></p>
@@ -111,7 +109,26 @@ Both registry-auth/certs/RootCA.crt and registry-auth/certs/RootCA.key should be
 <p>Now, we’ve sorted SSL certificate generation. Note: In production, a valid SSL certificate must be provisioned with <a href="https://letsencrypt.org/">LetsEncrypt</a> or other similar services.
 Let’s move on to configuring our docker registry server to use token authentication and the self-signed certificate.</p>
 <!-- raw HTML omitted -->
-<p>The configuration are passed through environment variables, you can also mount a config.yml file into the container but generally, configuring with environment variable is easier and straightforward. As you can see from the docker-compose.yml snippet above, we mounted our certs directory into the container so that we can use our SSL certificate to secure our docker registry server.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#66d9ef">version</span>: <span style="color:#e6db74">&#34;3&#34;</span>
+<span style="color:#66d9ef">services</span>:
+  <span style="color:#66d9ef">registry</span>:
+    <span style="color:#66d9ef">restart</span>: on-failure
+    <span style="color:#66d9ef">image</span>: registry:<span style="color:#ae81ff">2</span>
+    <span style="color:#66d9ef">ports</span>:
+      - <span style="color:#ae81ff">5010</span>:<span style="color:#ae81ff">5000</span>
+    <span style="color:#66d9ef">environment</span>:
+      - REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY=/data
+      - REGISTRY_AUTH=token
+      - REGISTRY_AUTH_TOKEN_REALM=https://localhost:<span style="color:#ae81ff">5011</span>/auth
+      - REGISTRY_AUTH_TOKEN_SERVICE=Authentication
+      - REGISTRY_AUTH_TOKEN_ISSUER=Example Issuer
+      - REGISTRY_AUTH_TOKEN_ROOTCERTBUNDLE=/mnt/local/certs/RootCA.crt
+      - REGISTRY_HTTP_TLS_CERTIFICATE=/mnt/local/certs/RootCA.crt
+      - REGISTRY_HTTP_TLS_KEY=/mnt/local/certs/RootCA.key
+    <span style="color:#66d9ef">volumes</span>:
+      - <span style="color:#e6db74">&#34;${HOME}/mnt/auth/registry/data:/mnt/registry/data&#34;</span>
+      - <span style="color:#e6db74">&#34;./certs:/mnt/local/certs&#34;</span>
+</code></pre></div><p>The configuration are passed through environment variables, you can also mount a config.yml file into the container but generally, configuring with environment variable is easier and straightforward. As you can see from the docker-compose.yml snippet above, we mounted our certs directory into the container so that we can use our SSL certificate to secure our docker registry server.</p>
 <ul>
 <li>
 <p>REGISTRY_AUTH=token which instructs the registry to activate token authentication method.</p>
@@ -136,25 +153,191 @@ Let’s move on to configuring our docker registry server to use token authentic
 <p>First of all, we need to understand what happens when users make an attempt to access our private docker registry without authentication. Basically, if the registry is configured to use token authentication like we’re doing, the configured token server will be called with the following parameters https://${SAMPLE_REGISTRY}/auth?service=registry.docker.io&amp;scope=repository:samalba/my-app:pull,push , the token server should first make an attempt to authenticate the user using the authentication credentials provided along with the request (HTTP basic authentication as of Docker 1.8), if the authentication succeeds, an authorization should follow using the scope parameter added to the request’s query parameters, the format of this scope is scope=repository:samalba/my-app:pull,push which contains basically the <strong>type</strong>, <strong>repository name</strong>, and **the requested actions. **These information should be use to determine if user should be given permission or not. Once it is decided whether to give users permission or not, authorization operation should return the list of permissions that should be granted the authorized user or an empty list should be return if the user is unauthorized to access the requested resources.</p>
 <p>Let’s write some code to make all of these explanation makes sense.</p>
 <!-- raw HTML omitted -->
-<p>The above code setups the basic structure of our token server. Lines 6-10 defines a structure to hold some important values. Lines 12-19 is a helper function to form a usable tokenServer structure, this function basically loads in the certificate data into go struct so that we can use them later on to sign the JWTs we’re going to be producing. Lines 22-40 is a helper function to load raw certificate data into libtrust.Privatekey and libtrust.Publickey .</p>
-<!-- raw HTML omitted -->
-<p>The above code made up the huge chunk of this whole solution. Lines 2-5 defined a struct Option{} to hold the docker registry request’s parameter, which are basically the values needed to create a valid JWT for our registry client. Lines 7-10 defined a Token{} struct to hold the value of the generated token. Lines 12-55 is a function that takes a Option{} and list of actions granted to authenticating user and then create a valid token according to <a href="https://github.com/docker/distribution/blob/1b9ab303a477ded9bdd3fc97e9119fa8f9e58fca/docs/spec/auth/jwt.md">THIS SPECIFICATION,</a> the code comments are straightforward and should be easy to follow. And lastly, Lines 58-77 parses the request’s data and create an Option{} from it, this will allow us to easily have access to the information we need to create a valid token.</p>
+<p>// loadCertAndKey from filesystem
+func loadCertAndKey(certFile, keyFile string) (libtrust.PublicKey, libtrust.PrivateKey, error) {
+cert, err := tls.LoadX509KeyPair(certFile, keyFile)
+if err != nil {
+return nil, nil, err
+}
+x509Cert, err := x509.ParseCertificate(cert.Certificate[0])
+if err != nil {
+return nil, nil, err
+}
+pk, err := libtrust.FromCryptoPublicKey(x509Cert.PublicKey)
+if err != nil {
+return nil, nil, err
+}
+prk, err := libtrust.FromCryptoPrivateKey(cert.PrivateKey)
+if err != nil {
+return nil, nil, err
+}
+}</p>
+<pre><code>The above code setups the basic structure of our token server. Lines 6-10 defines a structure to hold some important values. Lines 12-19 is a helper function to form a usable tokenServer structure, this function basically loads in the certificate data into go struct so that we can use them later on to sign the JWTs we’re going to be producing. Lines 22-40 is a helper function to load raw certificate data into libtrust.Privatekey and libtrust.Publickey .
+
+&lt;iframe src=&quot;https://medium.com/media/8b5bc090176606590d731a7fb9280b88&quot; frameborder=0&gt;&lt;/iframe&gt;
+```go
+type Option struct {
+	issuer, typ, name, account, service string
+	actions []string // requested actions
+}
+
+type Token struct {
+	Token       string `json:&quot;token&quot;`
+	AccessToken string `json:&quot;access_token&quot;`
+}
+
+func (srv *tokenServer) createToken(opt *Option, actions []string) (*Token, error) {
+	// sign any string to get the used signing Algorithm for the private key
+	_, algo, err := srv.privateKey.Sign(strings.NewReader(&quot;AUTH&quot;), 0)
+	if err != nil {
+		return nil, err
+	}
+	header := token.Header{
+		Type:       &quot;JWT&quot;,
+		SigningAlg: algo,
+		KeyID:      srv.pubKey.KeyID(),
+	}
+	headerJson, err := json.Marshal(header)
+	if err != nil {
+		return nil, err
+	}
+	now := time.Now().Unix()
+	exp := now + time.Now().Add(24*time.Hour).Unix()
+	claim := token.ClaimSet{
+		Issuer:     opt.issuer,
+		Subject:    opt.account,
+		Audience:   opt.service,
+		Expiration: exp,
+		NotBefore:  now - 10,
+		IssuedAt:   now,
+		JWTID:      fmt.Sprintf(&quot;%d&quot;, rand.Int63()),
+		Access:     []*token.ResourceActions{},
+	}
+	claim.Access = append(claim.Access, &amp;token.ResourceActions{
+		Type:    opt.typ,
+		Name:    opt.name,
+		Actions: actions,
+	})
+	claimJson, err := json.Marshal(claim)
+	if err != nil {
+		return nil, err
+	}
+	payload := fmt.Sprintf(&quot;%s%s%s&quot;, encodeBase64(headerJson), token.TokenSeparator, encodeBase64(claimJson))
+	sig, sigAlgo, err := srv.privateKey.Sign(strings.NewReader(payload), 0)
+	if err != nil &amp;&amp; sigAlgo != algo {
+		return nil, err
+	}
+	tk := fmt.Sprintf(&quot;%s%s%s&quot;, payload, token.TokenSeparator, encodeBase64(sig))
+	return &amp;Token{Token: tk, AccessToken: tk}, nil
+}
+
+
+func (srv *tokenServer) createTokenOption(r *http.Request) *Option {
+	opt := &amp;Option{}
+	q := r.URL.Query()
+
+	opt.service = q.Get(&quot;service&quot;)
+	opt.account = q.Get(&quot;account&quot;)
+	opt.issuer = &quot;Sample Issuer&quot; // issuer value must match the value configured via docker-compose
+
+	parts := strings.Split(q.Get(&quot;scope&quot;), &quot;:&quot;)
+	if len(parts) &gt; 0 {
+		opt.typ = parts[0] // repository
+	}
+	if len(parts) &gt; 1 {
+		opt.name = parts[1] // foo/repoName
+	}
+	if len(parts) &gt; 2 {
+		opt.actions = strings.Split(parts[2], &quot;,&quot;) // requested actions
+	}
+	return opt
+}
+</code></pre><p>The above code made up the huge chunk of this whole solution. Lines 2-5 defined a struct Option{} to hold the docker registry request’s parameter, which are basically the values needed to create a valid JWT for our registry client. Lines 7-10 defined a Token{} struct to hold the value of the generated token. Lines 12-55 is a function that takes a Option{} and list of actions granted to authenticating user and then create a valid token according to <a href="https://github.com/docker/distribution/blob/1b9ab303a477ded9bdd3fc97e9119fa8f9e58fca/docs/spec/auth/jwt.md">THIS SPECIFICATION,</a> the code comments are straightforward and should be easy to follow. And lastly, Lines 58-77 parses the request’s data and create an Option{} from it, this will allow us to easily have access to the information we need to create a valid token.</p>
 <p><strong>Putting it all together.</strong></p>
 <!-- raw HTML omitted -->
-<p><code>tokenServer</code> implements http.Handler function so that we can handle authentication and authorization requests from our private docker registry. The first thing we did was retrieve username and password from the request, as expected we immediately return http 401 error if this values are absent. We also did a static comparison to simulate real life authentication, in production you would normally compare these authentication credentials against a real datastore. And then we went ahead to extract Option{} out of our http request, we then do a dummy authorization by passing opt to a fake authorize function. Again, in real life or production scenario, authorize function would work according to your business logic. And finally, we generate our token using the list of authorized actions returned from calling authorize function. Lines 37-41 setup an https server and therefore our token authentication server is read to issue out valid JWT tokens.</p>
-<h3 id="containerizing-the-token-authentication-server"><strong>Containerizing the token authentication server</strong></h3>
-<p>We need to package our token authentication server into a container so that we can run it along the docker registry in a simple docker-compose.yml file.</p>
-<!-- raw HTML omitted -->
-<p>We need to create a bash file, we’re naming it build.sh , it’s just a simple file to group our command so that we won’t need to be repeating commands every single time.</p>
-<!-- raw HTML omitted -->
+<p>func (srv *tokenServer) authorize(opt *Option) []string {
+// do proper comparison to check for user&rsquo;s access
+// against the requested actions
+if opt.account == &ldquo;foo&rdquo; {
+return []string{&ldquo;pull&rdquo;, &ldquo;push&rdquo;}
+}
+if opt.account == &ldquo;bar&rdquo; {
+return []string{&ldquo;pull&rdquo;}
+}
+// unauthorized, no permission is granted
+return []string{}
+}</p>
+<p>func (srv *tokenServer) run() error {
+addr := fmt.Sprintf(&quot;:%s&rdquo;, os.Getenv(&ldquo;PORT&rdquo;))
+http.Handle(&quot;/auth&rdquo;, srv)
+return http.ListenAndServeTLS(addr, srv.crt, srv.key, nil)
+}</p>
+<pre><code>`tokenServer` implements http.Handler function so that we can handle authentication and authorization requests from our private docker registry. The first thing we did was retrieve username and password from the request, as expected we immediately return http 401 error if this values are absent. We also did a static comparison to simulate real life authentication, in production you would normally compare these authentication credentials against a real datastore. And then we went ahead to extract Option{} out of our http request, we then do a dummy authorization by passing opt to a fake authorize function. Again, in real life or production scenario, authorize function would work according to your business logic. And finally, we generate our token using the list of authorized actions returned from calling authorize function. Lines 37-41 setup an https server and therefore our token authentication server is read to issue out valid JWT tokens.
+
+### **Containerizing the token authentication server**
+
+We need to package our token authentication server into a container so that we can run it along the docker registry in a simple docker-compose.yml file.
+
+&lt;iframe src=&quot;https://medium.com/media/ba4144b0e04a733b65a794dabf66fe26&quot; frameborder=0&gt;&lt;/iframe&gt;
+```go
+FROM alpine:3.2
+RUN apk update &amp;&amp; apk add --no-cache ca-certificates
+ADD . /app
+WORKDIR /app
+RUN chmod +x /app/sample-auth
+ENTRYPOINT [ &quot;/app/sample-auth&quot; ]
+</code></pre><p>We need to create a bash file, we’re naming it build.sh , it’s just a simple file to group our command so that we won’t need to be repeating commands every single time.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell"><span style="color:#75715e">#!/bin/bash
+</span><span style="color:#75715e"></span><span style="color:#75715e"># Generate a random uuid to use as a docker tag</span>
+NEW_UUID<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>cat /dev/urandom | LC_CTYPE<span style="color:#f92672">=</span>C tr -dc <span style="color:#e6db74">&#39;a-zA-Z0-9&#39;</span> | fold -w <span style="color:#ae81ff">8</span> | head -n 1<span style="color:#66d9ef">)</span>
+<span style="color:#75715e"># build binary</span>
+export GOOS<span style="color:#f92672">=</span>linux <span style="color:#f92672">&amp;&amp;</span> go build -o sample-auth main.go
+<span style="color:#75715e"># build docker image</span>
+docker build -t <span style="color:#e6db74">&#34;sample-auth&#34;</span> .
+<span style="color:#75715e"># tag image</span>
+docker tag sample-auth localhost:5010/sample-auth:<span style="color:#e6db74">${</span>NEW_UUID<span style="color:#e6db74">}</span>
+<span style="color:#75715e"># push image to registry running at localhost:5010</span>
+docker push localhost:5010/sample-auth:<span style="color:#e6db74">${</span>NEW_UUID<span style="color:#e6db74">}</span>
+</code></pre></div><!-- raw HTML omitted -->
 <p>Your final docker-compose.yml file should look like the one pasted below —</p>
 <!-- raw HTML omitted -->
-<p>Use docker-compose upstart up the app, both registry and the token authentication server should start.</p>
-<p><strong>Testing our implementation</strong>
-On first try, the push should be rejected anddocker client should force you to authenticate. Use foo and bar for your username and password respectively and you should get a Login Succeeded response after which you can now push and pull images from our new docker registry. Voila!</p>
-<p>Side note: I put together a simple package that does most of the work describes here. If you’re interested, <a href="https://github.com/adigunhammedolalekan/registry-auth">it is here on my Github,</a> also the code written in this post can be found <a href="https://github.com/adigunhammedolalekan/secure-docker-registry">HERE</a></p>
-<p>Feel free to DM me on <a href="https://twitter.com/L3kanAdigun">Twitter</a> if there’s any issue you want to point out or if there’s any way i can help. Happy coding!</p>
+<p>services:
+sample-server:
+build: ./
+container_name: sample-server
+restart: on-failure
+environment:
+- PORT=5008
+ports:
+- 5011:5008
+volumes:
+- &ldquo;./certs:/mnt/certs&rdquo;</p>
+<p>docker-registry:
+restart: always
+image: registry:2
+ports:
+- 5010:5000
+environment:
+- REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY=/data
+- REGISTRY_AUTH=token
+- REGISTRY_AUTH_TOKEN_REALM=https://localhost:5011/auth
+- REGISTRY_AUTH_TOKEN_SERVICE=Authentication
+- REGISTRY_AUTH_TOKEN_ISSUER=Sample Issuer
+- REGISTRY_AUTH_TOKEN_ROOTCERTBUNDLE=/mnt/local/certs/RootCA.crt
+- REGISTRY_HTTP_TLS_CERTIFICATE=/mnt/local/certs/RootCA.crt
+- REGISTRY_HTTP_TLS_KEY=/mnt/local/certs/RootCA.key
+volumes:
+- &ldquo;${HOME}/mnt/auth/registry/data:/mnt/registry/data&rdquo;
+- &ldquo;./certs:/mnt/local/certs&rdquo;</p>
+<pre><code>Use docker-compose upstart up the app, both registry and the token authentication server should start.
 
+**Testing our implementation**
+On first try, the push should be rejected anddocker client should force you to authenticate. Use foo and bar for your username and password respectively and you should get a Login Succeeded response after which you can now push and pull images from our new docker registry. Voila!
+
+Side note: I put together a simple package that does most of the work describes here. If you’re interested, [it is here on my Github,](https://github.com/adigunhammedolalekan/registry-auth) also the code written in this post can be found [HERE](https://github.com/adigunhammedolalekan/secure-docker-registry)
+
+Feel free to DM me on [Twitter](https://twitter.com/L3kanAdigun) if there’s any issue you want to point out or if there’s any way i can help. Happy coding!
+</code></pre>
 </div>
 
 

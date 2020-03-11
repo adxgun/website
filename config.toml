@@ -10,3 +10,13 @@ theme = "hyde"
       {Name = "Github", URL = "https://github.com/adigunhammedolalekan/"},
       {Name = "Twitter", URL = "https://twitter.com/L3kanAdigun/"}
   ]
+[markup]
+  [markup.highlight]
+    codeFences = true
+    guessSyntax = false
+    hl_Lines = ""
+    lineNos = true
+    lineNumbersInTable = false
+    noClasses = true
+    style = "manni"
+    tabWidth = 4
