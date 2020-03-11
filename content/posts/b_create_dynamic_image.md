@@ -1,7 +1,7 @@
 ---
 title: "Building Docker Images Dynamically with Go"
 date: 2020-03-06T00:04:27+01:00
-draft: true
+draft: false
 ---
 
 I recently started looking into ways of automating microservices app deployment and one of the many things i needed to automate is the famous docker build command. I understand that i could take advantage of the installed Docker client on the host computer by using os/exec package, but my idea isn’t that simple and its not really fun compared to using github.com/docker/docker/client — refer to as goDockerClient henceforth. This post contains the steps i followed to building docker images successfully with goDockerClient

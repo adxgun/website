@@ -1,7 +1,7 @@
 ---
 title: "Creating Docker Registry Token Authentication Server with Go"
 date: 2020-03-06T00:04:27+01:00
-draft: true
+draft: false
 ---
 
 Creating Docker Registry Token Authentication Server with Go

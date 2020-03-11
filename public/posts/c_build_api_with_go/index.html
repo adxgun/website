@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-us" lang="en-us">
+<head>
+  <link href="https://gmpg.org/xfn/11" rel="profile">
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <meta name="generator" content="Hugo 0.58.2" />
+
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Build and Deploy a secure REST API with Go, Postgresql, JWT and GORM &middot; Lekan Adigun</title>
+  <meta name="description" content="" />
+
+  
+  <link type="text/css" rel="stylesheet" href="http://lekan.wtf/css/print.css" media="print">
+  <link type="text/css" rel="stylesheet" href="http://lekan.wtf/css/poole.css">
+  <link type="text/css" rel="stylesheet" href="http://lekan.wtf/css/syntax.css">
+  <link type="text/css" rel="stylesheet" href="http://lekan.wtf/css/hyde.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Abril+Fatface|PT+Sans:400,400i,700">
+
+
+  
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/apple-touch-icon-144-precomposed.png">
+  <link rel="shortcut icon" href="/favicon.png">
+
+  
+  
+</head>
+
+  <body class=" ">
+  <aside class="sidebar">
+  <div class="container sidebar-sticky">
+    <div class="sidebar-about">
+      <a href="http://lekan.wtf/"><h1>Lekan Adigun</h1></a>
+      <p class="lead">
+       Welcome to my blog! I will be writing about Golang, backend engineering, cloud native and sometimes, what I am currently working on. 
+      </p>
+    </div>
+
+    <nav>
+      <ul class="sidebar-nav">
+        <li><a href="http://lekan.wtf/">Home</a> </li>
+        <li><a href="https://github.com/adigunhammedolalekan/"> Github </a></li><li><a href="https://twitter.com/L3kanAdigun/"> Twitter </a></li>
+      </ul>
+    </nav>
+
+    <p>&copy; 2020. All rights reserved. </p>
+  </div>
+</aside>
+
+    <main class="content container">
+    <div class="post">
+  <h1>Build and Deploy a secure REST API with Go, Postgresql, JWT and GORM</h1>
+  <time datetime=2020-03-06T00:04:27&#43;0100 class="post-date">Fri, Mar 6, 2020</time>
+  
+
+<p>In this tutorial, we are going to learn how to develop and deploy a secure REST api using Go Programming language.</p>
+
+<h2 id="why-go">Why Go?</h2>
+
+<p>Go is a very interesting programming language, it is a strongly typed language which compiles very fast, it performance is likened to that of C++, go has goroutines — a much more efficient replacement for Threads, and also go give you the freedom to static type on the web — I understand this is not new, i just love Go’s way.</p>
+
+<h2 id="what-are-we-building">What are we building?</h2>
+
+<p>We are going to build a **contact/phonebook manager App, **our API will allow users to add contacts to their profiles, they will be able to retrieve it in case their phone got lost.</p>
+
+<h2 id="prerequisites">Prerequisites</h2>
+
+<p>This lesson assumed you already installed the following packages</p>
+
+<ul>
+<li><p>Go</p></li>
+
+<li><p>Postgresql</p></li>
+
+<li><p>GoLand IDE — optional(I am going to be using it for this tutorial)</p></li>
+</ul>
+
+<p>I also assumed you have setup your GOPATH. Check this if you haven’t <a href="https://github.com/golang/go/wiki/SettingGOPATH">https://github.com/golang/go/wiki/SettingGOPATH</a></p>
+
+<p>Let’s do it!</p>
+
+<h2 id="what-is-rest">What is REST?</h2>
+
+<p>REST stands for Representational State Transfer, it is the mechanism used by modern client apps to communicate with databases and servers via http — <a href="https://en.wikipedia.org/wiki/Representational_state_transfer">https://en.wikipedia.org/wiki/Representational_state_transfer</a>
+So, you have a new startup idea or you want to build that awesome side project? REST protocol is mostly the way to go.</p>
+
+<h2 id="building-the-app">Building the App</h2>
+
+<p>We start by identifying the package dependencies we are going to need for this project, luckily for us, Go standard library is rich enough to build a complete website without using a third party framework(i hope i am right) — see net.http package, but to make our work easier, we are going to need the following packages,</p>
+
+<ul>
+<li><p>gorilla/mux — A powerful URL router and dispatcher. We use this package to match URL paths with their handlers.</p></li>
+
+<li><p>jinzhu/gorm — The fantastic ORM library for Golang, aims to be developer friendly. We use this ORM(Object relational mapper) package to interact smoothly with our database</p></li>
+
+<li><p>dgrijalva/jwt-go — Used to sign and verify JWT tokens</p></li>
+
+<li><p>joho/godotenv — Used to load .env files into the project</p></li>
+</ul>
+
+<p>To install any of this package, open terminal and run</p>
+
+<p>go get github.com/{package-name}</p>
+
+<p>This command will install the packages into your GOPATH.</p>
+
+<h3 id="project-structure">Project Structure</h3>
+
+<p><img src="https://cdn-images-1.medium.com/max/2732/1*3MJjEDEI7i29eJecxxfopA.png" alt="Check the left sidebar to see project structure" /><em>Check the left sidebar to see project structure</em></p>
+
+<p>utils.go</p>
+
+<iframe src="https://medium.com/media/620faa452595f2ebc0e6656ab3908ab3" frameborder=0></iframe>
+
+<p>utils.go contain handy utils functions to build json messages and return a json response. Note the two function Message() and Respond() before we proceed.</p>
+
+<h3 id="more-about-jwt">More about JWT</h3>
+
+<p>JSON Web Tokens are an open, industry standard <a href="https://tools.ietf.org/html/rfc7519">RFC 7519</a> method for representing claims securely between two parties. It is easy to identify web application users through sessions, however, when your web apps API is interacting with say an Android or IOS client, sessions becomes unusable because of the stateless nature of the http request. With JWT, we can create a unique token for each authenticated user, this token would be included in the header of the subsequent request made to the API server, this method allow us to identify every users that make calls to our API. Lets see the implementation below</p>
+
+<iframe src="https://medium.com/media/8c8f1e17103f6763bb8e7da9c6500077" frameborder=0></iframe>
+
+<p>The comments inside the code explain everything there is to know, but basically, the code create a Middleware to intercept every requests, check for the presence of an authentication token (JWT token), verify if it is authentic and valid, then send error back to the client if we detect any deficiency in the token or proceed to serving the request otherwise(if the token is valid), you’ll see later, how we can access the user that is interacting with our API from the request.</p>
+
+<h3 id="building-the-user-registration-and-login-system">Building the user registration and login system</h3>
+
+<p>We want our users to be able to register and login before backing up/storing their contacts on our system. The first thing we will need to do is connect to our database, we use a .env file to store our database credentials, my .env looks like this</p>
+
+<pre><code>db_name = gocontacts
+db_pass = **** //This is default to the current user's password on windows for postgresql
+db_user = postgres
+db_type = postgres
+db_host = localhost
+db_port = 5434
+token_password = thisIsTheJwtSecretPassword //Do not commit to git!
+</code></pre>
+
+<p>Then, we can connect to the database using the following snippets</p>
+
+<iframe src="https://medium.com/media/5fe96345e52a7b8f79cc8682125e59b9" frameborder=0></iframe>
+
+<p>The code does a very simple thing, on the file init() function — init() automatically get called by Go, the code retrieve connection information from .env file then build a connection string and use it to connect to the database.</p>
+
+<h3 id="creating-the-application-entry-point">Creating the application entry point</h3>
+
+<p>So far, we’ve been able to create the JWT middleware and connect to our database. The next thing is creating the application’s entry point, see the code snippet below</p>
+
+<iframe src="https://medium.com/media/b265aa7bb84cc3de86b6646c4eb90033" frameborder=0></iframe>
+
+<p>We create a new Router object — line 13, we attach our JWT auth middleware using router’s Use() function — line 14, and then we proceed to start listening for incoming requests.</p>
+
+<p><img src="https://cdn-images-1.medium.com/max/2000/1*O_eTZ7RGS0uxNHpfmKPORA.png" alt="" /></p>
+
+<p>Use the small media play button located left of func main() to compile and launch the app, if all is good, you should see no error in the console, in case there was an error, take a second look at your database connection parameters to see that they correlate.</p>
+
+<p><img src="https://cdn-images-1.medium.com/max/2732/1*Fdq9mK_pk92jfB8YjF5qgw.png" alt="Results. DB migrations has occurred, GORM converted go struct to database tables" /><em>Results. DB migrations has occurred, GORM converted go struct to database tables</em></p>
+
+<h3 id="creating-and-authenticating-users">Creating and authenticating Users</h3>
+
+<p>create a new file models/accounts.go,</p>
+
+<iframe src="https://medium.com/media/b169e8da17685715d10f9b417f1985de" frameborder=0></iframe>
+
+<p>There is a lot of puzzle inside accounts.go, lets break it down a little bit.</p>
+
+<p>The first part create two structs Token and Account they represent a JWT token claim and a user account respectively. Function Validate() validates the data sent from clients and function Create() creates a new account and generate a JWT token that will be sent back to client that made the request. Function Login(username, password) authenticate an existing user, then generate a JWT token if authentication was successful.</p>
+
+<p><strong>authController.go</strong></p>
+
+<iframe src="https://medium.com/media/66cefdc82d73c7f811979ee5c7cd5c1c" frameborder=0></iframe>
+
+<p>The content is very straightforward. It contains the handler for /user/new and /user/login endpoints.</p>
+
+<p>Add the following snippet to main.go to register our new routes</p>
+
+<pre><code>router.HandleFunc(**&quot;/api/user/new&quot;**, controllers.CreateAccount).Methods(**&quot;POST&quot;**)
+
+router.HandleFunc(**&quot;/api/user/login&quot;**, controllers.Authenticate).Methods(**&quot;POST&quot;**)
+</code></pre>
+
+<p>The above code register both /user/new and /user/login endpoints and pass their corresponding request handlers.</p>
+
+<p>Now, recompile the code and visit localhost:8000/api/user/new using postman, set the request body to application/json as shown below</p>
+
+<p><img src="https://cdn-images-1.medium.com/max/2732/1*yzjtBq5zMPrgy0GN5sQKng.png" alt="Response from /user/new" /><em>Response from /user/new</em></p>
+
+<p>If you try to call /user/new twice with the same payload, you’ll receive a response that the email already exists, works according to our instructions.</p>
+
+<h3 id="creating-contacts">Creating contacts</h3>
+
+<p>Part of our app’s functionality is letting our users create/store contacts. Contact will have name and phone , we will define these as struct properties. The following snippets belongs to models/contact.go</p>
+
+<iframe src="https://medium.com/media/3abb478426ad8a975046052c594477ab" frameborder=0></iframe>
+
+<p>Same as in models/accounts.go we create a function Validate() to validate the passed inputs, we return an error with messages if anything we don’t want occur, then we wrote function Create() to insert this contact into the database.</p>
+
+<p>The only part left is retrieving the contacts. Lets do it!</p>
+
+<pre><code>router.HandleFunc(**&quot;/api/me/contacts&quot;**, controllers.GetContactsFor).Methods(**&quot;GET&quot;**)
+</code></pre>
+
+<p>Add the above snippet to main.go to tell the router to register /me/contacts
+endpoint. Lets create controllers.GetContactsFor handler to handle the API request.</p>
+
+<p><strong>contactsController.go</strong></p>
+
+<p>Bellow is the content of contactsController.go</p>
+
+<iframe src="https://medium.com/media/a06b9c42d5c391874e94925b3b54f5a6" frameborder=0></iframe>
+
+<p>What it does is pretty similar to authController.go&rsquo;s , but basically, it grabs the json body and decode it into Contact struct, if there was an error, return a response immediately or insert the contacts into the database if everything went well.</p>
+
+<p><strong>Fetching Contacts that belongs to a user</strong></p>
+
+<p>Now, our users have been able to store their contacts successfully, what if they want to retrieve the contact they stored, in case their phone is lost? Visiting /me/contacts should return a json structure for the contacts of the API caller(current user). Check the code snippet to have a clearer picture.</p>
+
+<p>Normally, retrieving user’s contacts endpoint should look like /user/{userId}/contacts , specifying userId as a path parameter is very dangerous, because every authenticated user can craft a request to this path and contacts of another users would be returned without any problem, this can lead to a brutal attack by hackers — I am trying to point out the usefulness of JWT .
+We can easily obtain the id of the API caller using r.Context().Value(&ldquo;user&rdquo;) , remember we set this value inside auth.go — Our authentication middleware</p>
+
+<iframe src="https://medium.com/media/a06b9c42d5c391874e94925b3b54f5a6" frameborder=0></iframe>
+
+<p><img src="https://cdn-images-1.medium.com/max/2732/1*NMXFN6aCXqoIiM5FSB2qIQ.png" alt="Response for /me/contacts" /><em>Response for /me/contacts</em></p>
+
+<p>The code for this project is on github — <a href="https://github.com/adigunhammedolalekan/go-contacts">https://github.com/adigunhammedolalekan/go-contacts</a></p>
+
+<h2 id="deployment">Deployment</h2>
+
+<p>We can easily deploy our app to heroku. Firstly, download godep . godep is a dependency manager for Golang, similar to npm for nodejs.</p>
+
+<pre><code>go get -u github.com/tools/godep
+</code></pre>
+
+<ul>
+<li><p>Open GoLand terminal and run godep save This will create a folder call Godeps and vender . To learn more about godep, visit <a href="https://github.com/tools/godep">https://github.com/tools/godep</a></p></li>
+
+<li><p>Create account on heroku.com and download Heroku Cli then login with your credentials</p></li>
+
+<li><p>Once done, run heroku create gocontacts This will create an app for you on your heroku dashboard and also a remote git repository.</p></li>
+
+<li><p>run the following command to push your code to heroku</p></li>
+
+<li><p>git add .</p></li>
+
+<li><p>git commit -m &ldquo;First commit&rdquo;</p></li>
+
+<li><p>git push heroku master</p></li>
+</ul>
+
+<p><img src="https://cdn-images-1.medium.com/max/2732/1*w9Vm0lZANuGCzQGbNuunDQ.png" alt="" /></p>
+
+<p>If everything went well, your screen should look like my own.</p>
+
+<p>Voila! Your app has been deployed. The next thing is setting up a remote Postgresql database.</p>
+
+<p>run heroku addons:create heroku-postgresql:hobby-dev to create the database. To learn more about this, visit <a href="https://devcenter.heroku.com/articles/heroku-postgresql">https://devcenter.heroku.com/articles/heroku-postgresql</a></p>
+
+<p>Great! We are almost there, next thing is to connect with our remote database.</p>
+
+<p>Go to heroku.com and login with your credentials, you should find your newly created app on your dashboard, click on it. After that, click on settings, then click on Reveal Config Vars
+Postgresql connection URI format postgres://username:password@host/dbName , There is a var named DATABASE_URL , this was automatically added to your .env file when you created the postgresql database (Note: Heroku automatically replace your local .env when you deploy your app), from this var, we will extract our database connection parameter.</p>
+
+<p><img src="https://cdn-images-1.medium.com/max/2732/1*rS24jUlHUgjnIb_F2IFtXw.png" alt="" /></p>
+
+<p><img src="https://cdn-images-1.medium.com/max/2732/1*fw5kKwbwOxy91Xjpjbzw4A.png" alt="I extracted database connection parameter from the auto generated DATABASE_URL vars" /><em>I extracted database connection parameter from the auto generated DATABASE_URL vars</em></p>
+
+<p>If all this went well, your API should be live now!</p>
+
+<p><img src="https://cdn-images-1.medium.com/max/2732/1*nOTRa077OtAWIWk9ApwTFg.png" alt="As you can see, the api is live!" /><em>As you can see, the api is live!</em></p>
+
+<p>I tried my best to make this lesson clear as much as possible. Please, bear with me for any error you might encountered. I am just trying to share my knowledge.</p>
+
+<p>Project Repo — <a href="https://github.com/adigunhammedolalekan/go-contacts">https://github.com/adigunhammedolalekan/go-contacts</a></p>
+
+<p>If you have any question, or a correction, i will be glad to know.</p>
+
+<p>Follow me on Twitter — <a href="http://www.twitter.com/L3kanAdigun">www.twitter.com/L3kanAdigun</a></p>
+
+<p>Hire me(I am available and actively looking for job, DM me on Twitter) —<a href="http://www.twitter.com/L3kanAdigun">www.twitter.com/L3kanAdigun</a></p>
+
+<p>You can mail me personally — adigunhammed.lekan@gmail.com</p>
+
+<p>Its really a long article, Thanks for reading.</p>
+
+</div>
+
+
+    </main>
+
+    
+      
+    
+  </body>
+</html>
