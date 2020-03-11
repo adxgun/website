@@ -4,7 +4,7 @@ title = "Lekan Adigun"
 theme = "hyde"
 [params]
   themeColor = ""
-  description = "Welcome to my blog! I will be writing about Golang, backend engineering, cloud native and sometimes, what I am currently working on."
+  description = "Welcome to my website! Where i write about Golang, Backend engineering, DevOps and sometimes, what I am currently working on."
 [Menus]
   main = [
       {Name = "Github", URL = "https://github.com/adigunhammedolalekan/"},
