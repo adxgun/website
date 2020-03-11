@@ -55,14 +55,71 @@
   <p>I recently started looking into ways of automating microservices app deployment and one of the many things i needed to automate is the famous docker build command. I understand that i could take advantage of the installed Docker client on the host computer by using os/exec package, but my idea isn’t that simple and its not really fun compared to using github.com/docker/docker/client — refer to as goDockerClient henceforth. This post contains the steps i followed to building docker images successfully with goDockerClient</p>
 <h3 id="understand-the-docker-buildcontext">Understand the Docker BuildContext</h3>
 <p>After i spent some time checking out goDockerClient <a href="https://godoc.org/github.com/docker/docker/client">GoDoc</a>, i felt like i was ready to start building docker images dynamically but i was wrong. It wasn’t as trivial as the Doc made it look, i thought all i had to do was call client.ImageBuild(context.Context, buildContext, opts) specifying my Dockerfile in opts.Dockerfile , after few unsuccessful trials, i began digging deeper. Turns out buildContext which is of type io.Reader is suppose to be the content of the image i am trying to build. Initially, i was doing something like this</p>
-<!-- raw HTML omitted -->
-<p>Using just the Dockerfile as buildContext will not work because the docker daemon expect the buildContext to be all the files you’ll need in your new docker image.</p>
+<div class="highlight"><pre style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span><span style="color:#069;font-weight:bold">func</span> <span style="color:#c0f">createBuildContext</span>() (io.Reader, <span style="color:#078;font-weight:bold">error</span>) {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span>  <span style="color:#09f;font-style:italic">// get current working dir
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span><span style="color:#09f;font-style:italic"></span>  wd, err <span style="color:#555">:=</span> os.<span style="color:#c0f">Getwd</span>()
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span>  <span style="color:#069;font-weight:bold">if</span> err <span style="color:#555">!=</span> <span style="color:#069;font-weight:bold">nil</span> {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span>    <span style="color:#069;font-weight:bold">return</span> <span style="color:#069;font-weight:bold">nil</span>, err
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span>  }
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span>  <span style="color:#09f;font-style:italic">// resolve Dockerfile path
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span><span style="color:#09f;font-style:italic"></span>  path <span style="color:#555">:=</span> filepath.<span style="color:#c0f">join</span>(wd, <span style="color:#c30">&#34;Dockerfile&#34;</span>)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span>  <span style="color:#069;font-weight:bold">return</span> os.<span style="color:#c0f">Open</span>(path)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span>}
+</code></pre></div><p>Using just the Dockerfile as buildContext will not work because the docker daemon expect the buildContext to be all the files you’ll need in your new docker image.</p>
 <h3 id="what-worked">What worked</h3>
 <p>After understanding what docker meant by buildContext the task at hand became easier. We just need a way to wrap all the files in a dir — BuildContext into an io.Reader so that we can easily send this to docker deamon and have our image built. Luckily, there is a helper function in goDockerClient that does just this, just give it a directory and this function would tar it and give you an io.Reader .</p>
-<!-- raw HTML omitted -->
-<p>The final solution. The code below results to a successful dynamic docker build</p>
-<!-- raw HTML omitted -->
-<p>Full code gist can be found here — <a href="https://gist.github.com/adigunhammedolalekan/354f31e7f9b53e6c76d09b2247d3ecad">https://gist.github.com/adigunhammedolalekan/354f31e7f9b53e6c76d09b2247d3ecad</a></p>
+<div class="highlight"><pre style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1</span><span style="color:#069;font-weight:bold">import</span> <span style="color:#c30">&#34;github.com/docker/docker/pkg/archive&#34;</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">3</span><span style="color:#09f;font-style:italic">// createBuildContext archive a dir and return an io.Reader
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">4</span><span style="color:#09f;font-style:italic"></span><span style="color:#069;font-weight:bold">func</span> <span style="color:#c0f">createBuildContext</span>(path <span style="color:#078;font-weight:bold">string</span>) (io.Reader, <span style="color:#078;font-weight:bold">error</span>) {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">5</span>	<span style="color:#069;font-weight:bold">return</span> archive.<span style="color:#c0f">Tar</span>(path, archive.Uncompressed)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">6</span>}
+</code></pre></div><p>The final solution. The code below results to a successful dynamic docker build</p>
+<div class="highlight"><pre style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span><span style="color:#09f;font-style:italic">// buildLocalImage build a docker image from the supplied `path` parameter.
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span><span style="color:#09f;font-style:italic">// The image built is intended to be pushed to a local docker registry.
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span><span style="color:#09f;font-style:italic">// This function assumes there is a Dockerfile in the dir
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span><span style="color:#09f;font-style:italic"></span><span style="color:#069;font-weight:bold">func</span> <span style="color:#c0f">buildLocalImage</span>(path <span style="color:#078;font-weight:bold">string</span>) <span style="color:#078;font-weight:bold">error</span> {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span>  <span style="color:#09f;font-style:italic">// get current working dir, to resolve the path to Dockerfile
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span><span style="color:#09f;font-style:italic"></span>  wd, err <span style="color:#555">:=</span> os.<span style="color:#c0f">Getwd</span>()
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span>  <span style="color:#069;font-weight:bold">if</span> err <span style="color:#555">!=</span> <span style="color:#069;font-weight:bold">nil</span> {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span>     <span style="color:#069;font-weight:bold">return</span> err
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span>  }
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span>  <span style="color:#09f;font-style:italic">// create a docker buildContext by `archiving` the files
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span><span style="color:#09f;font-style:italic"></span>  <span style="color:#09f;font-style:italic">// the target dir
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span><span style="color:#09f;font-style:italic"></span>  buildCtx, err <span style="color:#555">:=</span> <span style="color:#c0f">createBuildContext</span>(path)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span>  <span style="color:#069;font-weight:bold">if</span> err <span style="color:#555">!=</span> <span style="color:#069;font-weight:bold">nil</span> {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span>     <span style="color:#069;font-weight:bold">return</span> err
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16</span>  }
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18</span>  <span style="color:#09f;font-style:italic">// form a unique docker tag. the first string seg is the local docker registry host
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19</span><span style="color:#09f;font-style:italic"></span>  tag <span style="color:#555">:=</span> fmt.<span style="color:#c0f">Sprintf</span>(<span style="color:#c30">&#34;%s%s%s&#34;</span>, <span style="color:#c30">&#34;docker-registry:5000/&#34;</span>, build.<span style="color:#c0f">Name</span>(), p.<span style="color:#c0f">md5</span>()[:<span style="color:#f60">6</span>])
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20</span>  ctx <span style="color:#555">:=</span> context.<span style="color:#c0f">Background</span>()
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21</span>  <span style="color:#09f;font-style:italic">// build image. reader can be used to get output from docker deamon
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22</span><span style="color:#09f;font-style:italic"></span>  reader, err <span style="color:#555">:=</span> p.client.<span style="color:#c0f">ImageBuild</span>(ctx, buildCtx, types.ImageBuildOptions{
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">23</span>     Dockerfile: <span style="color:#c30">&#34;Dockerfile&#34;</span>, PullParent: <span style="color:#069;font-weight:bold">true</span>, Tags: []<span style="color:#078;font-weight:bold">string</span>{tag}, Remove: <span style="color:#069;font-weight:bold">true</span>, NoCache: <span style="color:#069;font-weight:bold">true</span>,
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">24</span>  })
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">25</span>  <span style="color:#069;font-weight:bold">if</span> err <span style="color:#555">!=</span> <span style="color:#069;font-weight:bold">nil</span> {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">26</span>     <span style="color:#069;font-weight:bold">return</span> err
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">27</span>  }
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">28</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">29</span>  <span style="color:#069;font-weight:bold">for</span> {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">30</span>	buf <span style="color:#555">:=</span> <span style="color:#366">make</span>([]<span style="color:#078;font-weight:bold">byte</span>, <span style="color:#f60">512</span>)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">31</span>	_, err <span style="color:#555">:=</span> reader.Body.<span style="color:#c0f">Read</span>(buf)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">32</span>	<span style="color:#069;font-weight:bold">if</span> err <span style="color:#555">!=</span> <span style="color:#069;font-weight:bold">nil</span> {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">33</span>	   <span style="color:#069;font-weight:bold">if</span> err <span style="color:#555">==</span> io.EOF {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">34</span>		<span style="color:#069;font-weight:bold">break</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">35</span>	    }
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">36</span>	    log.<span style="color:#c0f">Println</span>(<span style="color:#c30">&#34;error reading response &#34;</span>, err)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">37</span>	    <span style="color:#069;font-weight:bold">continue</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">38</span>	}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">39</span>	<span style="color:#09f;font-style:italic">// print outputs
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">40</span><span style="color:#09f;font-style:italic"></span>  	log.<span style="color:#c0f">Println</span>(<span style="color:#366">string</span>(buf[:]))
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">41</span>   }
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">42</span>  <span style="color:#09f;font-style:italic">// yay! no errors
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">43</span><span style="color:#09f;font-style:italic"></span>  <span style="color:#069;font-weight:bold">return</span> <span style="color:#069;font-weight:bold">nil</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">44</span>}
+</code></pre></div><p>Full code gist can be found here — <a href="https://gist.github.com/adigunhammedolalekan/354f31e7f9b53e6c76d09b2247d3ecad">https://gist.github.com/adigunhammedolalekan/354f31e7f9b53e6c76d09b2247d3ecad</a></p>
 <p>Thank you.</p>
 
 </div>

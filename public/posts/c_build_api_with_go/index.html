@@ -97,12 +97,104 @@ So, you have a new startup idea or you want to build that awesome side project? 
 <h3 id="project-structure">Project Structure</h3>
 <p><img src="https://cdn-images-1.medium.com/max/2732/1*3MJjEDEI7i29eJecxxfopA.png" alt="Check the left sidebar to see project structure"><em>Check the left sidebar to see project structure</em></p>
 <p>utils.go</p>
-<!-- raw HTML omitted -->
-<p>utils.go contain handy utils functions to build json messages and return a json response. Note the two function Message() and Respond() before we proceed.</p>
+<div class="highlight"><pre style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span><span style="color:#069;font-weight:bold">package</span> utils
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span><span style="color:#069;font-weight:bold">import</span> (
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span>	<span style="color:#c30">&#34;encoding/json&#34;</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span>	<span style="color:#c30">&#34;net/http&#34;</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span>)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span><span style="color:#069;font-weight:bold">func</span> <span style="color:#c0f">Message</span>(status <span style="color:#078;font-weight:bold">bool</span>, message <span style="color:#078;font-weight:bold">string</span>) (<span style="color:#069;font-weight:bold">map</span>[<span style="color:#078;font-weight:bold">string</span>]<span style="color:#069;font-weight:bold">interface</span>{}) {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span>	<span style="color:#069;font-weight:bold">return</span> <span style="color:#069;font-weight:bold">map</span>[<span style="color:#078;font-weight:bold">string</span>]<span style="color:#069;font-weight:bold">interface</span>{} {<span style="color:#c30">&#34;status&#34;</span> : status, <span style="color:#c30">&#34;message&#34;</span> : message}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span>}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span><span style="color:#069;font-weight:bold">func</span> <span style="color:#c0f">Respond</span>(w http.ResponseWriter, data <span style="color:#069;font-weight:bold">map</span>[<span style="color:#078;font-weight:bold">string</span>] <span style="color:#069;font-weight:bold">interface</span>{})  {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span>	w.<span style="color:#c0f">Header</span>().<span style="color:#c0f">Add</span>(<span style="color:#c30">&#34;Content-Type&#34;</span>, <span style="color:#c30">&#34;application/json&#34;</span>)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span>	json.<span style="color:#c0f">NewEncoder</span>(w).<span style="color:#c0f">Encode</span>(data)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span>}
+</code></pre></div><p>utils.go contain handy utils functions to build json messages and return a json response. Note the two function Message() and Respond() before we proceed.</p>
 <h3 id="more-about-jwt">More about JWT</h3>
 <p>JSON Web Tokens are an open, industry standard <a href="https://tools.ietf.org/html/rfc7519">RFC 7519</a> method for representing claims securely between two parties. It is easy to identify web application users through sessions, however, when your web apps API is interacting with say an Android or IOS client, sessions becomes unusable because of the stateless nature of the http request. With JWT, we can create a unique token for each authenticated user, this token would be included in the header of the subsequent request made to the API server, this method allow us to identify every users that make calls to our API. Lets see the implementation below</p>
-<!-- raw HTML omitted -->
-<p>The comments inside the code explain everything there is to know, but basically, the code create a Middleware to intercept every requests, check for the presence of an authentication token (JWT token), verify if it is authentic and valid, then send error back to the client if we detect any deficiency in the token or proceed to serving the request otherwise(if the token is valid), you’ll see later, how we can access the user that is interacting with our API from the request.</p>
+<div class="highlight"><pre style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span><span style="color:#069;font-weight:bold">package</span> app
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span><span style="color:#069;font-weight:bold">import</span> (
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span>	<span style="color:#c30">&#34;net/http&#34;</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span>	u <span style="color:#c30">&#34;lens/utils&#34;</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span>	<span style="color:#c30">&#34;strings&#34;</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span>	<span style="color:#c30">&#34;go-contacts/models&#34;</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span>	jwt <span style="color:#c30">&#34;github.com/dgrijalva/jwt-go&#34;</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span>	<span style="color:#c30">&#34;os&#34;</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span>	<span style="color:#c30">&#34;context&#34;</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span>	<span style="color:#c30">&#34;fmt&#34;</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span>)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span><span style="color:#069;font-weight:bold">var</span> JwtAuthentication = <span style="color:#069;font-weight:bold">func</span>(next http.Handler) http.Handler {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16</span>	<span style="color:#069;font-weight:bold">return</span> http.<span style="color:#c0f">HandlerFunc</span>(<span style="color:#069;font-weight:bold">func</span>(w http.ResponseWriter, r <span style="color:#555">*</span>http.Request) {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18</span>		notAuth <span style="color:#555">:=</span> []<span style="color:#078;font-weight:bold">string</span>{<span style="color:#c30">&#34;/api/user/new&#34;</span>, <span style="color:#c30">&#34;/api/user/login&#34;</span>} <span style="color:#09f;font-style:italic">//List of endpoints that doesn&#39;t require auth
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19</span><span style="color:#09f;font-style:italic"></span>		requestPath <span style="color:#555">:=</span> r.URL.Path <span style="color:#09f;font-style:italic">//current request path
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20</span><span style="color:#09f;font-style:italic"></span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21</span>		<span style="color:#09f;font-style:italic">//check if request does not need authentication, serve the request if it doesn&#39;t need it
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22</span><span style="color:#09f;font-style:italic"></span>		<span style="color:#069;font-weight:bold">for</span> _, value <span style="color:#555">:=</span> <span style="color:#069;font-weight:bold">range</span> notAuth {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">23</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">24</span>			<span style="color:#069;font-weight:bold">if</span> value <span style="color:#555">==</span> requestPath {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">25</span>				next.<span style="color:#c0f">ServeHTTP</span>(w, r)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">26</span>				<span style="color:#069;font-weight:bold">return</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">27</span>			}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">28</span>		}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">29</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">30</span>		response <span style="color:#555">:=</span> <span style="color:#366">make</span>(<span style="color:#069;font-weight:bold">map</span>[<span style="color:#078;font-weight:bold">string</span>] <span style="color:#069;font-weight:bold">interface</span>{})
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">31</span>		tokenHeader <span style="color:#555">:=</span> r.Header.<span style="color:#c0f">Get</span>(<span style="color:#c30">&#34;Authorization&#34;</span>) <span style="color:#09f;font-style:italic">//Grab the token from the header
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">32</span><span style="color:#09f;font-style:italic"></span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">33</span>		<span style="color:#069;font-weight:bold">if</span> tokenHeader <span style="color:#555">==</span> <span style="color:#c30">&#34;&#34;</span> { <span style="color:#09f;font-style:italic">//Token is missing, returns with error code 403 Unauthorized
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">34</span><span style="color:#09f;font-style:italic"></span>			response = u.<span style="color:#c0f">Message</span>(<span style="color:#069;font-weight:bold">false</span>, <span style="color:#c30">&#34;Missing auth token&#34;</span>)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">35</span>			w.<span style="color:#c0f">WriteHeader</span>(http.StatusForbidden)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">36</span>			w.<span style="color:#c0f">Header</span>().<span style="color:#c0f">Add</span>(<span style="color:#c30">&#34;Content-Type&#34;</span>, <span style="color:#c30">&#34;application/json&#34;</span>)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">37</span>			u.<span style="color:#c0f">Respond</span>(w, response)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">38</span>			<span style="color:#069;font-weight:bold">return</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">39</span>		}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">40</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">41</span>		splitted <span style="color:#555">:=</span> strings.<span style="color:#c0f">Split</span>(tokenHeader, <span style="color:#c30">&#34; &#34;</span>) <span style="color:#09f;font-style:italic">//The token normally comes in format `Bearer {token-body}`, we check if the retrieved token matched this requirement
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">42</span><span style="color:#09f;font-style:italic"></span>		<span style="color:#069;font-weight:bold">if</span> <span style="color:#366">len</span>(splitted) <span style="color:#555">!=</span> <span style="color:#f60">2</span> {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">43</span>			response = u.<span style="color:#c0f">Message</span>(<span style="color:#069;font-weight:bold">false</span>, <span style="color:#c30">&#34;Invalid/Malformed auth token&#34;</span>)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">44</span>			w.<span style="color:#c0f">WriteHeader</span>(http.StatusForbidden)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">45</span>			w.<span style="color:#c0f">Header</span>().<span style="color:#c0f">Add</span>(<span style="color:#c30">&#34;Content-Type&#34;</span>, <span style="color:#c30">&#34;application/json&#34;</span>)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">46</span>			u.<span style="color:#c0f">Respond</span>(w, response)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">47</span>			<span style="color:#069;font-weight:bold">return</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">48</span>		}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">49</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">50</span>		tokenPart <span style="color:#555">:=</span> splitted[<span style="color:#f60">1</span>] <span style="color:#09f;font-style:italic">//Grab the token part, what we are truly interested in
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">51</span><span style="color:#09f;font-style:italic"></span>		tk <span style="color:#555">:=</span> <span style="color:#555">&amp;</span>models.Token{}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">52</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">53</span>		token, err <span style="color:#555">:=</span> jwt.<span style="color:#c0f">ParseWithClaims</span>(tokenPart, tk, <span style="color:#069;font-weight:bold">func</span>(token <span style="color:#555">*</span>jwt.Token) (<span style="color:#069;font-weight:bold">interface</span>{}, <span style="color:#078;font-weight:bold">error</span>) {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">54</span>			<span style="color:#069;font-weight:bold">return</span> []<span style="color:#366">byte</span>(os.<span style="color:#c0f">Getenv</span>(<span style="color:#c30">&#34;token_password&#34;</span>)), <span style="color:#069;font-weight:bold">nil</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">55</span>		})
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">56</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">57</span>		<span style="color:#069;font-weight:bold">if</span> err <span style="color:#555">!=</span> <span style="color:#069;font-weight:bold">nil</span> { <span style="color:#09f;font-style:italic">//Malformed token, returns with http code 403 as usual
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">58</span><span style="color:#09f;font-style:italic"></span>			response = u.<span style="color:#c0f">Message</span>(<span style="color:#069;font-weight:bold">false</span>, <span style="color:#c30">&#34;Malformed authentication token&#34;</span>)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">59</span>			w.<span style="color:#c0f">WriteHeader</span>(http.StatusForbidden)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">60</span>			w.<span style="color:#c0f">Header</span>().<span style="color:#c0f">Add</span>(<span style="color:#c30">&#34;Content-Type&#34;</span>, <span style="color:#c30">&#34;application/json&#34;</span>)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">61</span>			u.<span style="color:#c0f">Respond</span>(w, response)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">62</span>			<span style="color:#069;font-weight:bold">return</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">63</span>		}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">64</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">65</span>		<span style="color:#069;font-weight:bold">if</span> !token.Valid { <span style="color:#09f;font-style:italic">//Token is invalid, maybe not signed on this server
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">66</span><span style="color:#09f;font-style:italic"></span>			response = u.<span style="color:#c0f">Message</span>(<span style="color:#069;font-weight:bold">false</span>, <span style="color:#c30">&#34;Token is not valid.&#34;</span>)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">67</span>			w.<span style="color:#c0f">WriteHeader</span>(http.StatusForbidden)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">68</span>			w.<span style="color:#c0f">Header</span>().<span style="color:#c0f">Add</span>(<span style="color:#c30">&#34;Content-Type&#34;</span>, <span style="color:#c30">&#34;application/json&#34;</span>)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">69</span>			u.<span style="color:#c0f">Respond</span>(w, response)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">70</span>			<span style="color:#069;font-weight:bold">return</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">71</span>		}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">72</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">73</span>		<span style="color:#09f;font-style:italic">//Everything went well, proceed with the request and set the caller to the user retrieved from the parsed token
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">74</span><span style="color:#09f;font-style:italic"></span>		fmt.<span style="color:#c0f">Sprintf</span>(<span style="color:#c30">&#34;User %&#34;</span>, tk.Username) <span style="color:#09f;font-style:italic">//Useful for monitoring
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">75</span><span style="color:#09f;font-style:italic"></span>		ctx <span style="color:#555">:=</span> context.<span style="color:#c0f">WithValue</span>(r.<span style="color:#c0f">Context</span>(), <span style="color:#c30">&#34;user&#34;</span>, tk.UserId)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">76</span>		r = r.<span style="color:#c0f">WithContext</span>(ctx)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">77</span>		next.<span style="color:#c0f">ServeHTTP</span>(w, r) <span style="color:#09f;font-style:italic">//proceed in the middleware chain!
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">78</span><span style="color:#09f;font-style:italic"></span>	});
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">79</span>}
+</code></pre></div><p>The comments inside the code explain everything there is to know, but basically, the code create a Middleware to intercept every requests, check for the presence of an authentication token (JWT token), verify if it is authentic and valid, then send error back to the client if we detect any deficiency in the token or proceed to serving the request otherwise(if the token is valid), you’ll see later, how we can access the user that is interacting with our API from the request.</p>
 <h3 id="building-the-user-registration-and-login-system">Building the user registration and login system</h3>
 <p>We want our users to be able to register and login before backing up/storing their contacts on our system. The first thing we will need to do is connect to our database, we use a .env file to store our database credentials, my .env looks like this</p>
 <pre><code>db_name = gocontacts
@@ -114,23 +206,242 @@ db_port = 5434
 token_password = thisIsTheJwtSecretPassword //Do not commit to git!
 </code></pre>
 <p>Then, we can connect to the database using the following snippets</p>
-<!-- raw HTML omitted -->
-<p>The code does a very simple thing, on the file init() function — init() automatically get called by Go, the code retrieve connection information from .env file then build a connection string and use it to connect to the database.</p>
+<div class="highlight"><pre style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span><span style="color:#069;font-weight:bold">package</span> models
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span><span style="color:#069;font-weight:bold">import</span> (
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span>	_ <span style="color:#c30">&#34;github.com/jinzhu/gorm/dialects/postgres&#34;</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span>	<span style="color:#c30">&#34;github.com/jinzhu/gorm&#34;</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span>	<span style="color:#c30">&#34;os&#34;</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span>	<span style="color:#c30">&#34;github.com/joho/godotenv&#34;</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span>	<span style="color:#c30">&#34;fmt&#34;</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span>)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span><span style="color:#069;font-weight:bold">var</span> db <span style="color:#555">*</span>gorm.DB <span style="color:#09f;font-style:italic">//database
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span><span style="color:#09f;font-style:italic"></span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span><span style="color:#069;font-weight:bold">func</span> <span style="color:#c0f">init</span>() {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span>	e <span style="color:#555">:=</span> godotenv.<span style="color:#c0f">Load</span>() <span style="color:#09f;font-style:italic">//Load .env file
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16</span><span style="color:#09f;font-style:italic"></span>	<span style="color:#069;font-weight:bold">if</span> e <span style="color:#555">!=</span> <span style="color:#069;font-weight:bold">nil</span> {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17</span>		fmt.<span style="color:#c0f">Print</span>(e)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18</span>	}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20</span>	username <span style="color:#555">:=</span> os.<span style="color:#c0f">Getenv</span>(<span style="color:#c30">&#34;db_user&#34;</span>)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21</span>	password <span style="color:#555">:=</span> os.<span style="color:#c0f">Getenv</span>(<span style="color:#c30">&#34;db_pass&#34;</span>)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22</span>	dbName <span style="color:#555">:=</span> os.<span style="color:#c0f">Getenv</span>(<span style="color:#c30">&#34;db_name&#34;</span>)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">23</span>	dbHost <span style="color:#555">:=</span> os.<span style="color:#c0f">Getenv</span>(<span style="color:#c30">&#34;db_host&#34;</span>)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">24</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">25</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">26</span>	dbUri <span style="color:#555">:=</span> fmt.<span style="color:#c0f">Sprintf</span>(<span style="color:#c30">&#34;host=%s user=%s dbname=%s sslmode=disable password=%s&#34;</span>, dbHost, username, dbName, password) <span style="color:#09f;font-style:italic">//Build connection string
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">27</span><span style="color:#09f;font-style:italic"></span>	fmt.<span style="color:#c0f">Println</span>(dbUri)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">28</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">29</span>	conn, err <span style="color:#555">:=</span> gorm.<span style="color:#c0f">Open</span>(<span style="color:#c30">&#34;postgres&#34;</span>, dbUri)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">30</span>	<span style="color:#069;font-weight:bold">if</span> err <span style="color:#555">!=</span> <span style="color:#069;font-weight:bold">nil</span> {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">31</span>		fmt.<span style="color:#c0f">Print</span>(err)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">32</span>	}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">33</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">34</span>	db = conn
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">35</span>	db.<span style="color:#c0f">Debug</span>().<span style="color:#c0f">AutoMigrate</span>(<span style="color:#555">&amp;</span>Account{}, <span style="color:#555">&amp;</span>Contact{}) <span style="color:#09f;font-style:italic">//Database migration
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">36</span><span style="color:#09f;font-style:italic"></span>}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">37</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">38</span><span style="color:#09f;font-style:italic">//returns a handle to the DB object
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">39</span><span style="color:#09f;font-style:italic"></span><span style="color:#069;font-weight:bold">func</span> <span style="color:#c0f">GetDB</span>() <span style="color:#555">*</span>gorm.DB {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">40</span>	<span style="color:#069;font-weight:bold">return</span> db
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">41</span>}
+</code></pre></div><p>The code does a very simple thing, on the file init() function — init() automatically get called by Go, the code retrieve connection information from .env file then build a connection string and use it to connect to the database.</p>
 <h3 id="creating-the-application-entry-point">Creating the application entry point</h3>
 <p>So far, we’ve been able to create the JWT middleware and connect to our database. The next thing is creating the application’s entry point, see the code snippet below</p>
-<!-- raw HTML omitted -->
-<p>We create a new Router object — line 13, we attach our JWT auth middleware using router’s Use() function — line 14, and then we proceed to start listening for incoming requests.</p>
+<div class="highlight"><pre style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span><span style="color:#069;font-weight:bold">package</span> main
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span><span style="color:#069;font-weight:bold">import</span> (
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span>	<span style="color:#c30">&#34;github.com/gorilla/mux&#34;</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span>	<span style="color:#c30">&#34;go-contacts/app&#34;</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span>	<span style="color:#c30">&#34;os&#34;</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span>	<span style="color:#c30">&#34;fmt&#34;</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span>	<span style="color:#c30">&#34;net/http&#34;</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span>)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span><span style="color:#069;font-weight:bold">func</span> <span style="color:#c0f">main</span>() {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span>	router <span style="color:#555">:=</span> mux.<span style="color:#c0f">NewRouter</span>()
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span>	router.<span style="color:#c0f">Use</span>(app.JwtAuthentication) <span style="color:#09f;font-style:italic">//attach JWT auth middleware
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span><span style="color:#09f;font-style:italic"></span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16</span>	port <span style="color:#555">:=</span> os.<span style="color:#c0f">Getenv</span>(<span style="color:#c30">&#34;PORT&#34;</span>) <span style="color:#09f;font-style:italic">//Get port from .env file, we did not specify any port so this should return an empty string when tested locally
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17</span><span style="color:#09f;font-style:italic"></span>	<span style="color:#069;font-weight:bold">if</span> port <span style="color:#555">==</span> <span style="color:#c30">&#34;&#34;</span> {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18</span>		port = <span style="color:#c30">&#34;8000&#34;</span> <span style="color:#09f;font-style:italic">//localhost
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19</span><span style="color:#09f;font-style:italic"></span>	}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21</span>	fmt.<span style="color:#c0f">Println</span>(port)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">23</span>	err <span style="color:#555">:=</span> http.<span style="color:#c0f">ListenAndServe</span>(<span style="color:#c30">&#34;:&#34;</span> <span style="color:#555">+</span> port, router) <span style="color:#09f;font-style:italic">//Launch the app, visit localhost:8000/api
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">24</span><span style="color:#09f;font-style:italic"></span>	<span style="color:#069;font-weight:bold">if</span> err <span style="color:#555">!=</span> <span style="color:#069;font-weight:bold">nil</span> {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">25</span>		fmt.<span style="color:#c0f">Print</span>(err)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">26</span>	}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">27</span>}
+</code></pre></div><p>We create a new Router object — line 13, we attach our JWT auth middleware using router’s Use() function — line 14, and then we proceed to start listening for incoming requests.</p>
 <p><img src="https://cdn-images-1.medium.com/max/2000/1*O_eTZ7RGS0uxNHpfmKPORA.png" alt=""></p>
 <p>Use the small media play button located left of func main() to compile and launch the app, if all is good, you should see no error in the console, in case there was an error, take a second look at your database connection parameters to see that they correlate.</p>
 <p><img src="https://cdn-images-1.medium.com/max/2732/1*Fdq9mK_pk92jfB8YjF5qgw.png" alt="Results. DB migrations has occurred, GORM converted go struct to database tables"><em>Results. DB migrations has occurred, GORM converted go struct to database tables</em></p>
 <h3 id="creating-and-authenticating-users">Creating and authenticating Users</h3>
 <p>create a new file models/accounts.go,</p>
-<!-- raw HTML omitted -->
-<p>There is a lot of puzzle inside accounts.go, lets break it down a little bit.</p>
+<div class="highlight"><pre style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  1</span><span style="color:#069;font-weight:bold">package</span> models
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  2</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  3</span><span style="color:#069;font-weight:bold">import</span> (
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  4</span>	<span style="color:#c30">&#34;github.com/dgrijalva/jwt-go&#34;</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  5</span>	u <span style="color:#c30">&#34;lens/utils&#34;</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  6</span>	<span style="color:#c30">&#34;strings&#34;</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  7</span>	<span style="color:#c30">&#34;github.com/jinzhu/gorm&#34;</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  8</span>	<span style="color:#c30">&#34;os&#34;</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  9</span>	<span style="color:#c30">&#34;golang.org/x/crypto/bcrypt&#34;</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 10</span>)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 11</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 12</span><span style="color:#09f;font-style:italic">/*
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 13</span><span style="color:#09f;font-style:italic">JWT claims struct
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 14</span><span style="color:#09f;font-style:italic">*/</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 15</span><span style="color:#069;font-weight:bold">type</span> Token <span style="color:#069;font-weight:bold">struct</span> {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 16</span>	UserId <span style="color:#078;font-weight:bold">uint</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 17</span>	jwt.StandardClaims
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 18</span>}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 19</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 20</span><span style="color:#09f;font-style:italic">//a struct to rep user account
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 21</span><span style="color:#09f;font-style:italic"></span><span style="color:#069;font-weight:bold">type</span> Account <span style="color:#069;font-weight:bold">struct</span> {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 22</span>	gorm.Model
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 23</span>	Email <span style="color:#078;font-weight:bold">string</span> <span style="color:#c30">`json:&#34;email&#34;`</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 24</span>	Password <span style="color:#078;font-weight:bold">string</span> <span style="color:#c30">`json:&#34;password&#34;`</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 25</span>	Token <span style="color:#078;font-weight:bold">string</span> <span style="color:#c30">`json:&#34;token&#34;;sql:&#34;-&#34;`</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 26</span>}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 27</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 28</span><span style="color:#09f;font-style:italic">//Validate incoming user details...
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 29</span><span style="color:#09f;font-style:italic"></span><span style="color:#069;font-weight:bold">func</span> (account <span style="color:#555">*</span>Account) <span style="color:#c0f">Validate</span>() (<span style="color:#069;font-weight:bold">map</span>[<span style="color:#078;font-weight:bold">string</span>] <span style="color:#069;font-weight:bold">interface</span>{}, <span style="color:#078;font-weight:bold">bool</span>) {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 30</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 31</span>	<span style="color:#069;font-weight:bold">if</span> !strings.<span style="color:#c0f">Contains</span>(account.Email, <span style="color:#c30">&#34;@&#34;</span>) {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 32</span>		<span style="color:#069;font-weight:bold">return</span> u.<span style="color:#c0f">Message</span>(<span style="color:#069;font-weight:bold">false</span>, <span style="color:#c30">&#34;Email address is required&#34;</span>), <span style="color:#069;font-weight:bold">false</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 33</span>	}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 34</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 35</span>	<span style="color:#069;font-weight:bold">if</span> <span style="color:#366">len</span>(account.Password) &lt; <span style="color:#f60">6</span> {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 36</span>		<span style="color:#069;font-weight:bold">return</span> u.<span style="color:#c0f">Message</span>(<span style="color:#069;font-weight:bold">false</span>, <span style="color:#c30">&#34;Password is required&#34;</span>), <span style="color:#069;font-weight:bold">false</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 37</span>	}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 38</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 39</span>	<span style="color:#09f;font-style:italic">//Email must be unique
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 40</span><span style="color:#09f;font-style:italic"></span>	temp <span style="color:#555">:=</span> <span style="color:#555">&amp;</span>Account{}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 41</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 42</span>	<span style="color:#09f;font-style:italic">//check for errors and duplicate emails
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 43</span><span style="color:#09f;font-style:italic"></span>	err <span style="color:#555">:=</span> <span style="color:#c0f">GetDB</span>().<span style="color:#c0f">Table</span>(<span style="color:#c30">&#34;accounts&#34;</span>).<span style="color:#c0f">Where</span>(<span style="color:#c30">&#34;email = ?&#34;</span>, account.Email).<span style="color:#c0f">First</span>(temp).Error
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 44</span>	<span style="color:#069;font-weight:bold">if</span> err <span style="color:#555">!=</span> <span style="color:#069;font-weight:bold">nil</span> <span style="color:#555">&amp;&amp;</span> err <span style="color:#555">!=</span> gorm.ErrRecordNotFound {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 45</span>		<span style="color:#069;font-weight:bold">return</span> u.<span style="color:#c0f">Message</span>(<span style="color:#069;font-weight:bold">false</span>, <span style="color:#c30">&#34;Connection error. Please retry&#34;</span>), <span style="color:#069;font-weight:bold">false</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 46</span>	}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 47</span>	<span style="color:#069;font-weight:bold">if</span> temp.Email <span style="color:#555">!=</span> <span style="color:#c30">&#34;&#34;</span> {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 48</span>		<span style="color:#069;font-weight:bold">return</span> u.<span style="color:#c0f">Message</span>(<span style="color:#069;font-weight:bold">false</span>, <span style="color:#c30">&#34;Email address already in use by another user.&#34;</span>), <span style="color:#069;font-weight:bold">false</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 49</span>	}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 50</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 51</span>	<span style="color:#069;font-weight:bold">return</span> u.<span style="color:#c0f">Message</span>(<span style="color:#069;font-weight:bold">false</span>, <span style="color:#c30">&#34;Requirement passed&#34;</span>), <span style="color:#069;font-weight:bold">true</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 52</span>}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 53</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 54</span><span style="color:#069;font-weight:bold">func</span> (account <span style="color:#555">*</span>Account) <span style="color:#c0f">Create</span>() (<span style="color:#069;font-weight:bold">map</span>[<span style="color:#078;font-weight:bold">string</span>] <span style="color:#069;font-weight:bold">interface</span>{}) {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 55</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 56</span>	<span style="color:#069;font-weight:bold">if</span> resp, ok <span style="color:#555">:=</span> account.<span style="color:#c0f">Validate</span>(); !ok {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 57</span>		<span style="color:#069;font-weight:bold">return</span> resp
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 58</span>	}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 59</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 60</span>	hashedPassword, _ <span style="color:#555">:=</span> bcrypt.<span style="color:#c0f">GenerateFromPassword</span>([]<span style="color:#366">byte</span>(account.Password), bcrypt.DefaultCost)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 61</span>	account.Password = <span style="color:#366">string</span>(hashedPassword)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 62</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 63</span>	<span style="color:#c0f">GetDB</span>().<span style="color:#c0f">Create</span>(account)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 64</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 65</span>	<span style="color:#069;font-weight:bold">if</span> account.ID <span style="color:#555">&lt;=</span> <span style="color:#f60">0</span> {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 66</span>		<span style="color:#069;font-weight:bold">return</span> u.<span style="color:#c0f">Message</span>(<span style="color:#069;font-weight:bold">false</span>, <span style="color:#c30">&#34;Failed to create account, connection error.&#34;</span>)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 67</span>	}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 68</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 69</span>	<span style="color:#09f;font-style:italic">//Create new JWT token for the newly registered account
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 70</span><span style="color:#09f;font-style:italic"></span>	tk <span style="color:#555">:=</span> <span style="color:#555">&amp;</span>Token{UserId: account.ID}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 71</span>	token <span style="color:#555">:=</span> jwt.<span style="color:#c0f">NewWithClaims</span>(jwt.<span style="color:#c0f">GetSigningMethod</span>(<span style="color:#c30">&#34;HS256&#34;</span>), tk)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 72</span>	tokenString, _ <span style="color:#555">:=</span> token.<span style="color:#c0f">SignedString</span>([]<span style="color:#366">byte</span>(os.<span style="color:#c0f">Getenv</span>(<span style="color:#c30">&#34;token_password&#34;</span>)))
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 73</span>	account.Token = tokenString
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 74</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 75</span>	account.Password = <span style="color:#c30">&#34;&#34;</span> <span style="color:#09f;font-style:italic">//delete password
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 76</span><span style="color:#09f;font-style:italic"></span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 77</span>	response <span style="color:#555">:=</span> u.<span style="color:#c0f">Message</span>(<span style="color:#069;font-weight:bold">true</span>, <span style="color:#c30">&#34;Account has been created&#34;</span>)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 78</span>	response[<span style="color:#c30">&#34;account&#34;</span>] = account
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 79</span>	<span style="color:#069;font-weight:bold">return</span> response
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 80</span>}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 81</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 82</span><span style="color:#069;font-weight:bold">func</span> <span style="color:#c0f">Login</span>(email, password <span style="color:#078;font-weight:bold">string</span>) (<span style="color:#069;font-weight:bold">map</span>[<span style="color:#078;font-weight:bold">string</span>]<span style="color:#069;font-weight:bold">interface</span>{}) {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 83</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 84</span>	account <span style="color:#555">:=</span> <span style="color:#555">&amp;</span>Account{}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 85</span>	err <span style="color:#555">:=</span> <span style="color:#c0f">GetDB</span>().<span style="color:#c0f">Table</span>(<span style="color:#c30">&#34;accounts&#34;</span>).<span style="color:#c0f">Where</span>(<span style="color:#c30">&#34;email = ?&#34;</span>, email).<span style="color:#c0f">First</span>(account).Error
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 86</span>	<span style="color:#069;font-weight:bold">if</span> err <span style="color:#555">!=</span> <span style="color:#069;font-weight:bold">nil</span> {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 87</span>		<span style="color:#069;font-weight:bold">if</span> err <span style="color:#555">==</span> gorm.ErrRecordNotFound {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 88</span>			<span style="color:#069;font-weight:bold">return</span> u.<span style="color:#c0f">Message</span>(<span style="color:#069;font-weight:bold">false</span>, <span style="color:#c30">&#34;Email address not found&#34;</span>)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 89</span>		}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 90</span>		<span style="color:#069;font-weight:bold">return</span> u.<span style="color:#c0f">Message</span>(<span style="color:#069;font-weight:bold">false</span>, <span style="color:#c30">&#34;Connection error. Please retry&#34;</span>)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 91</span>	}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 92</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 93</span>	err = bcrypt.<span style="color:#c0f">CompareHashAndPassword</span>([]<span style="color:#366">byte</span>(account.Password), []<span style="color:#366">byte</span>(password))
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 94</span>	<span style="color:#069;font-weight:bold">if</span> err <span style="color:#555">!=</span> <span style="color:#069;font-weight:bold">nil</span> <span style="color:#555">&amp;&amp;</span> err <span style="color:#555">==</span> bcrypt.ErrMismatchedHashAndPassword { <span style="color:#09f;font-style:italic">//Password does not match!
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 95</span><span style="color:#09f;font-style:italic"></span>		<span style="color:#069;font-weight:bold">return</span> u.<span style="color:#c0f">Message</span>(<span style="color:#069;font-weight:bold">false</span>, <span style="color:#c30">&#34;Invalid login credentials. Please try again&#34;</span>)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 96</span>	}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 97</span>	<span style="color:#09f;font-style:italic">//Worked! Logged In
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 98</span><span style="color:#09f;font-style:italic"></span>	account.Password = <span style="color:#c30">&#34;&#34;</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 99</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">100</span>	<span style="color:#09f;font-style:italic">//Create JWT token
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">101</span><span style="color:#09f;font-style:italic"></span>	tk <span style="color:#555">:=</span> <span style="color:#555">&amp;</span>Token{UserId: account.ID}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">102</span>	token <span style="color:#555">:=</span> jwt.<span style="color:#c0f">NewWithClaims</span>(jwt.<span style="color:#c0f">GetSigningMethod</span>(<span style="color:#c30">&#34;HS256&#34;</span>), tk)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">103</span>	tokenString, _ <span style="color:#555">:=</span> token.<span style="color:#c0f">SignedString</span>([]<span style="color:#366">byte</span>(os.<span style="color:#c0f">Getenv</span>(<span style="color:#c30">&#34;token_password&#34;</span>)))
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">104</span>	account.Token = tokenString <span style="color:#09f;font-style:italic">//Store the token in the response
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">105</span><span style="color:#09f;font-style:italic"></span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">106</span>	resp <span style="color:#555">:=</span> u.<span style="color:#c0f">Message</span>(<span style="color:#069;font-weight:bold">true</span>, <span style="color:#c30">&#34;Logged In&#34;</span>)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">107</span>	resp[<span style="color:#c30">&#34;account&#34;</span>] = account
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">108</span>	<span style="color:#069;font-weight:bold">return</span> resp
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">109</span>}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">110</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">111</span><span style="color:#069;font-weight:bold">func</span> <span style="color:#c0f">GetUser</span>(u <span style="color:#078;font-weight:bold">uint</span>) <span style="color:#555">*</span>Account {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">112</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">113</span>	acc <span style="color:#555">:=</span> <span style="color:#555">&amp;</span>Account{}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">114</span>	<span style="color:#c0f">GetDB</span>().<span style="color:#c0f">Table</span>(<span style="color:#c30">&#34;accounts&#34;</span>).<span style="color:#c0f">Where</span>(<span style="color:#c30">&#34;id = ?&#34;</span>, u).<span style="color:#c0f">First</span>(acc)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">115</span>	<span style="color:#069;font-weight:bold">if</span> acc.Email <span style="color:#555">==</span> <span style="color:#c30">&#34;&#34;</span> { <span style="color:#09f;font-style:italic">//User not found!
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">116</span><span style="color:#09f;font-style:italic"></span>		<span style="color:#069;font-weight:bold">return</span> <span style="color:#069;font-weight:bold">nil</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">117</span>	}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">118</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">119</span>	acc.Password = <span style="color:#c30">&#34;&#34;</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">120</span>	<span style="color:#069;font-weight:bold">return</span> acc
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">121</span>}
+</code></pre></div><p>There is a lot of puzzle inside accounts.go, lets break it down a little bit.</p>
 <p>The first part create two structs Token and Account they represent a JWT token claim and a user account respectively. Function Validate() validates the data sent from clients and function Create() creates a new account and generate a JWT token that will be sent back to client that made the request. Function Login(username, password) authenticate an existing user, then generate a JWT token if authentication was successful.</p>
 <p><strong>authController.go</strong></p>
-<!-- raw HTML omitted -->
-<p>The content is very straightforward. It contains the handler for /user/new and /user/login endpoints.</p>
+<div class="highlight"><pre style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span><span style="color:#069;font-weight:bold">package</span> controllers
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span><span style="color:#069;font-weight:bold">import</span> (
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span>	<span style="color:#c30">&#34;net/http&#34;</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span>	u <span style="color:#c30">&#34;go-contacts/utils&#34;</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span>	<span style="color:#c30">&#34;go-contacts/models&#34;</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span>	<span style="color:#c30">&#34;encoding/json&#34;</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span>)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span><span style="color:#069;font-weight:bold">var</span> CreateAccount = <span style="color:#069;font-weight:bold">func</span>(w http.ResponseWriter, r <span style="color:#555">*</span>http.Request) {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span>	account <span style="color:#555">:=</span> <span style="color:#555">&amp;</span>models.Account{}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span>	err <span style="color:#555">:=</span> json.<span style="color:#c0f">NewDecoder</span>(r.Body).<span style="color:#c0f">Decode</span>(account) <span style="color:#09f;font-style:italic">//decode the request body into struct and failed if any error occur
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span><span style="color:#09f;font-style:italic"></span>	<span style="color:#069;font-weight:bold">if</span> err <span style="color:#555">!=</span> <span style="color:#069;font-weight:bold">nil</span> {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span>		u.<span style="color:#c0f">Respond</span>(w, u.<span style="color:#c0f">Message</span>(<span style="color:#069;font-weight:bold">false</span>, <span style="color:#c30">&#34;Invalid request&#34;</span>))
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16</span>		<span style="color:#069;font-weight:bold">return</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17</span>	}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19</span>	resp <span style="color:#555">:=</span> account.<span style="color:#c0f">Create</span>() <span style="color:#09f;font-style:italic">//Create account
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20</span><span style="color:#09f;font-style:italic"></span>	u.<span style="color:#c0f">Respond</span>(w, resp)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21</span>}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">23</span><span style="color:#069;font-weight:bold">var</span> Authenticate = <span style="color:#069;font-weight:bold">func</span>(w http.ResponseWriter, r <span style="color:#555">*</span>http.Request) {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">24</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">25</span>	account <span style="color:#555">:=</span> <span style="color:#555">&amp;</span>models.Account{}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">26</span>	err <span style="color:#555">:=</span> json.<span style="color:#c0f">NewDecoder</span>(r.Body).<span style="color:#c0f">Decode</span>(account) <span style="color:#09f;font-style:italic">//decode the request body into struct and failed if any error occur
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">27</span><span style="color:#09f;font-style:italic"></span>	<span style="color:#069;font-weight:bold">if</span> err <span style="color:#555">!=</span> <span style="color:#069;font-weight:bold">nil</span> {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">28</span>		u.<span style="color:#c0f">Respond</span>(w, u.<span style="color:#c0f">Message</span>(<span style="color:#069;font-weight:bold">false</span>, <span style="color:#c30">&#34;Invalid request&#34;</span>))
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">29</span>		<span style="color:#069;font-weight:bold">return</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">30</span>	}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">31</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">32</span>	resp <span style="color:#555">:=</span> models.<span style="color:#c0f">Login</span>(account.Email, account.Password)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">33</span>	u.<span style="color:#c0f">Respond</span>(w, resp)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">34</span>}
+</code></pre></div><p>The content is very straightforward. It contains the handler for /user/new and /user/login endpoints.</p>
 <p>Add the following snippet to main.go to register our new routes</p>
 <pre><code>router.HandleFunc(**&quot;/api/user/new&quot;**, controllers.CreateAccount).Methods(**&quot;POST&quot;**)
 
@@ -142,8 +453,78 @@ router.HandleFunc(**&quot;/api/user/login&quot;**, controllers.Authenticate).Met
 <p>If you try to call /user/new twice with the same payload, you’ll receive a response that the email already exists, works according to our instructions.</p>
 <h3 id="creating-contacts">Creating contacts</h3>
 <p>Part of our app’s functionality is letting our users create/store contacts. Contact will have name and phone , we will define these as struct properties. The following snippets belongs to models/contact.go</p>
-<!-- raw HTML omitted -->
-<p>Same as in models/accounts.go we create a function Validate() to validate the passed inputs, we return an error with messages if anything we don’t want occur, then we wrote function Create() to insert this contact into the database.</p>
+<div class="highlight"><pre style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span><span style="color:#069;font-weight:bold">package</span> models
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span><span style="color:#069;font-weight:bold">import</span> (
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span>	u <span style="color:#c30">&#34;go-contacts/utils&#34;</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span>	<span style="color:#c30">&#34;github.com/jinzhu/gorm&#34;</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span>	<span style="color:#c30">&#34;fmt&#34;</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span>)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span><span style="color:#069;font-weight:bold">type</span> Contact <span style="color:#069;font-weight:bold">struct</span> {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span>	gorm.Model
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span>	Name <span style="color:#078;font-weight:bold">string</span> <span style="color:#c30">`json:&#34;name&#34;`</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span>	Phone <span style="color:#078;font-weight:bold">string</span> <span style="color:#c30">`json:&#34;phone&#34;`</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span>	UserId <span style="color:#078;font-weight:bold">uint</span> <span style="color:#c30">`json:&#34;user_id&#34;`</span> <span style="color:#09f;font-style:italic">//The user that this contact belongs to
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span><span style="color:#09f;font-style:italic"></span>}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16</span><span style="color:#09f;font-style:italic">/*
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17</span><span style="color:#09f;font-style:italic"> This struct function validate the required parameters sent through the http request body
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18</span><span style="color:#09f;font-style:italic">returns message and true if the requirement is met
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19</span><span style="color:#09f;font-style:italic">*/</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20</span><span style="color:#069;font-weight:bold">func</span> (contact <span style="color:#555">*</span>Contact) <span style="color:#c0f">Validate</span>() (<span style="color:#069;font-weight:bold">map</span>[<span style="color:#078;font-weight:bold">string</span>] <span style="color:#069;font-weight:bold">interface</span>{}, <span style="color:#078;font-weight:bold">bool</span>) {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22</span>	<span style="color:#069;font-weight:bold">if</span> contact.Name <span style="color:#555">==</span> <span style="color:#c30">&#34;&#34;</span> {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">23</span>		<span style="color:#069;font-weight:bold">return</span> u.<span style="color:#c0f">Message</span>(<span style="color:#069;font-weight:bold">false</span>, <span style="color:#c30">&#34;Contact name should be on the payload&#34;</span>), <span style="color:#069;font-weight:bold">false</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">24</span>	}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">25</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">26</span>	<span style="color:#069;font-weight:bold">if</span> contact.Phone <span style="color:#555">==</span> <span style="color:#c30">&#34;&#34;</span> {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">27</span>		<span style="color:#069;font-weight:bold">return</span> u.<span style="color:#c0f">Message</span>(<span style="color:#069;font-weight:bold">false</span>, <span style="color:#c30">&#34;Phone number should be on the payload&#34;</span>), <span style="color:#069;font-weight:bold">false</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">28</span>	}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">29</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">30</span>	<span style="color:#069;font-weight:bold">if</span> contact.UserId <span style="color:#555">&lt;=</span> <span style="color:#f60">0</span> {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">31</span>		<span style="color:#069;font-weight:bold">return</span> u.<span style="color:#c0f">Message</span>(<span style="color:#069;font-weight:bold">false</span>, <span style="color:#c30">&#34;User is not recognized&#34;</span>), <span style="color:#069;font-weight:bold">false</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">32</span>	}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">33</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">34</span>	<span style="color:#09f;font-style:italic">//All the required parameters are present
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">35</span><span style="color:#09f;font-style:italic"></span>	<span style="color:#069;font-weight:bold">return</span> u.<span style="color:#c0f">Message</span>(<span style="color:#069;font-weight:bold">true</span>, <span style="color:#c30">&#34;success&#34;</span>), <span style="color:#069;font-weight:bold">true</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">36</span>}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">37</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">38</span><span style="color:#069;font-weight:bold">func</span> (contact <span style="color:#555">*</span>Contact) <span style="color:#c0f">Create</span>() (<span style="color:#069;font-weight:bold">map</span>[<span style="color:#078;font-weight:bold">string</span>] <span style="color:#069;font-weight:bold">interface</span>{}) {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">39</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">40</span>	<span style="color:#069;font-weight:bold">if</span> resp, ok <span style="color:#555">:=</span> contact.<span style="color:#c0f">Validate</span>(); !ok {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">41</span>		<span style="color:#069;font-weight:bold">return</span> resp
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">42</span>	}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">43</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">44</span>	<span style="color:#c0f">GetDB</span>().<span style="color:#c0f">Create</span>(contact)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">45</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">46</span>	resp <span style="color:#555">:=</span> u.<span style="color:#c0f">Message</span>(<span style="color:#069;font-weight:bold">true</span>, <span style="color:#c30">&#34;success&#34;</span>)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">47</span>	resp[<span style="color:#c30">&#34;contact&#34;</span>] = contact
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">48</span>	<span style="color:#069;font-weight:bold">return</span> resp
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">49</span>}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">50</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">51</span><span style="color:#069;font-weight:bold">func</span> <span style="color:#c0f">GetContact</span>(id <span style="color:#078;font-weight:bold">uint</span>) (<span style="color:#555">*</span>Contact) {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">52</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">53</span>	contact <span style="color:#555">:=</span> <span style="color:#555">&amp;</span>Contact{}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">54</span>	err <span style="color:#555">:=</span> <span style="color:#c0f">GetDB</span>().<span style="color:#c0f">Table</span>(<span style="color:#c30">&#34;contacts&#34;</span>).<span style="color:#c0f">Where</span>(<span style="color:#c30">&#34;id = ?&#34;</span>, id).<span style="color:#c0f">First</span>(contact).Error
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">55</span>	<span style="color:#069;font-weight:bold">if</span> err <span style="color:#555">!=</span> <span style="color:#069;font-weight:bold">nil</span> {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">56</span>		<span style="color:#069;font-weight:bold">return</span> <span style="color:#069;font-weight:bold">nil</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">57</span>	}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">58</span>	<span style="color:#069;font-weight:bold">return</span> contact
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">59</span>}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">60</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">61</span><span style="color:#069;font-weight:bold">func</span> <span style="color:#c0f">GetContacts</span>(user <span style="color:#078;font-weight:bold">uint</span>) ([]<span style="color:#555">*</span>Contact) {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">62</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">63</span>	contacts <span style="color:#555">:=</span> <span style="color:#366">make</span>([]<span style="color:#555">*</span>Contact, <span style="color:#f60">0</span>)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">64</span>	err <span style="color:#555">:=</span> <span style="color:#c0f">GetDB</span>().<span style="color:#c0f">Table</span>(<span style="color:#c30">&#34;contacts&#34;</span>).<span style="color:#c0f">Where</span>(<span style="color:#c30">&#34;user_id = ?&#34;</span>, user).<span style="color:#c0f">Find</span>(<span style="color:#555">&amp;</span>contacts).Error
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">65</span>	<span style="color:#069;font-weight:bold">if</span> err <span style="color:#555">!=</span> <span style="color:#069;font-weight:bold">nil</span> {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">66</span>		fmt.<span style="color:#c0f">Println</span>(err)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">67</span>		<span style="color:#069;font-weight:bold">return</span> <span style="color:#069;font-weight:bold">nil</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">68</span>	}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">69</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">70</span>	<span style="color:#069;font-weight:bold">return</span> contacts
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">71</span>}
+</code></pre></div><p>Same as in models/accounts.go we create a function Validate() to validate the passed inputs, we return an error with messages if anything we don’t want occur, then we wrote function Create() to insert this contact into the database.</p>
 <p>The only part left is retrieving the contacts. Lets do it!</p>
 <pre><code>router.HandleFunc(**&quot;/api/me/contacts&quot;**, controllers.GetContactsFor).Methods(**&quot;GET&quot;**)
 </code></pre>
@@ -151,14 +532,98 @@ router.HandleFunc(**&quot;/api/user/login&quot;**, controllers.Authenticate).Met
 endpoint. Lets create controllers.GetContactsFor handler to handle the API request.</p>
 <p><strong>contactsController.go</strong></p>
 <p>Bellow is the content of contactsController.go</p>
-<!-- raw HTML omitted -->
-<p>What it does is pretty similar to authController.go&rsquo;s , but basically, it grabs the json body and decode it into Contact struct, if there was an error, return a response immediately or insert the contacts into the database if everything went well.</p>
+<div class="highlight"><pre style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span><span style="color:#069;font-weight:bold">package</span> controllers
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span><span style="color:#069;font-weight:bold">import</span> (
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span>	<span style="color:#c30">&#34;net/http&#34;</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span>	<span style="color:#c30">&#34;go-contacts/models&#34;</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span>	<span style="color:#c30">&#34;encoding/json&#34;</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span>	u <span style="color:#c30">&#34;go-contacts/utils&#34;</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span>	<span style="color:#c30">&#34;strconv&#34;</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span>	<span style="color:#c30">&#34;github.com/gorilla/mux&#34;</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span>	<span style="color:#c30">&#34;fmt&#34;</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span>)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span><span style="color:#069;font-weight:bold">var</span> CreateContact = <span style="color:#069;font-weight:bold">func</span>(w http.ResponseWriter, r <span style="color:#555">*</span>http.Request) {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span>	user <span style="color:#555">:=</span> r.<span style="color:#c0f">Context</span>().<span style="color:#c0f">Value</span>(<span style="color:#c30">&#34;user&#34;</span>) . (<span style="color:#078;font-weight:bold">uint</span>) <span style="color:#09f;font-style:italic">//Grab the id of the user that send the request
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16</span><span style="color:#09f;font-style:italic"></span>	contact <span style="color:#555">:=</span> <span style="color:#555">&amp;</span>models.Contact{}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18</span>	err <span style="color:#555">:=</span> json.<span style="color:#c0f">NewDecoder</span>(r.Body).<span style="color:#c0f">Decode</span>(contact)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19</span>	<span style="color:#069;font-weight:bold">if</span> err <span style="color:#555">!=</span> <span style="color:#069;font-weight:bold">nil</span> {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20</span>		u.<span style="color:#c0f">Respond</span>(w, u.<span style="color:#c0f">Message</span>(<span style="color:#069;font-weight:bold">false</span>, <span style="color:#c30">&#34;Error while decoding request body&#34;</span>))
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21</span>		<span style="color:#069;font-weight:bold">return</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22</span>	}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">23</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">24</span>	contact.UserId = user
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">25</span>	resp <span style="color:#555">:=</span> contact.<span style="color:#c0f">Create</span>()
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">26</span>	u.<span style="color:#c0f">Respond</span>(w, resp)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">27</span>}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">28</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">29</span><span style="color:#069;font-weight:bold">var</span> GetContactsFor = <span style="color:#069;font-weight:bold">func</span>(w http.ResponseWriter, r <span style="color:#555">*</span>http.Request) {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">30</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">31</span>	params <span style="color:#555">:=</span> mux.<span style="color:#c0f">Vars</span>(r)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">32</span>	id, err <span style="color:#555">:=</span> strconv.<span style="color:#c0f">Atoi</span>(params[<span style="color:#c30">&#34;id&#34;</span>])
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">33</span>	<span style="color:#069;font-weight:bold">if</span> err <span style="color:#555">!=</span> <span style="color:#069;font-weight:bold">nil</span> {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">34</span>		<span style="color:#09f;font-style:italic">//The passed path parameter is not an integer
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">35</span><span style="color:#09f;font-style:italic"></span>		u.<span style="color:#c0f">Respond</span>(w, u.<span style="color:#c0f">Message</span>(<span style="color:#069;font-weight:bold">false</span>, <span style="color:#c30">&#34;There was an error in your request&#34;</span>))
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">36</span>		<span style="color:#069;font-weight:bold">return</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">37</span>	}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">38</span>	
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">39</span>	data <span style="color:#555">:=</span> models.<span style="color:#c0f">GetContacts</span>(<span style="color:#366">uint</span>(id))
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">40</span>	resp <span style="color:#555">:=</span> u.<span style="color:#c0f">Message</span>(<span style="color:#069;font-weight:bold">true</span>, <span style="color:#c30">&#34;success&#34;</span>)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">41</span>	resp[<span style="color:#c30">&#34;data&#34;</span>] = data
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">42</span>	u.<span style="color:#c0f">Respond</span>(w, resp)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">43</span>}
+</code></pre></div><p>What it does is pretty similar to authController.go&rsquo;s , but basically, it grabs the json body and decode it into Contact struct, if there was an error, return a response immediately or insert the contacts into the database if everything went well.</p>
 <p><strong>Fetching Contacts that belongs to a user</strong></p>
 <p>Now, our users have been able to store their contacts successfully, what if they want to retrieve the contact they stored, in case their phone is lost? Visiting /me/contacts should return a json structure for the contacts of the API caller(current user). Check the code snippet to have a clearer picture.</p>
 <p>Normally, retrieving user’s contacts endpoint should look like /user/{userId}/contacts , specifying userId as a path parameter is very dangerous, because every authenticated user can craft a request to this path and contacts of another users would be returned without any problem, this can lead to a brutal attack by hackers — I am trying to point out the usefulness of JWT .
 We can easily obtain the id of the API caller using r.Context().Value(&ldquo;user&rdquo;) , remember we set this value inside auth.go — Our authentication middleware</p>
-<!-- raw HTML omitted -->
-<p><img src="https://cdn-images-1.medium.com/max/2732/1*NMXFN6aCXqoIiM5FSB2qIQ.png" alt="Response for /me/contacts"><em>Response for /me/contacts</em></p>
+<div class="highlight"><pre style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span><span style="color:#069;font-weight:bold">package</span> controllers
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span><span style="color:#069;font-weight:bold">import</span> (
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span>	<span style="color:#c30">&#34;net/http&#34;</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span>	<span style="color:#c30">&#34;go-contacts/models&#34;</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span>	<span style="color:#c30">&#34;encoding/json&#34;</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span>	u <span style="color:#c30">&#34;go-contacts/utils&#34;</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span>	<span style="color:#c30">&#34;strconv&#34;</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span>	<span style="color:#c30">&#34;github.com/gorilla/mux&#34;</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span>	<span style="color:#c30">&#34;fmt&#34;</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span>)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span><span style="color:#069;font-weight:bold">var</span> CreateContact = <span style="color:#069;font-weight:bold">func</span>(w http.ResponseWriter, r <span style="color:#555">*</span>http.Request) {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span>	user <span style="color:#555">:=</span> r.<span style="color:#c0f">Context</span>().<span style="color:#c0f">Value</span>(<span style="color:#c30">&#34;user&#34;</span>) . (<span style="color:#078;font-weight:bold">uint</span>) <span style="color:#09f;font-style:italic">//Grab the id of the user that send the request
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16</span><span style="color:#09f;font-style:italic"></span>	contact <span style="color:#555">:=</span> <span style="color:#555">&amp;</span>models.Contact{}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18</span>	err <span style="color:#555">:=</span> json.<span style="color:#c0f">NewDecoder</span>(r.Body).<span style="color:#c0f">Decode</span>(contact)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19</span>	<span style="color:#069;font-weight:bold">if</span> err <span style="color:#555">!=</span> <span style="color:#069;font-weight:bold">nil</span> {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20</span>		u.<span style="color:#c0f">Respond</span>(w, u.<span style="color:#c0f">Message</span>(<span style="color:#069;font-weight:bold">false</span>, <span style="color:#c30">&#34;Error while decoding request body&#34;</span>))
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21</span>		<span style="color:#069;font-weight:bold">return</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22</span>	}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">23</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">24</span>	contact.UserId = user
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">25</span>	resp <span style="color:#555">:=</span> contact.<span style="color:#c0f">Create</span>()
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">26</span>	u.<span style="color:#c0f">Respond</span>(w, resp)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">27</span>}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">28</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">29</span><span style="color:#069;font-weight:bold">var</span> GetContactsFor = <span style="color:#069;font-weight:bold">func</span>(w http.ResponseWriter, r <span style="color:#555">*</span>http.Request) {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">30</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">31</span>	params <span style="color:#555">:=</span> mux.<span style="color:#c0f">Vars</span>(r)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">32</span>	id, err <span style="color:#555">:=</span> strconv.<span style="color:#c0f">Atoi</span>(params[<span style="color:#c30">&#34;id&#34;</span>])
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">33</span>	<span style="color:#069;font-weight:bold">if</span> err <span style="color:#555">!=</span> <span style="color:#069;font-weight:bold">nil</span> {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">34</span>		<span style="color:#09f;font-style:italic">//The passed path parameter is not an integer
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">35</span><span style="color:#09f;font-style:italic"></span>		u.<span style="color:#c0f">Respond</span>(w, u.<span style="color:#c0f">Message</span>(<span style="color:#069;font-weight:bold">false</span>, <span style="color:#c30">&#34;There was an error in your request&#34;</span>))
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">36</span>		<span style="color:#069;font-weight:bold">return</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">37</span>	}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">38</span>	
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">39</span>	data <span style="color:#555">:=</span> models.<span style="color:#c0f">GetContacts</span>(<span style="color:#366">uint</span>(id))
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">40</span>	resp <span style="color:#555">:=</span> u.<span style="color:#c0f">Message</span>(<span style="color:#069;font-weight:bold">true</span>, <span style="color:#c30">&#34;success&#34;</span>)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">41</span>	resp[<span style="color:#c30">&#34;data&#34;</span>] = data
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">42</span>	u.<span style="color:#c0f">Respond</span>(w, resp)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">43</span>}
+</code></pre></div><p><img src="https://cdn-images-1.medium.com/max/2732/1*NMXFN6aCXqoIiM5FSB2qIQ.png" alt="Response for /me/contacts"><em>Response for /me/contacts</em></p>
 <p>The code for this project is on github — <a href="https://github.com/adigunhammedolalekan/go-contacts">https://github.com/adigunhammedolalekan/go-contacts</a></p>
 <h2 id="deployment">Deployment</h2>
 <p>We can easily deploy our app to heroku. Firstly, download godep . godep is a dependency manager for Golang, similar to npm for nodejs.</p>
