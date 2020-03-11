@@ -1,53 +1,14 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Lekan Adigun</title>
-    <link>http://lekan.wtf/</link>
+    <link>https://lekan.wtf/</link>
     <description>Recent content on Lekan Adigun</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Fri, 06 Mar 2020 00:04:27 +0100</lastBuildDate>
     
-	<atom:link href="http://lekan.wtf/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="https://lekan.wtf/index.xml" rel="self" type="application/rss+xml" />
     
-    
-    <item>
-      <title>Build and Deploy a secure REST API with Go, Postgresql, JWT and GORM</title>
-      <link>http://lekan.wtf/posts/c_build_api_with_go/</link>
-      <pubDate>Fri, 06 Mar 2020 00:04:27 +0100</pubDate>
-      
-      <guid>http://lekan.wtf/posts/c_build_api_with_go/</guid>
-      <description>In this tutorial, we are going to learn how to develop and deploy a secure REST api using Go Programming language.
-Why Go? Go is a very interesting programming language, it is a strongly typed language which compiles very fast, it performance is likened to that of C++, go has goroutines — a much more efficient replacement for Threads, and also go give you the freedom to static type on the web — I understand this is not new, i just love Go’s way.</description>
-    </item>
-    
-    <item>
-      <title>Building Docker Images Dynamically with Go</title>
-      <link>http://lekan.wtf/posts/b_create_dynamic_image/</link>
-      <pubDate>Fri, 06 Mar 2020 00:04:27 +0100</pubDate>
-      
-      <guid>http://lekan.wtf/posts/b_create_dynamic_image/</guid>
-      <description>I recently started looking into ways of automating microservices app deployment and one of the many things i needed to automate is the famous docker build command. I understand that i could take advantage of the installed Docker client on the host computer by using os/exec package, but my idea isn’t that simple and its not really fun compared to using github.com/docker/docker/client — refer to as goDockerClient henceforth. This post contains the steps i followed to building docker images successfully with goDockerClient</description>
-    </item>
-    
-    <item>
-      <title>Creating Docker Registry Token Authentication Server with Go</title>
-      <link>http://lekan.wtf/posts/a_create_docker_auth/</link>
-      <pubDate>Fri, 06 Mar 2020 00:04:27 +0100</pubDate>
-      
-      <guid>http://lekan.wtf/posts/a_create_docker_auth/</guid>
-      <description>Creating Docker Registry Token Authentication Server with Go
-Recently, I was working on a project that uses a private docker registry to store docker images produced by users. The access to these images needs to be controlled so that user foo MUST not be able to access(pull/push) images that belongs to user bar . Also, a user should be able to authenticate with the private docker registry from their local or remote development machine with the famous docker login command, additionally users should be able to perform basic docker operations — docker push, pull etc with proper authentication and authorization.</description>
-    </item>
-    
-    <item>
-      <title>How to resize images for better upload/download performance. Android Development.</title>
-      <link>http://lekan.wtf/posts/img_rzer/</link>
-      <pubDate>Fri, 06 Mar 2020 00:04:27 +0100</pubDate>
-      
-      <guid>http://lekan.wtf/posts/img_rzer/</guid>
-      <description>Its not very common to see a project that doesn’t require photo upload in one form or the other. Most high end android device today create a photo as big as 2MB. This is a problem, How? Imagine you are building a mobile app that require your users to have a profile picture, having scalabilty in mind, each photo must not be &amp;gt; 100KB, am i right?. You dont want to save a 1MB photo for each user.</description>
-    </item>
     
   </channel>
 </rss>

@@ -1,43 +1,17 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
-    <loc>http://lekan.wtf/posts/c_build_api_with_go/</loc>
-    <lastmod>2020-03-06T00:04:27+01:00</lastmod>
+    <loc>https://lekan.wtf/categories/</loc>
   </url>
   
   <url>
-    <loc>http://lekan.wtf/posts/b_create_dynamic_image/</loc>
-    <lastmod>2020-03-06T00:04:27+01:00</lastmod>
+    <loc>https://lekan.wtf/</loc>
   </url>
   
   <url>
-    <loc>http://lekan.wtf/posts/a_create_docker_auth/</loc>
-    <lastmod>2020-03-06T00:04:27+01:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://lekan.wtf/posts/img_rzer/</loc>
-    <lastmod>2020-03-06T00:04:27+01:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://lekan.wtf/</loc>
-    <lastmod>2020-03-06T00:04:27+01:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://lekan.wtf/posts/</loc>
-    <lastmod>2020-03-06T00:04:27+01:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://lekan.wtf/categories/</loc>
-  </url>
-  
-  <url>
-    <loc>http://lekan.wtf/tags/</loc>
+    <loc>https://lekan.wtf/tags/</loc>
   </url>
   
 </urlset>

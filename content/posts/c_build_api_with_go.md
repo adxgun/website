@@ -1,7 +1,7 @@
 ---
 title: "Build and Deploy a secure REST API with Go, Postgresql, JWT and GORM"
-date: 2020-03-06T00:04:27+01:00
-draft: false
+date: 2018-05-04 00:00:00 +0000
+draft: true
 ---
 
 In this tutorial, we are going to learn how to develop and deploy a secure REST api using Go Programming language.
