@@ -4,11 +4,12 @@ title = "Lekan Adigun"
 theme = "hyde"
 [params]
   themeColor = ""
-  description = "Welcome to my website! Where i write about Golang, Backend engineering, DevOps and sometimes, what I am currently working on."
+  description = "Welcome to my blog! Where i write about Golang, Backend engineering, DevOps and sometimes, what I am currently working on."
 [Menus]
   main = [
       {Name = "Github", URL = "https://github.com/adigunhammedolalekan/"},
-      {Name = "Twitter", URL = "https://twitter.com/L3kanAdigun/"}
+      {Name = "Twitter", URL = "https://twitter.com/L3kanAdigun/"},
+      {Name = "Email", URL = "mailto:adigunhammed.lekan@gmail.com"},
   ]
 [markup]
   [markup.highlight]

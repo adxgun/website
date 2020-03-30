@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-us" lang="en-us">
+<head>
+  <link href="https://gmpg.org/xfn/11" rel="profile">
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <meta name="generator" content="Hugo 0.66.0" />
+
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Golang Application on Kubernetes &middot; Lekan Adigun</title>
+  <meta name="description" content="" />
+
+  
+  <link type="text/css" rel="stylesheet" href="https://lekan.wtf/css/print.css" media="print">
+  <link type="text/css" rel="stylesheet" href="https://lekan.wtf/css/poole.css">
+  <link type="text/css" rel="stylesheet" href="https://lekan.wtf/css/syntax.css">
+  <link type="text/css" rel="stylesheet" href="https://lekan.wtf/css/hyde.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Abril+Fatface|PT+Sans:400,400i,700">
+
+
+  
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/apple-touch-icon-144-precomposed.png">
+  <link rel="shortcut icon" href="/favicon.png">
+
+  
+  
+</head>
+
+  <body class=" ">
+  <aside class="sidebar">
+  <div class="container sidebar-sticky">
+    <div class="sidebar-about">
+      <a href="https://lekan.wtf/"><h1>Lekan Adigun</h1></a>
+      <p class="lead">
+       Welcome to my website! Where i write about Golang, Backend engineering, DevOps and sometimes, what I am currently working on. 
+      </p>
+    </div>
+
+    <nav>
+      <ul class="sidebar-nav">
+        <li><a href="https://lekan.wtf/">Home</a> </li>
+        <li><a href="https://github.com/adigunhammedolalekan/"> Github </a></li><li><a href="https://twitter.com/L3kanAdigun/"> Twitter </a></li>
+      </ul>
+    </nav>
+
+    <p>&copy; 2020. All rights reserved. </p>
+  </div>
+</aside>
+
+    <main class="content container">
+    <div class="post">
+  <h1>Golang Application on Kubernetes</h1>
+  <time datetime=2017-03-14T00:00:00Z class="post-date">Tue, Mar 14, 2017</time>
+  <h1 id="golang-applications-on-kubernetes">Golang Applications on Kubernetes</h1>
+<p>This post is a complete walk-through of how to deploy a monolithic Go web application in a Kubernetes cluster, how to secure it with <code>LetsEncrypt's https</code>  and finally, how to attach a domain name so that it can be publicly accessible. Lets ride!</p>
+<h3 id="more-about-kubernetes">More about Kubernetes</h3>
+<p>Kubernetes is a portable, extensible, open-source platform for managing containerized workloads and services, that facilitates both declarative configuration and automation. It has a large, rapidly growing ecosystem. Kubernetes services, support, and tools are widely available. Containers are a good way to bundle and run your applications. In a production environment, you need to manage the containers that run the applications and ensure that there is no downtime. For example, if a container goes down, another container needs to start. Wouldn’t it be easier if this behavior was handled by a system?</p>
+<p>That’s how Kubernetes comes to the rescue! Kubernetes provides you with a framework to run distributed systems resiliently. It takes care of scaling and failover for your application, provides deployment patterns, and more. For example, Kubernetes can easily manage a canary deployment for your system. <a href="https://kubernetes.io/docs/concepts/overview/what-is-kubernetes/">Find out about Kubernetes</a></p>
+<h3 id="example-application">Example Application</h3>
+<p>I put together an example Go application. It&rsquo;s a dead-simple key-value store app backed by a redis database. I have chosen <code>redis database</code> in order to show how to setup and connect to an external storage service from inside a web application when both are running in the same Kubernetes cluster. The example application contains three endpoints, <code>/set</code> to set a value in the backing redis store, <code>/get</code> to get the stored value and <code>/status</code> to check the status or health of the application. The example app code is hosted <a href="https://github.com/adigunhammedolalekan/go-kubernetes-app">here on github</a>.</p>
+<h4 id="prerequisites-or-tools-required">Prerequisites or tools required</h4>
+<p>This post assumes you have <code>Docker &amp; Kubernetes</code> installed. It also assumes you have access to a <code>kubernetes cluster(Local or Cloud)</code> and Kubernetes management tool like <code>kubectl</code>. I am going to be using for Mac <code>Docker Desktop (v 2.1.0.4)</code> .</p>
+<h3 id="deploying-redis">Deploying Redis</h3>
+<p>Kubernetes has support for <code>deployment</code>, where you can define a deployment spec and Kubenetes will make sure your deployment is running up to the standard of the spec you defined. Kubernetes deployment is more useful for stateless applications. What would be more suitable for a stateful application &ndash; e.g databases or applications that needs their data to be persisted between container restarts and rescheduling, is Statefulset. Basically, the major difference between <code>Statefulset</code> and <code>deployment</code> is, Statefulset remembers its <code>state</code> between restarts and rescheduling, therefore container or application data is not lost when they crash where deployment is more lightweight and its mostly used for application or container that can rebuild it data from backend systems.</p>
+<p>Let&rsquo;s deploy our <code>redis</code> database with a kubernetes <code>Statefulset</code>. Create a <code>statefulsets.yml</code> and paste the following content.</p>
+<div class="highlight"><pre style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span><span style="color:#069;font-weight:bold">apiVersion</span>:<span style="color:#bbb"> </span>apps/v1<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span><span style="color:#bbb"></span><span style="color:#069;font-weight:bold">kind</span>:<span style="color:#bbb"> </span>StatefulSet<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span><span style="color:#bbb"></span><span style="color:#069;font-weight:bold">metadata</span>:<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">name</span>:<span style="color:#bbb"> </span>redis-store<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span><span style="color:#bbb"></span><span style="color:#069;font-weight:bold">spec</span>:<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">serviceName</span>:<span style="color:#bbb"> </span><span style="color:#c30">&#34;kv-redis-service&#34;</span><span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">replicas</span>:<span style="color:#bbb"> </span><span style="color:#f60">1</span><span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">selector</span>:<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span><span style="color:#bbb">    </span><span style="color:#069;font-weight:bold">matchLabels</span>:<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span><span style="color:#bbb">      </span><span style="color:#069;font-weight:bold">app</span>:<span style="color:#bbb"> </span>kv-redis-service<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">template</span>:<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span><span style="color:#bbb">    </span><span style="color:#069;font-weight:bold">metadata</span>:<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span><span style="color:#bbb">      </span><span style="color:#069;font-weight:bold">labels</span>:<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span><span style="color:#bbb">        </span><span style="color:#069;font-weight:bold">app</span>:<span style="color:#bbb"> </span>kv-redis-service<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span><span style="color:#bbb">    </span><span style="color:#069;font-weight:bold">spec</span>:<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16</span><span style="color:#bbb">      </span><span style="color:#069;font-weight:bold">containers</span>:<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17</span><span style="color:#bbb">        </span>- <span style="color:#069;font-weight:bold">name</span>:<span style="color:#bbb"> </span>redis-store<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18</span><span style="color:#bbb">          </span><span style="color:#069;font-weight:bold">image</span>:<span style="color:#bbb"> </span>redis:latest<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19</span><span style="color:#bbb">          </span><span style="color:#069;font-weight:bold">ports</span>:<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20</span><span style="color:#bbb">            </span>- <span style="color:#069;font-weight:bold">containerPort</span>:<span style="color:#bbb"> </span><span style="color:#f60">6379</span><span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21</span><span style="color:#bbb">              </span><span style="color:#069;font-weight:bold">name</span>:<span style="color:#bbb"> </span>tcp-port<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22</span><span style="color:#bbb">          </span><span style="color:#069;font-weight:bold">volumeMounts</span>:<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">23</span><span style="color:#bbb">            </span>- <span style="color:#069;font-weight:bold">name</span>:<span style="color:#bbb"> </span>redis-volume<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">24</span><span style="color:#bbb">              </span><span style="color:#069;font-weight:bold">mountPath</span>:<span style="color:#bbb"> </span>/var/redis/data<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">25</span><span style="color:#bbb">              </span><span style="color:#069;font-weight:bold">subPath</span>:<span style="color:#bbb"> </span>redis<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">26</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">volumeClaimTemplates</span>:<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">27</span><span style="color:#bbb">    </span>- <span style="color:#069;font-weight:bold">metadata</span>:<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">28</span><span style="color:#bbb">        </span><span style="color:#069;font-weight:bold">name</span>:<span style="color:#bbb"> </span>redis-volume<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">29</span><span style="color:#bbb">      </span><span style="color:#069;font-weight:bold">spec</span>:<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">30</span><span style="color:#bbb">        </span><span style="color:#069;font-weight:bold">accessModes</span>:<span style="color:#bbb"> </span>[<span style="color:#bbb"> </span><span style="color:#c30">&#34;ReadWriteOnce&#34;</span><span style="color:#bbb"> </span>]<span style="color:#bbb">    
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">31</span><span style="color:#bbb">        </span><span style="color:#069;font-weight:bold">resources</span>:<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">32</span><span style="color:#bbb">          </span><span style="color:#069;font-weight:bold">requests</span>:<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">33</span><span style="color:#bbb">            </span><span style="color:#069;font-weight:bold">storage</span>:<span style="color:#bbb"> </span>4Gi<span style="color:#bbb">
+</span></code></pre></div><p>And then run, <code>$ kubectl apply -f statefulsets.yml</code>
+You should get a response like this: <code>statefulset.apps/redis-store created</code></p>
+<p>Run <code>$ kubectl get pods</code> to verify that statefulset pod is running</p>
+<pre><code>NAMESPACE       NAME                                        READY   STATUS             RESTARTS   AGE
+default         redis-store-0                               1/1     Running            0          3m3s
+
+</code></pre><p>If you get the above response, great! We&rsquo;re on the right track, if not, check the steps we&rsquo;re following and make sure you have not missed anything.
+Next step, we need to be able to connect to our new redis backend, we will use kubernetes <code>Service</code> for this purpose. We want to expose our redis on its usual port <code>6379</code> in a <code>ClusterIP</code> type service so that other pods in the same cluster can connect to it. Create a <code>services.yml</code> file and paste the following:</p>
+<div class="highlight"><pre style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span><span style="color:#069;font-weight:bold">apiVersion</span>:<span style="color:#bbb"> </span>v1<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span><span style="color:#bbb"></span><span style="color:#069;font-weight:bold">kind</span>:<span style="color:#bbb"> </span>Service<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span><span style="color:#bbb"></span><span style="color:#069;font-weight:bold">metadata</span>:<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">name</span>:<span style="color:#bbb"> </span>kv-redis-service<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">labels</span>:<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span><span style="color:#bbb">    </span><span style="color:#069;font-weight:bold">app</span>:<span style="color:#bbb"> </span>kv-redis-service<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span><span style="color:#bbb"></span><span style="color:#069;font-weight:bold">spec</span>:<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">type</span>:<span style="color:#bbb"> </span>ClusterIP<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">ports</span>:<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span><span style="color:#bbb">    </span>- <span style="color:#069;font-weight:bold">name</span>:<span style="color:#bbb"> </span>http-port<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span><span style="color:#bbb">      </span><span style="color:#069;font-weight:bold">port</span>:<span style="color:#bbb"> </span><span style="color:#f60">6379</span><span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span><span style="color:#bbb">      </span><span style="color:#069;font-weight:bold">protocol</span>:<span style="color:#bbb"> </span>TCP<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span><span style="color:#bbb">      </span><span style="color:#069;font-weight:bold">targetPort</span>:<span style="color:#bbb"> </span><span style="color:#f60">6379</span><span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">selector</span>:<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span><span style="color:#bbb">    </span><span style="color:#069;font-weight:bold">app</span>:<span style="color:#bbb"> </span>kv-redis-service<span style="color:#bbb">
+</span></code></pre></div><p>Run <code>$ kubectl apply -f services.yml</code> and you should get a response like below:
+<code>service/kv-redis-service created</code> Then run,
+<code>kubectl get svc</code> to check if our new service is truly created.</p>
+<pre><code>
+NAME                  TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)    AGE
+kv-redis-service      ClusterIP   10.107.7.35      &lt;none&gt;        6379/TCP   77s
+
+</code></pre><p>Great! Our service is up. Now, the applications running in this cluster can connect to our new redis using the url <code>kv-redis-service:6379</code></p>
+<h3 id="deploying-the-application">Deploying the application</h3>
+<p>We need to create a kubernetes <code>deployment</code> for our <code>key-value store</code> application. A docker image is available on public <a href="https://hub.docker.com/repository/docker/dockadigun/kv-app">dockerhub</a> , you can also create your own image from the example repository.
+To create deployment for our application, create a <code>deployments.yml</code> file paste the below content</p>
+<div class="highlight"><pre style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span><span style="color:#069;font-weight:bold">apiVersion</span>:<span style="color:#bbb"> </span>apps/v1<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span><span style="color:#bbb"></span><span style="color:#069;font-weight:bold">kind</span>:<span style="color:#bbb"> </span>Deployment<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span><span style="color:#bbb"></span><span style="color:#069;font-weight:bold">metadata</span>:<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">name</span>:<span style="color:#bbb"> </span>kv-app<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">labels</span>:<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span><span style="color:#bbb">    </span><span style="color:#069;font-weight:bold">web</span>:<span style="color:#bbb"> </span>app-service<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span><span style="color:#bbb"></span><span style="color:#069;font-weight:bold">spec</span>:<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">replicas</span>:<span style="color:#bbb"> </span><span style="color:#f60">1</span><span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">selector</span>:<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span><span style="color:#bbb">    </span><span style="color:#069;font-weight:bold">matchLabels</span>:<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span><span style="color:#bbb">      </span><span style="color:#069;font-weight:bold">web</span>:<span style="color:#bbb"> </span>app-service<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">template</span>:<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span><span style="color:#bbb">    </span><span style="color:#069;font-weight:bold">spec</span>:<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span><span style="color:#bbb">      </span><span style="color:#069;font-weight:bold">containers</span>:<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span><span style="color:#bbb">        </span>- <span style="color:#069;font-weight:bold">name</span>:<span style="color:#bbb"> </span>kv-app-container<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16</span><span style="color:#bbb">          </span><span style="color:#069;font-weight:bold">image</span>:<span style="color:#bbb"> </span>dockadigun/kv-app<span style="color:#bbb"> 
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17</span><span style="color:#bbb">          </span><span style="color:#069;font-weight:bold">ports</span>:<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18</span><span style="color:#bbb">            </span>- <span style="color:#069;font-weight:bold">containerPort</span>:<span style="color:#bbb"> </span><span style="color:#f60">7002</span><span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19</span><span style="color:#bbb">              </span><span style="color:#069;font-weight:bold">protocol</span>:<span style="color:#bbb"> </span>TCP<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20</span><span style="color:#bbb">              </span><span style="color:#069;font-weight:bold">name</span>:<span style="color:#bbb"> </span>access-port<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21</span><span style="color:#bbb">          </span><span style="color:#069;font-weight:bold">env</span>:<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22</span><span style="color:#bbb">            </span>- <span style="color:#069;font-weight:bold">name</span>:<span style="color:#bbb"> </span>PORT<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">23</span><span style="color:#bbb">              </span><span style="color:#069;font-weight:bold">value</span>:<span style="color:#bbb"> </span><span style="color:#c30">&#34;7002&#34;</span><span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">24</span><span style="color:#bbb">	  </span>- <span style="color:#069;font-weight:bold">name</span>:<span style="color:#bbb"> </span>REDIS_HOST<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">25</span><span style="color:#bbb">            </span><span style="color:#069;font-weight:bold">value</span>:<span style="color:#bbb"> </span><span style="color:#c30">&#34;kv-redis-service:6379&#34;</span><span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">26</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">imagePullPolicy</span>:<span style="color:#bbb"> </span>Always<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">27</span><span style="color:#bbb">    </span><span style="color:#069;font-weight:bold">metadata</span>:<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">28</span><span style="color:#bbb">      </span><span style="color:#069;font-weight:bold">labels</span>:<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">29</span><span style="color:#bbb">        </span><span style="color:#069;font-weight:bold">web</span>:<span style="color:#bbb"> </span>app-service<span style="color:#bbb">
+</span></code></pre></div><p>As you can see from the above, we&rsquo;re passing some values to our application through the container&rsquo;s environment variable, These variables are <code>PORT</code> - The port on which the application http service will run on and <code>REDIS_HOST</code> which is the accessible address for our previously created redis service. After we&rsquo;ve defined our deployment manifest, we need to apply it using kubectl. Run <code>$ kubectl apply -f deployments.yml</code> , you should get a response like this - <code>deployment.apps/kv-app created</code>, run <code>$ kubectl get pods -o wide</code> to check the status of our new deployment.</p>
+<pre><code> 
+NAME                     READY   STATUS    RESTARTS   AGE
+kv-app-d584954bf-6xv4r   1/1     Running   0          3m13s
+
+</code></pre><p>If you get a response similar to the above, Yay! Our application is running. Next task on our list is to expose this deployment to a service so that we can access it publicly. We will be exposing the deployment through a <code>ClusterIP</code> service and then we will use <code>Nginx Ingress Controller</code> to route or load-balance the incoming traffic into our deployment.
+The first step is creating a <code>ClusterIP</code> service, we&rsquo;ve understood that <code>ClusterIP</code> service creates a network that can only be accessible within the cluster. To create the service, append the below content to <code>services.yml</code></p>
+<div class="highlight"><pre style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span>---<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span><span style="color:#bbb"></span><span style="color:#069;font-weight:bold">apiVersion</span>:<span style="color:#bbb"> </span>v1<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span><span style="color:#bbb"></span><span style="color:#069;font-weight:bold">kind</span>:<span style="color:#bbb"> </span>Service<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span><span style="color:#bbb"></span><span style="color:#069;font-weight:bold">metadata</span>:<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">name</span>:<span style="color:#bbb"> </span>app-service<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">labels</span>:<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span><span style="color:#bbb">    </span><span style="color:#069;font-weight:bold">web</span>:<span style="color:#bbb"> </span>app-service<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span><span style="color:#bbb"></span><span style="color:#069;font-weight:bold">spec</span>:<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">type</span>:<span style="color:#bbb"> </span>ClusterIP<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">ports</span>:<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span><span style="color:#bbb">    </span>- <span style="color:#069;font-weight:bold">name</span>:<span style="color:#bbb"> </span>http-port<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span><span style="color:#bbb">      </span><span style="color:#069;font-weight:bold">port</span>:<span style="color:#bbb"> </span><span style="color:#f60">7002</span><span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span><span style="color:#bbb">      </span><span style="color:#069;font-weight:bold">protocol</span>:<span style="color:#bbb"> </span>TCP<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span><span style="color:#bbb">      </span><span style="color:#069;font-weight:bold">targetPort</span>:<span style="color:#bbb"> </span><span style="color:#f60">7002</span><span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">selector</span>:<span style="color:#bbb">  
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16</span><span style="color:#bbb">    </span><span style="color:#069;font-weight:bold">web</span>:<span style="color:#bbb"> </span>app-service<span style="color:#bbb">
+</span></code></pre></div><p>Then, run <code>$ kubectl apply -f services.yml</code>, you should get a message <code>service/app-service created</code> as part of your response and running <code>$ kubectl get svc</code> should produce a response like below</p>
+<pre><code>
+NAME                  TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)    AGE
+app-service           ClusterIP   10.102.142.208   &lt;none&gt;        7002/TCP   55s
+kv-redis-service      ClusterIP   10.107.7.35      &lt;none&gt;        6379/TCP   31m
+
+</code></pre><p>Now, we have <code>app-service</code> which exposes our <code>kv-app</code> deployment and a <code>kv-redis-service</code> which exposes the redis server our app is connecting to for data storage. Few more steps and we will have a world-class service that could scale from 1 to 1000s replicas in time crises :-)</p>
+<h3 id="installing-and-setting-up-ingress">Installing and setting up Ingress</h3>
+<p><code>namespace/ingress-nginx created configmap/nginx-configuration created configmap/tcp-services created configmap/udp-services created serviceaccount/nginx-ingress-serviceaccount created clusterrole.rbac.authorization.k8s.io/nginx-ingress-clusterrole created role.rbac.authorization.k8s.io/nginx-ingress-role created rolebinding.rbac.authorization.k8s.io/nginx-ingress-role-nisa-binding created clusterrolebinding.rbac.authorization.k8s.io/nginx-ingress-clusterrole-nisa-binding created deployment.apps/nginx-ingress-controller created limitrange/ingress-nginx created service/ingress-nginx created</code></p>
+<h2 id="cert-manager">cert-manager</h2>
+<p><code>customresourcedefinition.apiextensions.k8s.io/certificaterequests.cert-manager.io created customresourcedefinition.apiextensions.k8s.io/certificates.cert-manager.io created customresourcedefinition.apiextensions.k8s.io/challenges.acme.cert-manager.io created customresourcedefinition.apiextensions.k8s.io/clusterissuers.cert-manager.io created customresourcedefinition.apiextensions.k8s.io/issuers.cert-manager.io created customresourcedefinition.apiextensions.k8s.io/orders.acme.cert-manager.io created Warning: kubectl apply should be used on resource created by either kubectl create --save-config or kubectl apply namespace/cert-manager configured serviceaccount/cert-manager-cainjector created serviceaccount/cert-manager created serviceaccount/cert-manager-webhook created clusterrole.rbac.authorization.k8s.io/cert-manager-cainjector created clusterrole.rbac.authorization.k8s.io/cert-manager-controller-ingress-shim created clusterrole.rbac.authorization.k8s.io/cert-manager-edit created clusterrole.rbac.authorization.k8s.io/cert-manager-controller-issuers created clusterrole.rbac.authorization.k8s.io/cert-manager-controller-challenges created clusterrole.rbac.authorization.k8s.io/cert-manager-controller-orders created clusterrole.rbac.authorization.k8s.io/cert-manager-controller-certificates created clusterrole.rbac.authorization.k8s.io/cert-manager-view created clusterrole.rbac.authorization.k8s.io/cert-manager-controller-clusterissuers created clusterrolebinding.rbac.authorization.k8s.io/cert-manager-cainjector created clusterrolebinding.rbac.authorization.k8s.io/cert-manager-controller-clusterissuers created clusterrolebinding.rbac.authorization.k8s.io/cert-manager-controller-issuers created clusterrolebinding.rbac.authorization.k8s.io/cert-manager-controller-challenges created clusterrolebinding.rbac.authorization.k8s.io/cert-manager-controller-ingress-shim created clusterrolebinding.rbac.authorization.k8s.io/cert-manager-controller-orders created clusterrolebinding.rbac.authorization.k8s.io/cert-manager-controller-certificates created role.rbac.authorization.k8s.io/cert-manager-cainjector:leaderelection created role.rbac.authorization.k8s.io/cert-manager:leaderelection created rolebinding.rbac.authorization.k8s.io/cert-manager-cainjector:leaderelection created rolebinding.rbac.authorization.k8s.io/cert-manager:leaderelection created service/cert-manager created service/cert-manager-webhook created deployment.apps/cert-manager-cainjector created deployment.apps/cert-manager created deployment.apps/cert-manager-webhook created mutatingwebhookconfiguration.admissionregistration.k8s.io/cert-manager-webhook created validatingwebhookconfiguration.admissionregistration.k8s.io/cert-manager-webhook created</code></p>
+
+</div>
+
+
+    </main>
+
+    
+      
+    
+  </body>
+</html>
