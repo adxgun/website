@@ -3,17 +3,22 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
-    <loc>https://lekan.wtf/posts/a_create_docker_auth/</loc>
-    <lastmod>2020-02-19T00:00:00+00:00</lastmod>
+    <loc>https://lekan.wtf/posts/go-app-k8s/</loc>
+    <lastmod>2020-03-14T00:00:00+00:00</lastmod>
   </url>
   
   <url>
     <loc>https://lekan.wtf/</loc>
-    <lastmod>2020-02-19T00:00:00+00:00</lastmod>
+    <lastmod>2020-03-14T00:00:00+00:00</lastmod>
   </url>
   
   <url>
     <loc>https://lekan.wtf/posts/</loc>
+    <lastmod>2020-03-14T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://lekan.wtf/posts/a_create_docker_auth/</loc>
     <lastmod>2020-02-19T00:00:00+00:00</lastmod>
   </url>
   
@@ -30,11 +35,6 @@
   <url>
     <loc>https://lekan.wtf/posts/img_rzer/</loc>
     <lastmod>2017-09-04T00:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>https://lekan.wtf/posts/go-app-k8s/</loc>
-    <lastmod>2017-03-14T00:00:00+00:00</lastmod>
   </url>
   
   <url>

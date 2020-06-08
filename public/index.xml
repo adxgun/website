@@ -6,10 +6,20 @@
     <description>Recent content on Lekan Adigun</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Wed, 19 Feb 2020 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sat, 14 Mar 2020 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="https://lekan.wtf/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Golang Application on Kubernetes</title>
+      <link>https://lekan.wtf/posts/go-app-k8s/</link>
+      <pubDate>Sat, 14 Mar 2020 00:00:00 +0000</pubDate>
+      
+      <guid>https://lekan.wtf/posts/go-app-k8s/</guid>
+      <description>Golang Applications on Kubernetes This post is a complete walk-through of how to deploy a monolithic Go web application in a Kubernetes cluster, how to attach a domain name so that it can be publicly accessible and finally, how to secure it with LetsEncrypt&#39;s https and cert-manager. Lets ride!
+More About Kubernetes Kubernetes is a portable, extensible, open-source platform for managing containerized workloads and services, that facilitates both declarative configuration and automation.</description>
+    </item>
     
     <item>
       <title>Creating Docker Registry Token Authentication Server with Go</title>
@@ -47,16 +57,6 @@ Why Go? Go is a very interesting programming language, it is a strongly typed la
       
       <guid>https://lekan.wtf/posts/img_rzer/</guid>
       <description>Its not very common to see a project that doesn’t require photo upload in one form or the other. Most high end android device today create a photo as big as 2MB. This is a problem, How? Imagine you are building a mobile app that require your users to have a profile picture, having scalabilty in mind, each photo must not be &amp;gt; 100KB, am i right?. You dont want to save a 1MB photo for each user.</description>
-    </item>
-    
-    <item>
-      <title>Golang Application on Kubernetes</title>
-      <link>https://lekan.wtf/posts/go-app-k8s/</link>
-      <pubDate>Tue, 14 Mar 2017 00:00:00 +0000</pubDate>
-      
-      <guid>https://lekan.wtf/posts/go-app-k8s/</guid>
-      <description>Golang Applications on Kubernetes This post is a complete walk-through of how to deploy a monolithic Go web application in a Kubernetes cluster, how to secure it with LetsEncrypt&#39;s https and finally, how to attach a domain name so that it can be publicly accessible. Lets ride!
-More about Kubernetes Kubernetes is a portable, extensible, open-source platform for managing containerized workloads and services, that facilitates both declarative configuration and automation. It has a large, rapidly growing ecosystem.</description>
     </item>
     
   </channel>
