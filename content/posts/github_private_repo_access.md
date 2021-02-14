@@ -1,6 +1,6 @@
 ---
 title: "Setting up GitAction private repository access for Golang applications"
-date: 2021-02-10 00:00:00 +0000
+date: 2021-02-14 00:00:00 +0000
 draft: false
 ---
 
