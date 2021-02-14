@@ -6,10 +6,19 @@
     <description>Recent content on Lekan Adigun</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sat, 14 Mar 2020 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sun, 14 Feb 2021 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="https://lekan.wtf/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Setting up GitAction private repository access for Golang applications</title>
+      <link>https://lekan.wtf/posts/github_private_repo_access/</link>
+      <pubDate>Sun, 14 Feb 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://lekan.wtf/posts/github_private_repo_access/</guid>
+      <description>Recently, i&amp;rsquo;ve been working on a Go project that has dependencies on internal/private packages built in-house by the team, mostly to cut boilerplate or automate recurring processes. We&amp;rsquo;re using go.mod to manage this project&amp;rsquo;s dependencies. One problem i &amp;amp; other member of the team often encounter is the GitAction error whenever we tried to access private repository/package from inside the project, most especially in Dockerfile(s) or some simple ci checks. The solution to this problem is quite simple, even though it skipped my memory almost anytime i had to do it.</description>
+    </item>
     
     <item>
       <title>Golang Application on Kubernetes</title>
@@ -17,8 +26,8 @@
       <pubDate>Sat, 14 Mar 2020 00:00:00 +0000</pubDate>
       
       <guid>https://lekan.wtf/posts/go-app-k8s/</guid>
-      <description>Golang Applications on Kubernetes This post is a complete walk-through of how to deploy a monolithic Go web application in a Kubernetes cluster, how to attach a domain name so that it can be publicly accessible and finally, how to secure it with LetsEncrypt&#39;s https and cert-manager. Lets ride!
-More About Kubernetes Kubernetes is a portable, extensible, open-source platform for managing containerized workloads and services, that facilitates both declarative configuration and automation.</description>
+      <description>This post is a complete walk-through of how to deploy a monolithic Go web application in a Kubernetes cluster, how to attach a domain name so that it can be publicly accessible and finally, how to secure it with LetsEncrypt&#39;s https and cert-manager. Lets ride!
+More About Kubernetes Kubernetes is a portable, extensible, open-source platform for managing containerized workloads and services, that facilitates both declarative configuration and automation. It has a large, rapidly growing ecosystem.</description>
     </item>
     
     <item>
@@ -27,8 +36,7 @@ More About Kubernetes Kubernetes is a portable, extensible, open-source platform
       <pubDate>Wed, 19 Feb 2020 00:00:00 +0000</pubDate>
       
       <guid>https://lekan.wtf/posts/a_create_docker_auth/</guid>
-      <description>Creating Docker Registry Token Authentication Server with Go
-Recently, I was working on a project that uses a private docker registry to store docker images produced by users. The access to these images needs to be controlled so that user foo MUST not be able to access(pull/push) images that belongs to user bar . Also, a user should be able to authenticate with the private docker registry from their local or remote development machine with the famous docker login command, additionally users should be able to perform basic docker operations — docker push, pull etc with proper authentication and authorization.</description>
+      <description>Recently, I was working on a project that uses a private docker registry to store docker images produced by users. The access to these images needs to be controlled so that user foo MUST not be able to access(pull/push) images that belongs to user bar . Also, a user should be able to authenticate with the private docker registry from their local or remote development machine with the famous docker login command, additionally users should be able to perform basic docker operations — docker push, pull etc with proper authentication and authorization.</description>
     </item>
     
     <item>

@@ -9,7 +9,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <title>Lekan Adigun</title>
-  <meta name="description" content="Welcome to my blog! Where i write about Golang, Backend engineering, DevOps and sometimes, what I am currently working on." />
+  <meta name="description" content="SRE. Golang" />
 
   
   <link type="text/css" rel="stylesheet" href="https://lekan.wtf/css/print.css" media="print">
@@ -34,7 +34,7 @@
     <div class="sidebar-about">
       <a href="https://lekan.wtf/"><h1>Lekan Adigun</h1></a>
       <p class="lead">
-       Welcome to my blog! Where i write about Golang, Backend engineering, DevOps and sometimes, what I am currently working on. 
+       SRE. Golang 
       </p>
     </div>
 
@@ -45,7 +45,7 @@
       </ul>
     </nav>
 
-    <p>&copy; 2020. All rights reserved. </p>
+    <p>&copy; 2021. All rights reserved. </p>
   </div>
 </aside>
 
@@ -53,11 +53,22 @@
     <div class="posts">
 <article class="post">
   <h1 class="post-title">
+    <a href="https://lekan.wtf/posts/github_private_repo_access/">Setting up GitAction private repository access for Golang applications</a>
+  </h1>
+  <time datetime="2021-02-14T00:00:00Z" class="post-date">Sun, Feb 14, 2021</time>
+  Recently, i&rsquo;ve been working on a Go project that has dependencies on internal/private packages built in-house by the team, mostly to cut boilerplate or automate recurring processes. We&rsquo;re using go.mod to manage this project&rsquo;s dependencies. One problem i &amp; other member of the team often encounter is the GitAction error whenever we tried to access private repository/package from inside the project, most especially in Dockerfile(s) or some simple ci checks. The solution to this problem is quite simple, even though it skipped my memory almost anytime i had to do it.
+  
+  <div class="read-more-link">
+    <a href="/posts/github_private_repo_access/">Read More…</a>
+  </div>
+  
+</article><article class="post">
+  <h1 class="post-title">
     <a href="https://lekan.wtf/posts/go-app-k8s/">Golang Application on Kubernetes</a>
   </h1>
   <time datetime="2020-03-14T00:00:00Z" class="post-date">Sat, Mar 14, 2020</time>
-  Golang Applications on Kubernetes This post is a complete walk-through of how to deploy a monolithic Go web application in a Kubernetes cluster, how to attach a domain name so that it can be publicly accessible and finally, how to secure it with LetsEncrypt's https and cert-manager. Lets ride!
-More About Kubernetes Kubernetes is a portable, extensible, open-source platform for managing containerized workloads and services, that facilitates both declarative configuration and automation.
+  This post is a complete walk-through of how to deploy a monolithic Go web application in a Kubernetes cluster, how to attach a domain name so that it can be publicly accessible and finally, how to secure it with LetsEncrypt's https and cert-manager. Lets ride!
+More About Kubernetes Kubernetes is a portable, extensible, open-source platform for managing containerized workloads and services, that facilitates both declarative configuration and automation. It has a large, rapidly growing ecosystem.
   
   <div class="read-more-link">
     <a href="/posts/go-app-k8s/">Read More…</a>
@@ -68,8 +79,7 @@ More About Kubernetes Kubernetes is a portable, extensible, open-source platform
     <a href="https://lekan.wtf/posts/a_create_docker_auth/">Creating Docker Registry Token Authentication Server with Go</a>
   </h1>
   <time datetime="2020-02-19T00:00:00Z" class="post-date">Wed, Feb 19, 2020</time>
-  Creating Docker Registry Token Authentication Server with Go
-Recently, I was working on a project that uses a private docker registry to store docker images produced by users. The access to these images needs to be controlled so that user foo MUST not be able to access(pull/push) images that belongs to user bar . Also, a user should be able to authenticate with the private docker registry from their local or remote development machine with the famous docker login command, additionally users should be able to perform basic docker operations — docker push, pull etc with proper authentication and authorization.
+  Recently, I was working on a project that uses a private docker registry to store docker images produced by users. The access to these images needs to be controlled so that user foo MUST not be able to access(pull/push) images that belongs to user bar . Also, a user should be able to authenticate with the private docker registry from their local or remote development machine with the famous docker login command, additionally users should be able to perform basic docker operations — docker push, pull etc with proper authentication and authorization.
   
   <div class="read-more-link">
     <a href="/posts/a_create_docker_auth/">Read More…</a>

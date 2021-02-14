@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-us" lang="en-us">
+<head>
+  <link href="https://gmpg.org/xfn/11" rel="profile">
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <meta name="generator" content="Hugo 0.66.0" />
+
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Setting up GitAction private repository access for Golang applications &middot; Lekan Adigun</title>
+  <meta name="description" content="" />
+
+  
+  <link type="text/css" rel="stylesheet" href="https://lekan.wtf/css/print.css" media="print">
+  <link type="text/css" rel="stylesheet" href="https://lekan.wtf/css/poole.css">
+  <link type="text/css" rel="stylesheet" href="https://lekan.wtf/css/syntax.css">
+  <link type="text/css" rel="stylesheet" href="https://lekan.wtf/css/hyde.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Abril+Fatface|PT+Sans:400,400i,700">
+
+
+  
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/apple-touch-icon-144-precomposed.png">
+  <link rel="shortcut icon" href="/favicon.png">
+
+  
+  
+</head>
+
+  <body class=" ">
+  <aside class="sidebar">
+  <div class="container sidebar-sticky">
+    <div class="sidebar-about">
+      <a href="https://lekan.wtf/"><h1>Lekan Adigun</h1></a>
+      <p class="lead">
+       SRE. Golang 
+      </p>
+    </div>
+
+    <nav>
+      <ul class="sidebar-nav">
+        <li><a href="https://lekan.wtf/">Home</a> </li>
+        <li><a href="mailto:adigunhammed.lekan@gmail.com"> Email </a></li><li><a href="https://github.com/adigunhammedolalekan/"> Github </a></li><li><a href="https://twitter.com/L3kanAdigun/"> Twitter </a></li>
+      </ul>
+    </nav>
+
+    <p>&copy; 2021. All rights reserved. </p>
+  </div>
+</aside>
+
+    <main class="content container">
+    <div class="post">
+  <h1>Setting up GitAction private repository access for Golang applications</h1>
+  <time datetime=2021-02-14T00:00:00Z class="post-date">Sun, Feb 14, 2021</time>
+  <p>Recently, i&rsquo;ve been working on a Go project that has dependencies on internal/private packages built in-house by the team, mostly to cut boilerplate or automate recurring processes. We&rsquo;re using <code>go.mod</code> to manage this project&rsquo;s dependencies. One problem i &amp; other member of the team often encounter is the GitAction error whenever we tried to access private repository/package from inside the project, most especially in <code>Dockerfile(s)</code> or some simple <code>ci</code> checks.
+The solution to this problem is quite simple, even though it skipped my memory almost anytime i had to do it. This write-up is a small documentation for myself(easy future reference when i forget again :) )  and anyone out there facing similar issue.</p>
+<h3 id="an-example-gitaction">An Example GitAction</h3>
+<p>Below is an example of one of the many steps we have in the project&rsquo;s GitAction:</p>
+<div class="highlight"><pre style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span><span style="color:#09f;font-style:italic"># ci.yml</span><span style="color:#bbb">
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span><span style="color:#bbb"></span><span style="color:#069;font-weight:bold">name</span>:<span style="color:#bbb"> </span>Build<span style="color:#bbb">
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span><span style="color:#bbb"></span><span style="color:#069;font-weight:bold">on</span>:<span style="color:#bbb">
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">push</span>:<span style="color:#bbb">
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span><span style="color:#bbb">    </span><span style="color:#069;font-weight:bold">branches</span>:<span style="color:#bbb">
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span><span style="color:#bbb">      </span>- *<span style="color:#bbb">
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">pull_request</span>:<span style="color:#bbb">
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span><span style="color:#bbb">    </span><span style="color:#069;font-weight:bold">branches</span>:<span style="color:#bbb"> </span>[<span style="color:#099">*]</span><span style="color:#bbb">
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span><span style="color:#bbb">
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span><span style="color:#bbb"></span><span style="color:#069;font-weight:bold">jobs</span>:<span style="color:#bbb">
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span><span style="color:#bbb">
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">lint</span>:<span style="color:#bbb">
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span><span style="color:#bbb">    </span><span style="color:#069;font-weight:bold">name</span>:<span style="color:#bbb"> </span>Build<span style="color:#bbb"> </span>to<span style="color:#bbb"> </span>prevent<span style="color:#bbb"> </span>compiler<span style="color:#bbb"> </span>error<span style="color:#bbb">
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span><span style="color:#bbb">
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span><span style="color:#bbb">    </span><span style="color:#09f;font-style:italic"># The type of runner that the job will run on</span><span style="color:#bbb">
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16</span><span style="color:#bbb">    </span><span style="color:#069;font-weight:bold">runs-on</span>:<span style="color:#bbb"> </span>ubuntu-latest<span style="color:#bbb">
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17</span><span style="color:#bbb">
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18</span><span style="color:#bbb">    </span><span style="color:#069;font-weight:bold">steps</span>:<span style="color:#bbb">
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19</span><span style="color:#bbb">      </span><span style="color:#09f;font-style:italic"># Setup Go</span><span style="color:#bbb">
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20</span><span style="color:#bbb">      </span>- <span style="color:#069;font-weight:bold">name</span>:<span style="color:#bbb"> </span>Set<span style="color:#bbb"> </span>up<span style="color:#bbb"> </span>Go<span style="color:#bbb">
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21</span><span style="color:#bbb">        </span><span style="color:#069;font-weight:bold">uses</span>:<span style="color:#bbb"> </span>actions/setup-go@v2<span style="color:#bbb">
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22</span><span style="color:#bbb">        </span><span style="color:#069;font-weight:bold">with</span>:<span style="color:#bbb">
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">23</span><span style="color:#bbb">          </span><span style="color:#069;font-weight:bold">go-version</span>:<span style="color:#bbb"> </span>^<span style="color:#f60">1.15</span><span style="color:#bbb">
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">24</span><span style="color:#bbb">
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">25</span><span style="color:#bbb">      </span>- <span style="color:#069;font-weight:bold">name</span>:<span style="color:#bbb"> </span>Check<span style="color:#bbb"> </span>out<span style="color:#bbb"> </span>code<span style="color:#bbb">
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">26</span><span style="color:#bbb">        </span><span style="color:#069;font-weight:bold">uses</span>:<span style="color:#bbb"> </span>actions/checkout@v2<span style="color:#bbb">
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">27</span><span style="color:#bbb">
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">28</span><span style="color:#bbb">      </span>- <span style="color:#069;font-weight:bold">name</span>:<span style="color:#bbb"> </span>Run<span style="color:#bbb"> </span>build<span style="color:#bbb">
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">29</span><span style="color:#bbb">        </span><span style="color:#069;font-weight:bold">run</span>:<span style="color:#bbb"> </span>go<span style="color:#bbb"> </span>build<span style="color:#bbb"> </span>.<span style="color:#bbb">
+</span></code></pre></div><p>The above <code>GitAction</code> manifest is very simple, it builds a Go application to check for general compilation issues e.g unused variables or missed syntax error. Assuming the project or repository this workflow is meant for requires access to a particular private repository, you would get an error from <code>go.mod</code> when it tries to fetch &amp; resolve all dependencies.</p>
+<h3 id="solution--requirement">Solution &amp; Requirement</h3>
+<ul>
+<li><strong>Access to the target private repository</strong> - You will need a <code>PAT - Personal Access Token</code> to configure the authentication mechanism, as a result, you need to have at least <code>read</code> access to the target private repository. You can also generate the <code>PAT</code> in organization level settings on Github. To generate <code>PAT</code>, follow these steps:
+<ul>
+<li>Login to your Github account</li>
+<li>Navigate to <code>Settings -&gt; Developers Settings -&gt; Personal access tokens</code> and generate a new one with necessary/minimal access.</li>
+<li>Copy the newly generated <code>PAT</code></li>
+</ul>
+</li>
+<li><strong>Add <code>PAT</code> as a Github Secret</strong> - For the value of the created <code>PAT</code> to be accessed from GitAction context, it needs to be added securely to Github secret. You can access Github secret by navigating to the target repository, click <code>Settings -&gt; Secrets</code> on Github.</li>
+</ul>
+<p>Once you&rsquo;re able to generate <code>PAT</code>, add the lines below to the existing <code>GitAction</code> manifest, just before the authentication is required.</p>
+<div class="highlight"><pre style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1</span><span style="color:#bbb">    </span>- <span style="color:#069;font-weight:bold">name</span>:<span style="color:#bbb"> </span>Setup<span style="color:#bbb"> </span>credentials<span style="color:#bbb"> </span>to<span style="color:#bbb"> </span>access<span style="color:#bbb"> </span>private<span style="color:#bbb"> </span>repo<span style="color:#bbb">
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2</span><span style="color:#bbb">      </span><span style="color:#069;font-weight:bold">run</span>:<span style="color:#bbb"> </span>git<span style="color:#bbb"> </span>config<span style="color:#bbb"> </span>--global<span style="color:#bbb"> </span>url.<span style="color:#c30">&#34;https://${{ secrets.PAT }}:x-oauth-basic@github.com/&#34;</span>.insteadOf<span style="color:#bbb"> </span><span style="color:#c30">&#34;https://github.com/&#34;</span><span style="color:#bbb">
+</span></code></pre></div><p>The updated <code>ci.yml</code> should look like this:</p>
+<div class="highlight"><pre style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span><span style="color:#09f;font-style:italic"># ci.yaml</span><span style="color:#bbb">
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span><span style="color:#bbb"></span><span style="color:#069;font-weight:bold">name</span>:<span style="color:#bbb"> </span>Build<span style="color:#bbb">
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span><span style="color:#bbb"></span><span style="color:#069;font-weight:bold">on</span>:<span style="color:#bbb">
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">push</span>:<span style="color:#bbb">
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span><span style="color:#bbb">    </span><span style="color:#069;font-weight:bold">branches</span>:<span style="color:#bbb">
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span><span style="color:#bbb">      </span>- *<span style="color:#bbb">
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">pull_request</span>:<span style="color:#bbb">
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span><span style="color:#bbb">    </span><span style="color:#069;font-weight:bold">branches</span>:<span style="color:#bbb"> </span>[<span style="color:#099">*]</span><span style="color:#bbb">
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span><span style="color:#bbb">
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span><span style="color:#bbb"></span><span style="color:#069;font-weight:bold">jobs</span>:<span style="color:#bbb">
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span><span style="color:#bbb">
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">lint</span>:<span style="color:#bbb">
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span><span style="color:#bbb">    </span><span style="color:#069;font-weight:bold">name</span>:<span style="color:#bbb"> </span>Build<span style="color:#bbb"> </span>to<span style="color:#bbb"> </span>prevent<span style="color:#bbb"> </span>compiler<span style="color:#bbb"> </span>error<span style="color:#bbb">
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span><span style="color:#bbb">
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span><span style="color:#bbb">    </span><span style="color:#09f;font-style:italic"># The type of runner that the job will run on</span><span style="color:#bbb">
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16</span><span style="color:#bbb">    </span><span style="color:#069;font-weight:bold">runs-on</span>:<span style="color:#bbb"> </span>ubuntu-latest<span style="color:#bbb">
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17</span><span style="color:#bbb">
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18</span><span style="color:#bbb">    </span><span style="color:#069;font-weight:bold">steps</span>:<span style="color:#bbb">
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19</span><span style="color:#bbb">      </span><span style="color:#09f;font-style:italic"># Setup Go</span><span style="color:#bbb">
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20</span><span style="color:#bbb">      </span>- <span style="color:#069;font-weight:bold">name</span>:<span style="color:#bbb"> </span>Set<span style="color:#bbb"> </span>up<span style="color:#bbb"> </span>Go<span style="color:#bbb">
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21</span><span style="color:#bbb">        </span><span style="color:#069;font-weight:bold">uses</span>:<span style="color:#bbb"> </span>actions/setup-go@v2<span style="color:#bbb">
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22</span><span style="color:#bbb">        </span><span style="color:#069;font-weight:bold">with</span>:<span style="color:#bbb">
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">23</span><span style="color:#bbb">          </span><span style="color:#069;font-weight:bold">go-version</span>:<span style="color:#bbb"> </span>^<span style="color:#f60">1.15</span><span style="color:#bbb">
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">24</span><span style="color:#bbb">
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">25</span><span style="color:#bbb">      </span>- <span style="color:#069;font-weight:bold">name</span>:<span style="color:#bbb"> </span>Check<span style="color:#bbb"> </span>out<span style="color:#bbb"> </span>code<span style="color:#bbb">
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">26</span><span style="color:#bbb">        </span><span style="color:#069;font-weight:bold">uses</span>:<span style="color:#bbb"> </span>actions/checkout@v2<span style="color:#bbb">
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">27</span><span style="color:#bbb">
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">28</span><span style="color:#bbb">      </span>- <span style="color:#069;font-weight:bold">name</span>:<span style="color:#bbb"> </span>Setup<span style="color:#bbb"> </span>credentials<span style="color:#bbb"> </span>to<span style="color:#bbb"> </span>access<span style="color:#bbb"> </span>private<span style="color:#bbb"> </span>repo<span style="color:#bbb">
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">29</span><span style="color:#bbb">        </span><span style="color:#069;font-weight:bold">run</span>:<span style="color:#bbb"> </span>git<span style="color:#bbb"> </span>config<span style="color:#bbb"> </span>--global<span style="color:#bbb"> </span>url.<span style="color:#c30">&#34;https://${{ secrets.PAT }}:x-oauth-basic@github.com/&#34;</span>.insteadOf<span style="color:#bbb"> </span><span style="color:#c30">&#34;https://github.com/&#34;</span><span style="color:#bbb">
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">30</span><span style="color:#bbb">
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">31</span><span style="color:#bbb">      </span>- <span style="color:#069;font-weight:bold">name</span>:<span style="color:#bbb"> </span>Run<span style="color:#bbb"> </span>build<span style="color:#bbb">
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">32</span><span style="color:#bbb">        </span><span style="color:#069;font-weight:bold">run</span>:<span style="color:#bbb"> </span>go<span style="color:#bbb"> </span>build<span style="color:#bbb"> </span>.<span style="color:#bbb">
+</span></code></pre></div><p>And that&rsquo;s it! You should be able to authenticate with Github from GitAction context from now on. Enjoy :)</p>
+
+</div>
+
+
+    </main>
+
+    
+      
+    
+  </body>
+</html>

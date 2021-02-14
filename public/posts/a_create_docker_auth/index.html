@@ -33,7 +33,7 @@
     <div class="sidebar-about">
       <a href="https://lekan.wtf/"><h1>Lekan Adigun</h1></a>
       <p class="lead">
-       Welcome to my blog! Where i write about Golang, Backend engineering, DevOps and sometimes, what I am currently working on. 
+       SRE. Golang 
       </p>
     </div>
 
@@ -44,7 +44,7 @@
       </ul>
     </nav>
 
-    <p>&copy; 2020. All rights reserved. </p>
+    <p>&copy; 2021. All rights reserved. </p>
   </div>
 </aside>
 
@@ -52,11 +52,10 @@
     <div class="post">
   <h1>Creating Docker Registry Token Authentication Server with Go</h1>
   <time datetime=2020-02-19T00:00:00Z class="post-date">Wed, Feb 19, 2020</time>
-  <p>Creating Docker Registry Token Authentication Server with Go</p>
-<p>Recently, I was working on a project that uses a private docker registry to store docker images produced by users. The access to these images needs to be controlled so that user foo MUST not be able to access(pull/push) images that belongs to user bar . Also, a user should be able to authenticate with the private docker registry from their local or remote development machine with the famous docker login command, additionally users should be able to perform basic docker operations — docker push, pull etc with proper authentication and authorization. This is similar to Google cloud’s grc.io container registry.</p>
+  <p>Recently, I was working on a project that uses a private docker registry to store docker images produced by users. The access to these images needs to be controlled so that user <code>foo</code> MUST not be able to access(pull/push) images that belongs to user <code>bar</code> . Also, a user should be able to authenticate with the private docker registry from their local or remote development machine with the famous docker login command, additionally users should be able to perform basic docker operations — docker push, pull etc with proper authentication and authorization. This is similar to Google cloud’s grc.io container registry.</p>
 <h2 id="the-problem">The Problem</h2>
 <p>You can easily get up and running with the <a href="https://hub.docker.com/_/registry">registry docker image,</a> by running the command below, you’ll have a docker registry running on your machine:</p>
-<p>docker run -d -p 5000:5000 &ndash;restart always &ndash;name registry registry:2</p>
+<p><code>docker run -d -p 5000:5000 --restart always --name registry registry:2</code></p>
 <p>Boom! docker registry is up and running on localhost:5000 . But this is limited because of the following reasons</p>
 <ol>
 <li>
@@ -94,10 +93,10 @@
 </span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">7</span><span style="color:#bbb">      </span>- <span style="color:#f60">5010</span>:<span style="color:#f60">5000</span><span style="color:#bbb">
 </span></code></pre></div><p>When you run docker-compose up , a docker registry will start running on localhost:5010 . Note: i choose port :5010 for my new docker registry, you can use any available port on your machine.
 Let’s perform some operations to make sure our local docker registry works as expected.</p>
-<p><em>docker pull ubuntu</em>
-<em>docker tag localhost:5010/ubuntu</em>
-<em>docker push localhost:5010/ubuntu</em></p>
-<p>The above commands pull an image from public docker registry(dockerhub) and then tag the image to include the url of our local registry, this instructs docker to push the image to the docker registry running at localhost:5010 when docker push is invoked, if all goes well, you should see the push progress indicator in your terminal, yay!!!</p>
+<pre><code>$ docker pull ubuntu*
+$ docker tag localhost:5010/ubuntu*
+$ docker push localhost:5010/ubuntu*
+</code></pre><p>The above commands pull an image from public docker registry(dockerhub) and then tag the image to include the url of our local registry, this instructs docker to push the image to the docker registry running at localhost:5010 when docker push is invoked, if all goes well, you should see the push progress indicator in your terminal, yay!!!</p>
 <p>Now, let’s configure our new docker registry server to use token authentication. First thing we want to do is to create a SSL certificate because it is a requirement for token authentication to work, registry server will forcefully quit when it is configured to use token authentication and SSL certificate is not provided. For this purpose, we’ll generate a self-signed SSL certificate with <a href="https://www.openssl.org/">openssl</a>.
 Before we continue, let’s create a basic project setup for our token authentication server. I am creating a new Go project, with go mod as my dependency manager.</p>
 <ul>
