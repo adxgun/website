@@ -4,7 +4,6 @@ date: 2020-03-14 00:00:00 +0000
 draft: false
 ---
 
-# Golang Applications on Kubernetes
 This post is a complete walk-through of how to deploy a monolithic Go web application in a Kubernetes cluster, how to attach a domain name so that it can be publicly accessible and finally, how to secure it with `LetsEncrypt's https and cert-manager`. Lets ride!
 
 ### More About Kubernetes

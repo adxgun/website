@@ -4,15 +4,13 @@ date: 2020-02-19 00:00:00 +0000
 draft: false
 ---
 
-Creating Docker Registry Token Authentication Server with Go
-
-Recently, I was working on a project that uses a private docker registry to store docker images produced by users. The access to these images needs to be controlled so that user foo MUST not be able to access(pull/push) images that belongs to user bar . Also, a user should be able to authenticate with the private docker registry from their local or remote development machine with the famous docker login command, additionally users should be able to perform basic docker operations — docker push, pull etc with proper authentication and authorization. This is similar to Google cloud’s grc.io container registry.
+Recently, I was working on a project that uses a private docker registry to store docker images produced by users. The access to these images needs to be controlled so that user `foo` MUST not be able to access(pull/push) images that belongs to user `bar` . Also, a user should be able to authenticate with the private docker registry from their local or remote development machine with the famous docker login command, additionally users should be able to perform basic docker operations — docker push, pull etc with proper authentication and authorization. This is similar to Google cloud’s grc.io container registry.
 
 ## The Problem
 
 You can easily get up and running with the [registry docker image,](https://hub.docker.com/_/registry) by running the command below, you’ll have a docker registry running on your machine:
 
-docker run -d -p 5000:5000 --restart always --name registry registry:2
+`docker run -d -p 5000:5000 --restart always --name registry registry:2`
 
 Boom! docker registry is up and running on localhost:5000 . But this is limited because of the following reasons
 
@@ -49,9 +47,11 @@ services:
 When you run docker-compose up , a docker registry will start running on localhost:5010 . Note: i choose port :5010 for my new docker registry, you can use any available port on your machine.
 Let’s perform some operations to make sure our local docker registry works as expected.
 
-*docker pull ubuntu*
-*docker tag localhost:5010/ubuntu*
-*docker push localhost:5010/ubuntu*
+```
+$ docker pull ubuntu*
+$ docker tag localhost:5010/ubuntu*
+$ docker push localhost:5010/ubuntu*
+```
 
 The above commands pull an image from public docker registry(dockerhub) and then tag the image to include the url of our local registry, this instructs docker to push the image to the docker registry running at localhost:5010 when docker push is invoked, if all goes well, you should see the push progress indicator in your terminal, yay!!!
 
