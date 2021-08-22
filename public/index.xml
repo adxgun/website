@@ -6,10 +6,19 @@
     <description>Recent content on Lekan Adigun</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sun, 14 Feb 2021 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sun, 22 Aug 2021 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="https://lekan.wtf/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Unit Testing REST Services in Go</title>
+      <link>https://lekan.wtf/posts/golang_automated_testing/</link>
+      <pubDate>Sun, 22 Aug 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://lekan.wtf/posts/golang_automated_testing/</guid>
+      <description>Building software is a complex process. A software project perceived to be simple when started can easily grow to having thousands of lines of code. Also, unforeseen circumstances are common occurrence for any software project and this can cause a lot of unplanned changes. Making changes to a software can be very hard and unpredictable, especially when it is not done carefully, there has been many real life instances where numerous problems or bugs were introduce to a software due to some changes made to it.</description>
+    </item>
     
     <item>
       <title>Setting up GitAction private repository access for Golang applications</title>

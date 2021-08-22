@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-us" lang="en-us">
+<head>
+  <link href="https://gmpg.org/xfn/11" rel="profile">
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <meta name="generator" content="Hugo 0.66.0" />
+
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Unit Testing REST Services in Go &middot; Lekan Adigun</title>
+  <meta name="description" content="" />
+
+  
+  <link type="text/css" rel="stylesheet" href="https://lekan.wtf/css/print.css" media="print">
+  <link type="text/css" rel="stylesheet" href="https://lekan.wtf/css/poole.css">
+  <link type="text/css" rel="stylesheet" href="https://lekan.wtf/css/syntax.css">
+  <link type="text/css" rel="stylesheet" href="https://lekan.wtf/css/hyde.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Abril+Fatface|PT+Sans:400,400i,700">
+
+
+  
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/apple-touch-icon-144-precomposed.png">
+  <link rel="shortcut icon" href="/favicon.png">
+
+  
+  
+</head>
+
+  <body class=" ">
+  <aside class="sidebar">
+  <div class="container sidebar-sticky">
+    <div class="sidebar-about">
+      <a href="https://lekan.wtf/"><h1>Lekan Adigun</h1></a>
+      <p class="lead">
+       SRE. Golang 
+      </p>
+    </div>
+
+    <nav>
+      <ul class="sidebar-nav">
+        <li><a href="https://lekan.wtf/">Home</a> </li>
+        <li><a href="mailto:adigunhammed.lekan@gmail.com"> Email </a></li><li><a href="https://github.com/adigunhammedolalekan/"> Github </a></li><li><a href="https://twitter.com/L3kanAdigun/"> Twitter </a></li>
+      </ul>
+    </nav>
+
+    <p>&copy; 2021. All rights reserved. </p>
+  </div>
+</aside>
+
+    <main class="content container">
+    <div class="post">
+  <h1>Unit Testing REST Services in Go</h1>
+  <time datetime=2021-08-22T00:00:00Z class="post-date">Sun, Aug 22, 2021</time>
+  <p>Building software is a complex process. A software project perceived to be simple when started can easily grow to having thousands of lines of code. Also, unforeseen circumstances are common occurrence for any software project and this can cause a lot of unplanned changes. Making changes to a software can be very hard and unpredictable, especially when it is not done carefully, there has been many real life instances where numerous problems or bugs were introduce to a software due to some changes made to it. This is also known as regression bug - a bug introduced as a result of a change or changes in a system.
+Writing automated tests is a great solution to minimising regression bug. Alongside with preventing regression bug, here are some other benefits of automated testing.</p>
+<ul>
+<li>Enhance fast iterable feature development.</li>
+<li>Faster &amp; more accurate - Can you manually test 100s of HTTP endpoints in secs? Test automation can!</li>
+<li>Easier code improvement &amp; maintainability</li>
+</ul>
+<p>Of course, you can read more about the numerous benefits you can acquire by writing automated tests - <a href="https://www.testim.io/blog/test-automation-benefits/">https://www.testim.io/blog/test-automation-benefits/</a></p>
+<p>One aspect of software development cycle where there&rsquo;s less learning resources is automated testing. I personally had problems understanding why automated testing is needed and most importantly, how to do it right. Why i have to write code to test my code? Sounds elegant but some things don&rsquo;t really make sense until you see how much values they bring.</p>
+<p>In this article, we&rsquo;re going to see how to write automated tests for Go REST services. Hopefully, someone out there would find it useful!</p>
+<h4 id="assumptions">Assumptions</h4>
+<p>I assume you have basic knowledge of how HTTP request &amp; response works, Golang knowledge is not essential as you can apply the principles in other languages, although many Golang specific library and semantics are used, it shouldn&rsquo;t be too hard to take the principles and use them in other programming environments.</p>
+<h3 id="so-what-are-unit-tests">So what are Unit tests?</h3>
+<p>Before we dive in, i think it&rsquo;s important to understand what Unit tests are. A Unit test is similar to what the name suggests, it is written to test a unit section or function in a particular software program, it is done to make sure a unit/function in a program behaves as expected, it is often written to mimic multiple scenario ensuring the program unit behaves as expected when tested under all these scenarios. One important characteristics of Unit tests is <code>Speed</code>. Unit tests should
+run very quickly because the programmer would run them multiple time during the course of programming and development.</p>
+<h3 id="the-nethttphttptest-package">The <code>net/http/httptest</code> Package</h3>
+<p>The Go standard library does not only provide rich packages to write http servers but it also provide rich packages to test them. The best place to look when looking to test REST services in Go is in the <code>net/http/httptest</code> package. It provides a hassle free components to test http handlers. As we&rsquo;ll soon see, this package provide a way to create <code>http.Request</code> and <code>http.ResponseWriter</code> object which are important parts of any Go http handler. You can read more about this package <a href="https://pkg.go.dev/net/http/httptest">HERE - GoDoc</a></p>
+<h3 id="golang-interfaces">Golang Interfaces</h3>
+<p><em>Don&rsquo;t worry - I am not moving away from our topic.</em> Interfaces in Golang are very essential when writing tests - especially unit tests. They provide an excellent way to abstract concrete implementation of a logical function. Consider an example below:</p>
+<div class="highlight"><pre style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span><span style="color:#069;font-weight:bold">type</span> Greeter <span style="color:#069;font-weight:bold">interface</span> {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span>    <span style="color:#c0f">Greet</span>(name <span style="color:#078;font-weight:bold">string</span>) (<span style="color:#078;font-weight:bold">string</span>, <span style="color:#078;font-weight:bold">error</span>)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span>}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span><span style="color:#069;font-weight:bold">type</span> realGreeter <span style="color:#069;font-weight:bold">struct</span> {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span>    c RestClient
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span>} 
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span><span style="color:#069;font-weight:bold">func</span> (r <span style="color:#555">*</span>realGreeter) <span style="color:#c0f">Greet</span>(name <span style="color:#078;font-weight:bold">string</span>) (<span style="color:#078;font-weight:bold">string</span>, <span style="color:#078;font-weight:bold">error</span>) {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span>    <span style="color:#069;font-weight:bold">if</span> r.c.<span style="color:#c0f">Authorized</span>(name) {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span>        <span style="color:#069;font-weight:bold">return</span> <span style="color:#c30">&#34;Hello &#34;</span> <span style="color:#555">+</span> name, <span style="color:#069;font-weight:bold">nil</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span>    }
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span>    <span style="color:#069;font-weight:bold">return</span> <span style="color:#c30">&#34;&#34;</span>, errors.<span style="color:#c0f">New</span>(<span style="color:#c30">&#34;You&#39;re not allowed to be greeted&#34;</span>)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span>}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span><span style="color:#069;font-weight:bold">type</span> fakeGreeter <span style="color:#069;font-weight:bold">struct</span> {}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16</span><span style="color:#069;font-weight:bold">func</span> (r <span style="color:#555">*</span>fakeGreeter) <span style="color:#c0f">Greet</span>(name <span style="color:#078;font-weight:bold">string</span>) (<span style="color:#078;font-weight:bold">string</span>, <span style="color:#078;font-weight:bold">error</span>) {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17</span>   <span style="color:#069;font-weight:bold">return</span> <span style="color:#c30">&#34;Hi, Mr. &#34;</span> <span style="color:#555">+</span> name
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18</span>}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20</span><span style="color:#069;font-weight:bold">type</span> GreeterEngine <span style="color:#069;font-weight:bold">struct</span> {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21</span>    greeter Greeter
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22</span>}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">23</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">24</span><span style="color:#069;font-weight:bold">func</span> <span style="color:#c0f">main</span>() {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">25</span>    env <span style="color:#555">:=</span> os.<span style="color:#c0f">Getenv</span>(<span style="color:#c30">&#34;ENV&#34;</span>)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">26</span>    g <span style="color:#555">:=</span> <span style="color:#555">&amp;</span>realGreeter{}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">27</span>    <span style="color:#069;font-weight:bold">if</span> env <span style="color:#555">==</span> <span style="color:#c30">&#34;local&#34;</span> {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">28</span>        g = <span style="color:#555">&amp;</span>fakeGreeter{}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">29</span>    }
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">30</span>    engine <span style="color:#555">:=</span> <span style="color:#555">&amp;</span>GreeterEnginer{greeter: g}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">31</span>    r, err <span style="color:#555">:=</span> engine.greeter.<span style="color:#c0f">Greet</span>(<span style="color:#c30">&#34;Robot&#34;</span>)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">32</span>    assert.<span style="color:#c0f">Nil</span>(err)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">33</span>    assert.<span style="color:#c0f">Equals</span>(r, <span style="color:#c30">&#34;Hi, Mr. Robot&#34;</span>)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">34</span>}
+</code></pre></div><p>Long piece of code, i know and i wish i could make it shorter :(</p>
+<p>The main point to be noted in the code snippet above is how we switch the implementation of a <code>Greeter</code> in a <code>GreeterEngine</code> based on the environment our code is executed in. This is a very useful trick when writing test, <code>Unit test</code> is about control - you should be able to control scenarios and outcomes because that is how you get power to test your systems as you see fit. The above example can also be related to a real life case where you can switch a real implementation of
+a function(e.g a function that makes HTTP or database calls as part of it operation) to a fake function(e.g a function that mocks HTTP or database calls). As we&rsquo;ll soon see later in this post, interfaces are used heavily when mocking service dependencies which is one of the most important aspect of unit testing.</p>
+<h3 id="mocking">Mocking</h3>
+<p>Mocking is creating objects and functions that simulates or mimic the behavior of real objects/functions. REST services code structures are often complex with many dependencies. One of the best way to isolate these dependencies without too much hassles and unnecessary resources wasting is mocking. Let&rsquo;s assume you need to test an API endpoint that accepts user details, performs data transformation and finally, persist the data. Your responsibility as a unit tester is to make sure you successfully accept, process and make calls to the database to persist the data, whether database connection succeeds or not is NOT your responsibility which is why you would <code>mock</code> this aspect. Unit testing is also about assumption, putting it mildly &ndash; <strong>Assuming database connection state is X, then API behavior should be Y</strong></p>
+<p>Enough talking, show me the code!</p>
+<h2 id="an-example">An Example</h2>
+<p>We are going ahead to create a simple sample project to demonstrate testing REST services. We want a simple system that creates blog posts via an endpoint plus another endpoint that retrieves the created posts &ndash; we are picking a well understood example simply because it&rsquo;ll allow us focus more on how unit testing works rather than the example project itself.</p>
+<p>Let&rsquo;s dive in!</p>
+<p>Quickly download and open the completed code for this project. It is hosted on <a href="https://github.com/adigunhammedolalekan/rest-services-testing">GITHUB</a></p>
+<p>We will first take a quick overview of the external packages we&rsquo;ll be using in this project. Below is a list and a brief explanation of what each package is used for in this sample project.</p>
+<ul>
+<li>chi <a href="https://github.com/go-chi/chi">Github</a> - <code>Github:</code> lightweight, idiomatic and composable router for building Go HTTP services. Like we&rsquo;ve seen in the description, we use this package to create our REST service.</li>
+<li>testify <a href="https://github.com/stretchr/testify">Github</a> - <code>Github: </code>A toolkit with common assertions and mocks that plays nicely with the standard library. &ndash; This is used in this example to facilitate easy testing.</li>
+<li>gomock <a href="github.com/golang/mock">Github</a> - <code>Github: </code> GoMock is a mocking framework for the Go programming language. An initial setup steps is required to use GoMock, latest installation instruction can be found <a href="https://github.com/golang/mock">HERE</a> &ndash; This package is used to mock test dependencies.</li>
+</ul>
+<div class="highlight"><pre style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span><span style="color:#069;font-weight:bold">package</span> handlers
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span><span style="color:#069;font-weight:bold">import</span> (
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span>	<span style="color:#c30">&#34;encoding/json&#34;</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span>	<span style="color:#c30">&#34;github.com/adigunhammedolalekan/rest-unit-testing-sample/repository&#34;</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span>	<span style="color:#c30">&#34;github.com/go-chi/render&#34;</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span>	<span style="color:#c30">&#34;net/http&#34;</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span>)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span><span style="color:#069;font-weight:bold">type</span> Handler <span style="color:#069;font-weight:bold">struct</span> {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span>	repo repository.Repository
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span>}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span><span style="color:#069;font-weight:bold">func</span> <span style="color:#c0f">New</span>(repo repository.Repository) <span style="color:#555">*</span>Handler {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span>	<span style="color:#069;font-weight:bold">return</span> <span style="color:#555">&amp;</span>Handler{repo: repo}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16</span>}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18</span><span style="color:#069;font-weight:bold">func</span> (handler <span style="color:#555">*</span>Handler) <span style="color:#c0f">CreatePostHandler</span>(w http.ResponseWriter, r <span style="color:#555">*</span>http.Request) {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19</span>	<span style="color:#069;font-weight:bold">var</span> body <span style="color:#069;font-weight:bold">struct</span>{
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20</span>		Title <span style="color:#078;font-weight:bold">string</span> <span style="color:#c30">`json:&#34;title&#34;`</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21</span>		Body <span style="color:#078;font-weight:bold">string</span> <span style="color:#c30">`json:&#34;body&#34;`</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22</span>	}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">23</span>	<span style="color:#069;font-weight:bold">if</span> err <span style="color:#555">:=</span> json.<span style="color:#c0f">NewDecoder</span>(r.Body).<span style="color:#c0f">Decode</span>(<span style="color:#555">&amp;</span>body); err <span style="color:#555">!=</span> <span style="color:#069;font-weight:bold">nil</span> {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">24</span>		render.<span style="color:#c0f">Status</span>(r, http.StatusBadRequest)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">25</span>		render.<span style="color:#c0f">Respond</span>(w, r, <span style="color:#555">&amp;</span>response{Success: <span style="color:#069;font-weight:bold">false</span>, Message: <span style="color:#c30">&#34;malformed body&#34;</span>})
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">26</span>		<span style="color:#069;font-weight:bold">return</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">27</span>	}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">28</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">29</span>	token <span style="color:#555">:=</span> r.Header.<span style="color:#c0f">Get</span>(<span style="color:#c30">&#34;x-auth-token&#34;</span>)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">30</span>	user, err <span style="color:#555">:=</span> handler.repo.<span style="color:#c0f">GetUser</span>(token)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">31</span>	<span style="color:#069;font-weight:bold">if</span> err <span style="color:#555">!=</span> <span style="color:#069;font-weight:bold">nil</span> {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">32</span>		render.<span style="color:#c0f">Status</span>(r, http.StatusForbidden)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">33</span>		render.<span style="color:#c0f">Respond</span>(w, r, <span style="color:#555">&amp;</span>response{Success: <span style="color:#069;font-weight:bold">false</span>, Message: <span style="color:#c30">&#34;forbidden&#34;</span>})
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">34</span>		<span style="color:#069;font-weight:bold">return</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">35</span>	}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">36</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">37</span>	p, err <span style="color:#555">:=</span> handler.repo.<span style="color:#c0f">CreatePost</span>(user.ID.<span style="color:#c0f">String</span>(), body.Title, body.Body)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">38</span>	<span style="color:#069;font-weight:bold">if</span> err <span style="color:#555">!=</span> <span style="color:#069;font-weight:bold">nil</span> {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">39</span>		render.<span style="color:#c0f">Status</span>(r, http.StatusInternalServerError)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">40</span>		render.<span style="color:#c0f">Respond</span>(w, r, <span style="color:#555">&amp;</span>response{Success: <span style="color:#069;font-weight:bold">false</span>, Message: <span style="color:#c30">&#34;server error&#34;</span>})
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">41</span>		<span style="color:#069;font-weight:bold">return</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">42</span>	}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">43</span>	render.<span style="color:#c0f">Status</span>(r, http.StatusOK)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">44</span>	render.<span style="color:#c0f">Respond</span>(w, r, <span style="color:#555">&amp;</span>response{Success: <span style="color:#069;font-weight:bold">true</span>, Message: <span style="color:#c30">&#34;post.created&#34;</span>, Data: p})
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">45</span>}
+</code></pre></div><p>The code block above contains an http handler - <code>CreatePostHandler</code>. This handler is self explanatory but let&rsquo;s see a detailed explanation below.</p>
+<p>Line 19-22 defined a temporary struct to hold a Post data sent by a client. Line 23-27 decodes the request&rsquo;s JSON body into our defined temp struct, this will return a <code>400 - Badrequest</code> error when a malformed or non-JSON body is detected. Line 29-35 performs authorization check to ensure the user that&rsquo;s about to create a post is allowed to do so. In this example, we used a fictional authentication and authorization system in order to keep the example simple and not take our eyes off the goal. And, finally Line 37-45 send the new Post to a persistence layer, error is returned if there were problems while interacting with the persistence layer or a success message is returned otherwise.</p>
+<p>Let&rsquo;s look at how to test this handler.</p>
+<p>First step is to generate mocks for our persistence layer, i explained previously how dependent services needs to be mocked in other to have control and test our service as we see fit &ndash; which is exactly what we are going to do here because database is a service we depend on. For this purpose, we will be using <code>GoMock</code>.</p>
+<p>Change to the project root directory and run the command below(assuming you installed <code>mockgen</code>):</p>
+<div class="highlight"><pre style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1</span>mockgen -source<span style="color:#555">=</span>repo.go -destination<span style="color:#555">=</span>../mocks/repository_mock.go -package<span style="color:#555">=</span>mocks
+</code></pre></div><p>The above command will generate mock implementations for <code>repository/repo.go</code> and put them in <code>mocks</code> directory/package. We will be using the generated code to mock our database dependency.</p>
+<p>We&rsquo;ll go ahead and separate our test code into three main parts - <code>arrange</code>, <code>act</code> and <code>assert</code>, this is a common pattern considered to be the best way to write good tests. Let&rsquo;s take advantage of it!</p>
+<p>Before that, let&rsquo;s take a look at steps involved in each stage.</p>
+<ul>
+<li>Create an implementation of <code>http.ResponseWriter</code> provided to us by the <code>net/http/httptest</code> package. And, create a new mock Controller.</li>
+</ul>
+<div class="highlight"><pre style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1</span>w <span style="color:#555">:=</span> httptest.<span style="color:#c0f">NewRecorder</span>()
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2</span>ctrl <span style="color:#555">:=</span> gomock.<span style="color:#c0f">NewController</span>(t)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">3</span><span style="color:#069;font-weight:bold">defer</span> ctrl.<span style="color:#c0f">Finish</span>()
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">4</span>
+</code></pre></div><ul>
+<li>Setup a mock http request, you can customize this request according to your test need. In this project, We simply added a dummy Post{} object in the body of the request, we also added a mock authorization token to satisfy the requirement for our &lsquo;Fictional&rsquo; auth and authz system.</li>
+</ul>
+<div class="highlight"><pre style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span>    <span style="color:#069;font-weight:bold">type</span> body <span style="color:#069;font-weight:bold">struct</span>{
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span>		Title <span style="color:#078;font-weight:bold">string</span> <span style="color:#c30">`json:&#34;title&#34;`</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span>		Body <span style="color:#078;font-weight:bold">string</span> <span style="color:#c30">`json:&#34;body&#34;`</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span>	}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span>	mockToken <span style="color:#555">:=</span> uuid.<span style="color:#c0f">New</span>().<span style="color:#c0f">String</span>()
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span>	mockPost <span style="color:#555">:=</span> <span style="color:#555">&amp;</span>body{Title: <span style="color:#c30">&#34;Test Title&#34;</span>, Body: <span style="color:#c30">&#34;Test Body&#34;</span>}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span>	mockUser <span style="color:#555">:=</span> <span style="color:#555">&amp;</span>types.User{ID: uuid.<span style="color:#c0f">New</span>(), Name: <span style="color:#c30">&#34;Tester&#34;</span>}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span>	buf <span style="color:#555">:=</span> <span style="color:#555">&amp;</span>bytes.Buffer{}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span>	err <span style="color:#555">:=</span> json.<span style="color:#c0f">NewEncoder</span>(buf).<span style="color:#c0f">Encode</span>(mockPost)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span>	assert.<span style="color:#c0f">Nil</span>(t, err)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span>	r <span style="color:#555">:=</span> httptest.<span style="color:#c0f">NewRequest</span>(<span style="color:#c30">&#34;POST&#34;</span>, <span style="color:#c30">&#34;/&#34;</span>, buf)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span>	r.Header.<span style="color:#c0f">Add</span>(<span style="color:#c30">&#34;x-auth-token&#34;</span>, mockToken)
+</code></pre></div><ul>
+<li>Create mock instance for <code>Repository</code> &ndash; which represents our persistence layer that we&rsquo;re specifically interested in mocking out. Also, set expectations. Setting expectations is how we make sure nothing else happens except for what we&rsquo;ve actually written in our http handler. It is also a way to control our mock, tell it what input to expect, how many times it is expected to be called and set an output. This aspect can be a little bit confusing but it&rsquo;s very key to writing good unit tests for http handlers.</li>
+</ul>
+<div class="highlight"><pre style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1</span>    repo <span style="color:#555">:=</span> mocks.<span style="color:#c0f">NewMockRepository</span>(ctrl)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2</span>	repo.<span style="color:#c0f">EXPECT</span>().<span style="color:#c0f">GetUser</span>(mockToken).<span style="color:#c0f">Return</span>(mockUser, <span style="color:#069;font-weight:bold">nil</span>).<span style="color:#c0f">Times</span>(<span style="color:#f60">1</span>)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">3</span>	repo.<span style="color:#c0f">EXPECT</span>().<span style="color:#c0f">CreatePost</span>(mockUser.ID.<span style="color:#c0f">String</span>(), mockPost.Title, mockPost.Body).<span style="color:#c0f">Return</span>(<span style="color:#555">&amp;</span>types.Post{}, <span style="color:#069;font-weight:bold">nil</span>).<span style="color:#c0f">Times</span>(<span style="color:#f60">1</span>)
+</code></pre></div><ul>
+<li>Execute handler and assert expectations. This is where we execute our http handler &ndash; <code>In a non-test context, this is equivalent to making http request to our handler</code>. We also check if we have expected http statuscode and response body &ndash; This makes sense because this is what our users would do. By making sure we have the expected/correct statuscode, we&rsquo;ve effectively tested this http handler.</li>
+</ul>
+<div class="highlight"><pre style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1</span>    handler <span style="color:#555">:=</span> <span style="color:#c0f">New</span>(repo)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2</span>	handler.<span style="color:#c0f">CreatePostHandler</span>(w, r)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">3</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">4</span>    assert.<span style="color:#c0f">Equal</span>(t, http.StatusOK, w.Code)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">5</span>    assert.<span style="color:#c0f">True</span>(t, strings.<span style="color:#c0f">Contains</span>(w.Body.<span style="color:#c0f">String</span>(), <span style="color:#c30">&#34;post.created&#34;</span>))
+</code></pre></div><p>Putting it all together,</p>
+<div class="highlight"><pre style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span><span style="color:#069;font-weight:bold">func</span> <span style="color:#c0f">TestHandler_CreatePostHandler</span>(t <span style="color:#555">*</span>testing.T) {
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span>    <span style="color:#09f;font-style:italic">// arrange
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span><span style="color:#09f;font-style:italic"></span>	w <span style="color:#555">:=</span> httptest.<span style="color:#c0f">NewRecorder</span>()
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span>	ctrl <span style="color:#555">:=</span> gomock.<span style="color:#c0f">NewController</span>(t)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span>	<span style="color:#069;font-weight:bold">defer</span> ctrl.<span style="color:#c0f">Finish</span>()
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span>	<span style="color:#069;font-weight:bold">type</span> body <span style="color:#069;font-weight:bold">struct</span>{
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span>		Title <span style="color:#078;font-weight:bold">string</span> <span style="color:#c30">`json:&#34;title&#34;`</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span>		Body <span style="color:#078;font-weight:bold">string</span> <span style="color:#c30">`json:&#34;body&#34;`</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span>	}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span>	mockToken <span style="color:#555">:=</span> uuid.<span style="color:#c0f">New</span>().<span style="color:#c0f">String</span>()
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span>	mockPost <span style="color:#555">:=</span> <span style="color:#555">&amp;</span>body{Title: <span style="color:#c30">&#34;Test Title&#34;</span>, Body: <span style="color:#c30">&#34;Test Body&#34;</span>}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16</span>	mockUser <span style="color:#555">:=</span> <span style="color:#555">&amp;</span>types.User{ID: uuid.<span style="color:#c0f">New</span>(), Name: <span style="color:#c30">&#34;Tester&#34;</span>}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17</span>	buf <span style="color:#555">:=</span> <span style="color:#555">&amp;</span>bytes.Buffer{}
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18</span>	err <span style="color:#555">:=</span> json.<span style="color:#c0f">NewEncoder</span>(buf).<span style="color:#c0f">Encode</span>(mockPost)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19</span>	assert.<span style="color:#c0f">Nil</span>(t, err)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21</span>	r <span style="color:#555">:=</span> httptest.<span style="color:#c0f">NewRequest</span>(<span style="color:#c30">&#34;POST&#34;</span>, <span style="color:#c30">&#34;/&#34;</span>, buf)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22</span>	r.Header.<span style="color:#c0f">Add</span>(<span style="color:#c30">&#34;x-auth-token&#34;</span>, mockToken)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">23</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">24</span>	repo <span style="color:#555">:=</span> mocks.<span style="color:#c0f">NewMockRepository</span>(ctrl)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">25</span>	repo.<span style="color:#c0f">EXPECT</span>().<span style="color:#c0f">GetUser</span>(mockToken).<span style="color:#c0f">Return</span>(mockUser, <span style="color:#069;font-weight:bold">nil</span>).<span style="color:#c0f">Times</span>(<span style="color:#f60">1</span>)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">26</span>	repo.<span style="color:#c0f">EXPECT</span>().<span style="color:#c0f">CreatePost</span>(mockUser.ID.<span style="color:#c0f">String</span>(), mockPost.Title, mockPost.Body).<span style="color:#c0f">Return</span>(<span style="color:#555">&amp;</span>types.Post{}, <span style="color:#069;font-weight:bold">nil</span>).<span style="color:#c0f">Times</span>(<span style="color:#f60">1</span>)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">27</span>
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">28</span>    <span style="color:#09f;font-style:italic">// act
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">29</span><span style="color:#09f;font-style:italic"></span>	handler <span style="color:#555">:=</span> <span style="color:#c0f">New</span>(repo)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">30</span>	handler.<span style="color:#c0f">CreatePostHandler</span>(w, r)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">31</span>    
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">32</span>    <span style="color:#09f;font-style:italic">// assert
+</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">33</span><span style="color:#09f;font-style:italic"></span>	assert.<span style="color:#c0f">Equal</span>(t, http.StatusOK, w.Code)
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">34</span>	assert.<span style="color:#c0f">True</span>(t, strings.<span style="color:#c0f">Contains</span>(w.Body.<span style="color:#c0f">String</span>(), <span style="color:#c30">&#34;post.created&#34;</span>))
+<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">35</span>}
+</code></pre></div><p>Full code, including the 2nd endpoint(to get created posts) and it test can be found in the <a href="https://github.com/adigunhammedolalekan/rest-services-testing">LINKED</a> github repository.</p>
+<p>Thanks for reading. I am actively taking feedback via email or my <a href="https://twitter.com/@L3kanAdigun">Twitter DM</a>.</p>
+<p>Happy coding :)</p>
+
+</div>
+
+
+    </main>
+
+    
+      
+    
+  </body>
+</html>
