@@ -23,14 +23,14 @@ In this article, we're going to see how to write automated tests for Go REST ser
 I assume you have basic knowledge of how HTTP request & response works, Golang knowledge is not essential as you can apply the principles in other languages, although many Golang specific library and semantics are used, it shouldn't be too hard to take the principles and use them in other programming environments.
 
 ### So what are Unit tests?
-Before we dive in, i think it's important to understand what Unit tests are. A Unit test is similar to what the name suggests, it is written to test a unit section or function in a particular software program, it is done to make sure a unit/function in a program behaves as expected, it is often written to mimic multiple scenario ensuring the program unit behaves as expected when tested under all these scenarios. One important characteristics of Unit tests is `Speed`. Unit tests should
-run very quickly because the programmer would run them multiple time during the course of programming and development.
+Before we dive in, i think it's important to understand what Unit tests are. A Unit test is similar to what the name suggests, it is written to test a unit section or function in a particular software program, it is done to make sure a unit/function in a program behaves as expected, it is often written to mimic multiple functional scenarios ensuring the program unit behaves as expected when tested under all these scenarios. One important characteristics of Unit tests is `Speed`. Unit tests should
+run very quickly because the programmer would run them multiple times during the course of development.
 
 ### The `net/http/httptest` Package
 The Go standard library does not only provide rich packages to write http servers but it also provide rich packages to test them. The best place to look when looking to test REST services in Go is in the `net/http/httptest` package. It provides a hassle free components to test http handlers. As we'll soon see, this package provide a way to create `http.Request` and `http.ResponseWriter` object which are important parts of any Go http handler. You can read more about this package [HERE - GoDoc](https://pkg.go.dev/net/http/httptest) 
 
 ### Golang Interfaces
-*Don't worry - I am not moving away from our topic.* Interfaces in Golang are very essential when writing tests - especially unit tests. They provide an excellent way to abstract concrete implementation of a logical function. Consider an example below:
+*Don't worry - I am not moving away from our topic.* Interfaces in Golang are essential when writing tests - especially unit tests. They provide an excellent way to abstract concrete implementation of a logical function. Consider an example below:
 
 
 ```go
@@ -77,7 +77,7 @@ a function(e.g a function that makes HTTP or database calls as part of it operat
 
 
 ### Mocking
-Mocking is creating objects and functions that simulates or mimic the behavior of real objects/functions. REST services code structures are often complex with many dependencies. One of the best way to isolate these dependencies without too much hassles and unnecessary resources wasting is mocking. Let's assume you need to test an API endpoint that accepts user details, performs data transformation and finally, persist the data. Your responsibility as a unit tester is to make sure you successfully accept, process and make calls to the database to persist the data, whether database connection succeeds or not is NOT your responsibility which is why you would `mock` this aspect. Unit testing is also about assumption, putting it mildly -- **Assuming database connection state is X, then API behavior should be Y** 
+Mocking is the process of creating objects and functions that simulates or mimics the behavior of real or actual objects/functions. REST services code structures are often complex with many dependencies. One of the best way to isolate these dependencies without too much hassles and unnecessary resources wasting is mocking. Let's assume you need to test an API endpoint that accepts user details, performs data transformation and finally, persist the data. Your responsibility as a unit tester is to make sure you successfully accept, process and make calls to the database to persist the data, whether database connection succeeds or not is NOT your responsibility which is why you would `mock` this aspect. Unit testing is also about assumption, putting it mildly -- **Assuming database connection state is X, then API behavior should be Y** 
 
 Enough talking, show me the code!
 
@@ -149,7 +149,7 @@ Line 19-22 defined a temporary struct to hold a Post data sent by a client. Line
 
 Let's look at how to test this handler.   
 
-First step is to generate mocks for our persistence layer, i explained previously how dependent services needs to be mocked in other to have control and test our service as we see fit -- which is exactly what we are going to do here because database is a service we depend on. For this purpose, we will be using `GoMock`.   
+The first step is to generate mocks for our persistence layer, i explained previously how dependent services needs to be mocked in other to have control and test our service as we see fit -- which is exactly what we are going to do here because database is a service we depend on. For this purpose, we will be using `GoMock`.   
 
 Change to the project root directory and run the command below(assuming you installed `mockgen`):   
 ```shell script
@@ -158,7 +158,7 @@ mockgen -source=repo.go -destination=../mocks/repository_mock.go -package=mocks
 
 The above command will generate mock implementations for `repository/repo.go` and put them in `mocks` directory/package. We will be using the generated code to mock our database dependency.   
 
-We'll go ahead and separate our test code into three main parts - `arrange`, `act` and `assert`, this is a common pattern considered to be the best way to write good tests. Let's take advantage of it!   
+We'll go ahead and separate our test code into three main parts - `arrange`, `act` and `assert`, this pattern is common and considered to be the best way to write good tests. Let's take advantage of it!   
 
 Before that, let's take a look at steps involved in each stage.   
 
