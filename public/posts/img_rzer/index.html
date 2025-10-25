@@ -1,58 +1,175 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-us" lang="en-us">
-<head>
-  <link href="https://gmpg.org/xfn/11" rel="profile">
-  <meta http-equiv="content-type" content="text/html; charset=utf-8">
-  <meta name="generator" content="Hugo 0.66.0" />
+<html lang="en-us"
+  dir="ltr">
 
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <title>How to resize images for better upload/download performance. Android Development. &middot; Lekan Adigun</title>
-  <meta name="description" content="" />
-
-  
-  <link type="text/css" rel="stylesheet" href="https://lekan.wtf/css/print.css" media="print">
-  <link type="text/css" rel="stylesheet" href="https://lekan.wtf/css/poole.css">
-  <link type="text/css" rel="stylesheet" href="https://lekan.wtf/css/syntax.css">
-  <link type="text/css" rel="stylesheet" href="https://lekan.wtf/css/hyde.css">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Abril+Fatface|PT+Sans:400,400i,700">
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+  <meta charset="utf-8">
+<meta name="viewport" content="width=device-width">
 
 
-  
-  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/apple-touch-icon-144-precomposed.png">
-  <link rel="shortcut icon" href="/favicon.png">
 
-  
-  
+
+
+
+
+
+    
+
+
+
+
+
+
+<link rel="icon" type="image/ico" href="http://localhost:1313//favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313//favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313//favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="http://localhost:1313//android-chrome-192x192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="http://localhost:1313//apple-touch-icon.png">
+
+<meta name="description" content=""/>
+
+
+
+<title>
+    
+    How to resize images for better upload/download performance. Android Development. | Hammed Adigun
+    
+</title>
+
+<link rel="canonical" href="http://localhost:1313/posts/img_rzer/"/>
+
+<meta property="og:url" content="http://localhost:1313/posts/img_rzer/">
+  <meta property="og:site_name" content="Hammed Adigun">
+  <meta property="og:title" content="How to resize images for better upload/download performance. Android Development.">
+  <meta property="og:description" content="Its not very common to see a project that doesn’t require photo upload in one form or the other. Most high end android device today create a photo as big as 2MB. This is a problem, How? Imagine you are building a mobile app that require your users to have a profile picture, having scalabilty in mind, each photo must not be &gt; 100KB, am i right?. You dont want to save a 1MB photo for each user. It will not only affect your UX, your server would suffer as well. Uploading large photo to remote server can cause one or all of the following problems">
+  <meta property="og:locale" content="en_us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2017-09-04T00:00:00+00:00">
+    <meta property="article:modified_time" content="2017-09-04T00:00:00+00:00">
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/assets/combined.min.0f4f5c64ee7100cff28e7c7366d922b5499829f72c91a53b9b17f236d85ad7e7.css" media="all">
+
+
+
+
+
+
+
+
+
+
+
+    
+
+
+
+
 </head>
 
-  <body class=" ">
-  <aside class="sidebar">
-  <div class="container sidebar-sticky">
-    <div class="sidebar-about">
-      <a href="https://lekan.wtf/"><h1>Lekan Adigun</h1></a>
-      <p class="lead">
-       SRE. Golang 
-      </p>
+
+
+
+
+
+
+<body class="auto">
+
+  <div class="content">
+    <header>
+      
+
+<div class="header">
+
+    
+
+    <h1 class="header-title">
+        <a href="http://localhost:1313/">Hammed Adigun</a>
+    </h1>
+
+    <div class="flex">
+        
+
+        
+        
+      
+        <p class="small ">
+            <a href="/posts" >
+                /posts
+            </a>
+        </p>
+        
+      
+        <p class="small ">
+            <a href="/projects" >
+                /projects
+            </a>
+        </p>
+        
+        
     </div>
 
-    <nav>
-      <ul class="sidebar-nav">
-        <li><a href="https://lekan.wtf/">Home</a> </li>
-        <li><a href="mailto:adigunhammed.lekan@gmail.com"> Email </a></li><li><a href="https://github.com/adigunhammedolalekan/"> Github </a></li><li><a href="https://twitter.com/L3kanAdigun/"> Twitter </a></li>
-      </ul>
-    </nav>
+    
 
-    <p>&copy; 2021. All rights reserved. </p>
+</div>
+
+    </header>
+
+    <main class="main">
+      
+
+
+
+
+<div class="breadcrumbs"><a href="/">~</a><span class="breadcrumbs-separator">/</span><a href="/posts/">Posts</a><span class="breadcrumbs-separator">/</span>
+        <a href="/posts/img_rzer/">How to resize images for better upload/download performance. Android Development.</a></div>
+
+
+<div >
+
+  <div class="single-intro-container">
+
+    
+
+    <h1 class="single-title">How to resize images for better upload/download performance. Android Development.</h1>
+    
+
+    
+
+    <p class="single-readtime">
+      
+      
+      
+      <time datetime="2017-09-04T00:00:00&#43;00:00">4 Sep 2017</time>
+      
+
+      
+    </p>
+
   </div>
-</aside>
 
-    <main class="content container">
-    <div class="post">
-  <h1>How to resize images for better upload/download performance. Android Development.</h1>
-  <time datetime=2017-09-04T00:00:00Z class="post-date">Mon, Sep 4, 2017</time>
-  <p>Its not very common to see a project that doesn’t require photo upload in one form or the other. Most high end android device today create a photo as big as 2MB. This is a problem, How? Imagine you are building a mobile app that require your users to have a profile picture, having scalabilty in mind, each photo must not be &gt; 100KB, am i right?. You dont want to save a 1MB photo for each user. It will not only affect your UX, your server would suffer as well. Uploading large photo to remote server can cause one or all of the following problems</p>
+  
+
+  
+
+  
+
+  
+
+  <div class="single-content">
+    <p>Its not very common to see a project that doesn’t require photo upload in one form or the other. Most high end android device today create a photo as big as 2MB. This is a problem, How? Imagine you are building a mobile app that require your users to have a profile picture, having scalabilty in mind, each photo must not be &gt; 100KB, am i right?. You dont want to save a 1MB photo for each user. It will not only affect your UX, your server would suffer as well. Uploading large photo to remote server can cause one or all of the following problems</p>
 <ul>
 <li>
 <p>Slow upload/download operation on devices with low network bandwidth</p>
@@ -64,10 +181,16 @@
 <p>And MORE…</p>
 </li>
 </ul>
-<h3 id="solution">SOLUTION</h3>
+<h3 class="heading" id="solution">
+  SOLUTION
+  <a class="anchor" href="#solution">#</a>
+</h3>
 <p>The real obvious solution is to have the photo resized before sending to remote server. Good!. But, how? Thats what i am trying to show.</p>
 <p>I had little problem figuring out how i would solve this when i started writting apps for android, so i just decided to share it today. I am looking forward to seeing someone that will show me a better way of doing it. Lets go!</p>
-<h3 id="assumption"><strong>Assumption</strong></h3>
+<h3 class="heading" id="assumption">
+  <strong>Assumption</strong>
+  <a class="anchor" href="#assumption">#</a>
+</h3>
 <ul>
 <li>
 <p>I assume you are convenient with Java programming language(Thats what i’ll be using, you can easily grab it if you have experience with other programming languages too.)</p>
@@ -79,7 +202,27 @@
 <p>Create a new android studio project. I call mine EasyPhotoUpload</p>
 </li>
 </ul>
-<p><img src="https://cdn-images-1.medium.com/max/2732/1*YuJYPjO6KHQv4zCprHlEHA.png" alt=""></p>
+<p>
+
+
+
+
+
+
+
+
+
+
+
+<figure class="">
+
+    <div class="img-container" >
+        <img loading="lazy" alt="" src="https://cdn-images-1.medium.com/max/2732/1*YuJYPjO6KHQv4zCprHlEHA.png" >
+    </div>
+
+    
+</figure>
+</p>
 <p>Project name — EasyPhotoUpload</p>
 <p>Min SDK — 4.0.3, API 15</p>
 <p>Basically, we are trying to</p>
@@ -96,7 +239,27 @@
 </ul>
 <p>The final code for this article is available on github — <a href="https://github.com/adigunhammedolalekan/easyphotoupload">https://github.com/adigunhammedolalekan/easyphotoupload</a></p>
 <p>Once android studio finished building the project and you are all ready, create these packages — core, listeners, utils</p>
-<p><img src="https://cdn-images-1.medium.com/max/2732/1*DyCVICAyc6rdKEEUzStL1Q.png" alt=""></p>
+<p>
+
+
+
+
+
+
+
+
+
+
+
+<figure class="">
+
+    <div class="img-container" >
+        <img loading="lazy" alt="" src="https://cdn-images-1.medium.com/max/2732/1*DyCVICAyc6rdKEEUzStL1Q.png" >
+    </div>
+
+    
+</figure>
+</p>
 <p>Under util package, create a new class, Util.java, the following is the content of the file.</p>
 <p>‘public class Util {</p>
 <p>//SDF to generate a unique name for the compressed file.
@@ -121,7 +284,7 @@ File root = new File(rootDir);</p>
 if(!root.exists())
 root.mkdirs();</p>
 <p>//decode and resize the original bitmap from <a href="http://twitter.com/param">@param</a> path.
-Bitmap bitmap = decodeImageFromFiles(path, /* your desired width*/300, /*your desired height*/ 300);</p>
+Bitmap bitmap = decodeImageFromFiles(path, /* your desired width*/300, /<em>your desired height</em>/ 300);</p>
 <p>//create placeholder for the compressed image file
 File compressed = new File(root, SDF.format(new Date()) + “.jpg” /<em>Your desired format</em>/);</p>
 <p>//convert the decoded bitmap to stream
@@ -291,20 +454,114 @@ imageCompressTask = null;
 }’</p>
 <p>All the codes are well commented, but if you have problem with any part. Do let me know! All the codes are on github, visit it for better view. The screenshoot from the final result.</p>
 <p>I’ll love your contribution to this. Thanks!</p>
-<p><img src="https://cdn-images-1.medium.com/max/2000/1*Ft4n6WXie7yij3_bEghHIQ.png" alt=""></p>
-<h3 id="about-me">About Me</h3>
+<p>
+
+
+
+
+
+
+
+
+
+
+
+<figure class="">
+
+    <div class="img-container" >
+        <img loading="lazy" alt="" src="https://cdn-images-1.medium.com/max/2000/1*Ft4n6WXie7yij3_bEghHIQ.png" >
+    </div>
+
+    
+</figure>
+</p>
+<h3 class="heading" id="about-me">
+  About Me
+  <a class="anchor" href="#about-me">#</a>
+</h3>
 <p>I am a passionate mobile app developer with 2.5+ experience building great apps for the android platform. If you need my talent, feel free to contact me!</p>
 <p>Github — <a href="http://www.github.com/adigunhammedolalekan">www.github.com/adigunhammedolalekan</a></p>
 <p>Mail — <a href="mailto:adigunhammed.lekan@gmail.com">adigunhammed.lekan@gmail.com</a></p>
 <p>Contact — 07035452307</p>
 
+    
+  </div>
+
+  
+
+  
+
+  
+  
+
+<div class="single-pagination">
+    <hr />
+
+    <div class="flexnowrap">
+
+        <div class="single-pagination-prev">
+            
+        </div>
+
+        <div class="single-pagination-next">
+            
+            <div class="single-pagination-container-next">
+                <div class="single-pagination-text">
+                    <a href="/posts/c_build_api_with_go/">
+                        Build and Deploy a secure REST API with Go, Postgresql, JWT and GORM
+                    </a>
+                </div>
+                <div class="single-pagination-text">→</div>
+            </div>
+            
+        </div>
+
+    </div>
+
+    <hr />
+</div>
+
+
+
+  
+
+  
+
+  
+  <div class="back-to-top">
+    <a href="#top">
+      back to top
+    </a>
+  </div>
+  
+
 </div>
 
 
     </main>
+  </div>
+
+  
+  
+
+
+
+
 
     
-      
+
+
+
+
+  <footer>
     
-  </body>
+
+
+  </footer>
+
+  
+</body>
+
+<script src="/js/theme-switch.js"></script>
+<script defer src="/js/copy-code.js"></script>
 </html>

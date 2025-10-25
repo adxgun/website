@@ -1,321 +1,546 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-us" lang="en-us">
-<head>
-  <link href="https://gmpg.org/xfn/11" rel="profile">
-  <meta http-equiv="content-type" content="text/html; charset=utf-8">
-  <meta name="generator" content="Hugo 0.66.0" />
+<html lang="en-us"
+  dir="ltr">
 
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <title>Golang Application on Kubernetes &middot; Lekan Adigun</title>
-  <meta name="description" content="" />
-
-  
-  <link type="text/css" rel="stylesheet" href="https://lekan.wtf/css/print.css" media="print">
-  <link type="text/css" rel="stylesheet" href="https://lekan.wtf/css/poole.css">
-  <link type="text/css" rel="stylesheet" href="https://lekan.wtf/css/syntax.css">
-  <link type="text/css" rel="stylesheet" href="https://lekan.wtf/css/hyde.css">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Abril+Fatface|PT+Sans:400,400i,700">
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+  <meta charset="utf-8">
+<meta name="viewport" content="width=device-width">
 
 
-  
-  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/apple-touch-icon-144-precomposed.png">
-  <link rel="shortcut icon" href="/favicon.png">
 
-  
-  
+
+
+
+
+
+    
+
+
+
+
+
+
+<link rel="icon" type="image/ico" href="http://localhost:1313//favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313//favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313//favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="http://localhost:1313//android-chrome-192x192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="http://localhost:1313//apple-touch-icon.png">
+
+<meta name="description" content=""/>
+
+
+
+<title>
+    
+    Golang Application on Kubernetes | Hammed Adigun
+    
+</title>
+
+<link rel="canonical" href="http://localhost:1313/posts/go-app-k8s/"/>
+
+<meta property="og:url" content="http://localhost:1313/posts/go-app-k8s/">
+  <meta property="og:site_name" content="Hammed Adigun">
+  <meta property="og:title" content="Golang Application on Kubernetes">
+  <meta property="og:description" content="This post is a complete walk-through of how to deploy a monolithic Go web application in a Kubernetes cluster, how to attach a domain name so that it can be publicly accessible and finally, how to secure it with LetsEncrypt&#39;s https and cert-manager. Lets ride!
+More About Kubernetes # Kubernetes is a portable, extensible, open-source platform for managing containerized workloads and services, that facilitates both declarative configuration and automation. It has a large, rapidly growing ecosystem. Kubernetes services, support, and tools are widely available. Containers are a good way to bundle and run your applications. In a production environment, you need to manage the containers that run the applications and ensure that there is no downtime. For example, if a container goes down, another container needs to start. Wouldn’t it be easier if this behavior was handled by a system?">
+  <meta property="og:locale" content="en_us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2020-03-14T00:00:00+00:00">
+    <meta property="article:modified_time" content="2020-03-14T00:00:00+00:00">
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/assets/combined.min.0f4f5c64ee7100cff28e7c7366d922b5499829f72c91a53b9b17f236d85ad7e7.css" media="all">
+
+
+
+
+
+
+
+
+
+
+
+    
+
+
+
+
 </head>
 
-  <body class=" ">
-  <aside class="sidebar">
-  <div class="container sidebar-sticky">
-    <div class="sidebar-about">
-      <a href="https://lekan.wtf/"><h1>Lekan Adigun</h1></a>
-      <p class="lead">
-       SRE. Golang 
-      </p>
+
+
+
+
+
+
+<body class="auto">
+
+  <div class="content">
+    <header>
+      
+
+<div class="header">
+
+    
+
+    <h1 class="header-title">
+        <a href="http://localhost:1313/">Hammed Adigun</a>
+    </h1>
+
+    <div class="flex">
+        
+
+        
+        
+      
+        <p class="small ">
+            <a href="/posts" >
+                /posts
+            </a>
+        </p>
+        
+      
+        <p class="small ">
+            <a href="/projects" >
+                /projects
+            </a>
+        </p>
+        
+        
     </div>
 
-    <nav>
-      <ul class="sidebar-nav">
-        <li><a href="https://lekan.wtf/">Home</a> </li>
-        <li><a href="mailto:adigunhammed.lekan@gmail.com"> Email </a></li><li><a href="https://github.com/adigunhammedolalekan/"> Github </a></li><li><a href="https://twitter.com/L3kanAdigun/"> Twitter </a></li>
-      </ul>
-    </nav>
+    
 
-    <p>&copy; 2021. All rights reserved. </p>
+</div>
+
+    </header>
+
+    <main class="main">
+      
+
+
+
+
+<div class="breadcrumbs"><a href="/">~</a><span class="breadcrumbs-separator">/</span><a href="/posts/">Posts</a><span class="breadcrumbs-separator">/</span>
+        <a href="/posts/go-app-k8s/">Golang Application on Kubernetes</a></div>
+
+
+<div >
+
+  <div class="single-intro-container">
+
+    
+
+    <h1 class="single-title">Golang Application on Kubernetes</h1>
+    
+
+    
+
+    <p class="single-readtime">
+      
+      
+      
+      <time datetime="2020-03-14T00:00:00&#43;00:00">14 Mar 2020</time>
+      
+
+      
+    </p>
+
   </div>
-</aside>
 
-    <main class="content container">
-    <div class="post">
-  <h1>Golang Application on Kubernetes</h1>
-  <time datetime=2020-03-14T00:00:00Z class="post-date">Sat, Mar 14, 2020</time>
-  <p>This post is a complete walk-through of how to deploy a monolithic Go web application in a Kubernetes cluster, how to attach a domain name so that it can be publicly accessible and finally, how to secure it with <code>LetsEncrypt's https and cert-manager</code>. Lets ride!</p>
-<h3 id="more-about-kubernetes">More About Kubernetes</h3>
+  
+
+  
+
+  
+
+  
+
+  <div class="single-content">
+    <p>This post is a complete walk-through of how to deploy a monolithic Go web application in a Kubernetes cluster, how to attach a domain name so that it can be publicly accessible and finally, how to secure it with <code>LetsEncrypt's https and cert-manager</code>. Lets ride!</p>
+<h3 class="heading" id="more-about-kubernetes">
+  More About Kubernetes
+  <a class="anchor" href="#more-about-kubernetes">#</a>
+</h3>
 <p>Kubernetes is a portable, extensible, open-source platform for managing containerized workloads and services, that facilitates both declarative configuration and automation. It has a large, rapidly growing ecosystem. Kubernetes services, support, and tools are widely available. Containers are a good way to bundle and run your applications. In a production environment, you need to manage the containers that run the applications and ensure that there is no downtime. For example, if a container goes down, another container needs to start. Wouldn’t it be easier if this behavior was handled by a system?</p>
 <p>That’s how Kubernetes comes to the rescue! Kubernetes provides you with a framework to run distributed systems resiliently. It takes care of scaling and failover for your application, provides deployment patterns, and more. For example, Kubernetes can easily manage a canary deployment for your system. <a href="https://kubernetes.io/docs/concepts/overview/what-is-kubernetes/">Find out more about Kubernetes</a></p>
-<h3 id="example-application">Example Application</h3>
+<h3 class="heading" id="example-application">
+  Example Application
+  <a class="anchor" href="#example-application">#</a>
+</h3>
 <p>I put together an example Go application. It&rsquo;s a dead-simple key-value store app backed by a redis database. I have chosen <code>redis database</code> in order to show how to setup and connect to an external storage service from inside a web application when both are running in the same Kubernetes cluster. The example application contains three endpoints, <code>/set</code> to set a value in the backing redis store, <code>/get</code> to get the stored value and <code>/status</code> to check the status or health of the application. The example app code is hosted <a href="https://github.com/adigunhammedolalekan/go-kubernetes-app">here on github</a>.</p>
-<h4 id="prerequisites-or-tools-required">Prerequisites or tools required</h4>
+<h4 class="heading" id="prerequisites-or-tools-required">
+  Prerequisites or tools required
+  <a class="anchor" href="#prerequisites-or-tools-required">#</a>
+</h4>
 <p>This post assumes you have <code>Docker &amp; Kubernetes</code> installed. It also assumes you have access to a <code>kubernetes cluster(Local or Cloud)</code> and Kubernetes management tool like <code>kubectl</code>. I am going to be using Docker Desktop for Mac <code>Docker Desktop (v 2.1.0.4)</code> .</p>
-<h3 id="deploying-redis">Deploying Redis</h3>
+<h3 class="heading" id="deploying-redis">
+  Deploying Redis
+  <a class="anchor" href="#deploying-redis">#</a>
+</h3>
 <p>Kubernetes has support for <code>deployment</code>, where you can define a deployment spec and Kubenetes will make sure your deployment is running up to the standard of the spec you defined. Kubernetes deployment is more useful for stateless applications. What would be more suitable for a stateful application &ndash; e.g databases or applications that needs their data to be persisted between container restarts and rescheduling, is Statefulset. Basically, the major difference between <code>Statefulset</code> and <code>deployment</code> is, Statefulset remembers its <code>state</code> after restarts or rescheduling, therefore container or application data is not lost when they crash whereas deployment is more lightweight and its mostly used for application or container that can rebuild it data from backend systems.</p>
 <p>Let&rsquo;s deploy our <code>redis</code> database with a kubernetes <code>Statefulset</code>. Create a <code>statefulsets.yml</code> and paste the following content.</p>
-<div class="highlight"><pre style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span><span style="color:#069;font-weight:bold">apiVersion</span>:<span style="color:#bbb"> </span>apps/v1<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span><span style="color:#bbb"></span><span style="color:#069;font-weight:bold">kind</span>:<span style="color:#bbb"> </span>StatefulSet<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span><span style="color:#bbb"></span><span style="color:#069;font-weight:bold">metadata</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">name</span>:<span style="color:#bbb"> </span>redis-store<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span><span style="color:#bbb"></span><span style="color:#069;font-weight:bold">spec</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">serviceName</span>:<span style="color:#bbb"> </span><span style="color:#c30">&#34;kv-redis-service&#34;</span><span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">replicas</span>:<span style="color:#bbb"> </span><span style="color:#f60">1</span><span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">selector</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span><span style="color:#bbb">    </span><span style="color:#069;font-weight:bold">matchLabels</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span><span style="color:#bbb">      </span><span style="color:#069;font-weight:bold">app</span>:<span style="color:#bbb"> </span>kv-redis-service<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">template</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span><span style="color:#bbb">    </span><span style="color:#069;font-weight:bold">metadata</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span><span style="color:#bbb">      </span><span style="color:#069;font-weight:bold">labels</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span><span style="color:#bbb">        </span><span style="color:#069;font-weight:bold">app</span>:<span style="color:#bbb"> </span>kv-redis-service<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span><span style="color:#bbb">    </span><span style="color:#069;font-weight:bold">spec</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16</span><span style="color:#bbb">      </span><span style="color:#069;font-weight:bold">containers</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17</span><span style="color:#bbb">        </span>- <span style="color:#069;font-weight:bold">name</span>:<span style="color:#bbb"> </span>redis-store<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18</span><span style="color:#bbb">          </span><span style="color:#069;font-weight:bold">image</span>:<span style="color:#bbb"> </span>redis:latest<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19</span><span style="color:#bbb">          </span><span style="color:#069;font-weight:bold">ports</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20</span><span style="color:#bbb">            </span>- <span style="color:#069;font-weight:bold">containerPort</span>:<span style="color:#bbb"> </span><span style="color:#f60">6379</span><span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21</span><span style="color:#bbb">              </span><span style="color:#069;font-weight:bold">name</span>:<span style="color:#bbb"> </span>tcp-port<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22</span><span style="color:#bbb">          </span><span style="color:#069;font-weight:bold">volumeMounts</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">23</span><span style="color:#bbb">            </span>- <span style="color:#069;font-weight:bold">name</span>:<span style="color:#bbb"> </span>redis-volume<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">24</span><span style="color:#bbb">              </span><span style="color:#069;font-weight:bold">mountPath</span>:<span style="color:#bbb"> </span>/var/redis/data<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">25</span><span style="color:#bbb">              </span><span style="color:#069;font-weight:bold">subPath</span>:<span style="color:#bbb"> </span>redis<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">26</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">volumeClaimTemplates</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">27</span><span style="color:#bbb">    </span>- <span style="color:#069;font-weight:bold">metadata</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">28</span><span style="color:#bbb">        </span><span style="color:#069;font-weight:bold">name</span>:<span style="color:#bbb"> </span>redis-volume<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">29</span><span style="color:#bbb">      </span><span style="color:#069;font-weight:bold">spec</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">30</span><span style="color:#bbb">        </span><span style="color:#069;font-weight:bold">accessModes</span>:<span style="color:#bbb"> </span>[<span style="color:#bbb"> </span><span style="color:#c30">&#34;ReadWriteOnce&#34;</span><span style="color:#bbb"> </span>]<span style="color:#bbb">    
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">31</span><span style="color:#bbb">        </span><span style="color:#069;font-weight:bold">resources</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">32</span><span style="color:#bbb">          </span><span style="color:#069;font-weight:bold">requests</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">33</span><span style="color:#bbb">            </span><span style="color:#069;font-weight:bold">storage</span>:<span style="color:#bbb"> </span>4Gi<span style="color:#bbb">
-</span></code></pre></div><p>And then run, <code>$ kubectl apply -f statefulsets.yml</code>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="font-weight:bold">apiVersion</span>: apps/v1  
+</span></span><span style="display:flex;"><span><span style="font-weight:bold">kind</span>: StatefulSet  
+</span></span><span style="display:flex;"><span><span style="font-weight:bold">metadata</span>:  
+</span></span><span style="display:flex;"><span>  <span style="font-weight:bold">name</span>: redis-store  
+</span></span><span style="display:flex;"><span><span style="font-weight:bold">spec</span>:  
+</span></span><span style="display:flex;"><span>  <span style="font-weight:bold">serviceName</span>: <span style="font-style:italic">&#34;kv-redis-service&#34;</span>  
+</span></span><span style="display:flex;"><span>  <span style="font-weight:bold">replicas</span>: 1  
+</span></span><span style="display:flex;"><span>  <span style="font-weight:bold">selector</span>:  
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">matchLabels</span>:  
+</span></span><span style="display:flex;"><span>      <span style="font-weight:bold">app</span>: kv-redis-service  
+</span></span><span style="display:flex;"><span>  <span style="font-weight:bold">template</span>:  
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">metadata</span>:  
+</span></span><span style="display:flex;"><span>      <span style="font-weight:bold">labels</span>:  
+</span></span><span style="display:flex;"><span>        <span style="font-weight:bold">app</span>: kv-redis-service  
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">spec</span>:  
+</span></span><span style="display:flex;"><span>      <span style="font-weight:bold">containers</span>:  
+</span></span><span style="display:flex;"><span>        - <span style="font-weight:bold">name</span>: redis-store  
+</span></span><span style="display:flex;"><span>          <span style="font-weight:bold">image</span>: redis:latest  
+</span></span><span style="display:flex;"><span>          <span style="font-weight:bold">ports</span>:  
+</span></span><span style="display:flex;"><span>            - <span style="font-weight:bold">containerPort</span>: 6379  
+</span></span><span style="display:flex;"><span>              <span style="font-weight:bold">name</span>: tcp-port  
+</span></span><span style="display:flex;"><span>          <span style="font-weight:bold">volumeMounts</span>:  
+</span></span><span style="display:flex;"><span>            - <span style="font-weight:bold">name</span>: redis-volume  
+</span></span><span style="display:flex;"><span>              <span style="font-weight:bold">mountPath</span>: /var/redis/data  
+</span></span><span style="display:flex;"><span>              <span style="font-weight:bold">subPath</span>: redis  
+</span></span><span style="display:flex;"><span>  <span style="font-weight:bold">volumeClaimTemplates</span>:  
+</span></span><span style="display:flex;"><span>    - <span style="font-weight:bold">metadata</span>:  
+</span></span><span style="display:flex;"><span>        <span style="font-weight:bold">name</span>: redis-volume  
+</span></span><span style="display:flex;"><span>      <span style="font-weight:bold">spec</span>:  
+</span></span><span style="display:flex;"><span>        <span style="font-weight:bold">accessModes</span>: [ <span style="font-style:italic">&#34;ReadWriteOnce&#34;</span> ]    
+</span></span><span style="display:flex;"><span>        <span style="font-weight:bold">resources</span>:  
+</span></span><span style="display:flex;"><span>          <span style="font-weight:bold">requests</span>:  
+</span></span><span style="display:flex;"><span>            <span style="font-weight:bold">storage</span>: 4Gi
+</span></span></code></pre></div><p>And then run, <code>$ kubectl apply -f statefulsets.yml</code>
 You should get a response like this: <code>statefulset.apps/redis-store created</code></p>
 <p>Run <code>$ kubectl get pods</code> to verify that statefulset pod is running</p>
-<div class="highlight"><pre style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1</span>NAMESPACE       NAME                                        READY   STATUS             RESTARTS   AGE
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2</span>default         redis-store-0                               1/1     Running            <span style="color:#f60">0</span>          3m3s
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">3</span>
-</code></pre></div><p>If you get the above response, great! We&rsquo;re on the right track, if not, check the steps and make sure you have not missed anything.
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>NAMESPACE       NAME                                        READY   STATUS             RESTARTS   AGE
+</span></span><span style="display:flex;"><span>default         redis-store-0                               1/1     Running            0          3m3s
+</span></span></code></pre></div><p>If you get the above response, great! We&rsquo;re on the right track, if not, check the steps and make sure you have not missed anything.
 Next step, we need to be able to connect to our new redis backend, we will use kubernetes <code>Service</code> for this purpose. We want to expose our redis on its usual port <code>6379</code> in a <code>ClusterIP</code> type service so that other pods in our cluster can connect to it. Create a <code>services.yml</code> file and paste the following:</p>
-<div class="highlight"><pre style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span><span style="color:#069;font-weight:bold">apiVersion</span>:<span style="color:#bbb"> </span>v1<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span><span style="color:#bbb"></span><span style="color:#069;font-weight:bold">kind</span>:<span style="color:#bbb"> </span>Service<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span><span style="color:#bbb"></span><span style="color:#069;font-weight:bold">metadata</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">name</span>:<span style="color:#bbb"> </span>kv-redis-service<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">labels</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span><span style="color:#bbb">    </span><span style="color:#069;font-weight:bold">app</span>:<span style="color:#bbb"> </span>kv-redis-service<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span><span style="color:#bbb"></span><span style="color:#069;font-weight:bold">spec</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">type</span>:<span style="color:#bbb"> </span>ClusterIP<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">ports</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span><span style="color:#bbb">    </span>- <span style="color:#069;font-weight:bold">name</span>:<span style="color:#bbb"> </span>http-port<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span><span style="color:#bbb">      </span><span style="color:#069;font-weight:bold">port</span>:<span style="color:#bbb"> </span><span style="color:#f60">6379</span><span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span><span style="color:#bbb">      </span><span style="color:#069;font-weight:bold">protocol</span>:<span style="color:#bbb"> </span>TCP<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span><span style="color:#bbb">      </span><span style="color:#069;font-weight:bold">targetPort</span>:<span style="color:#bbb"> </span><span style="color:#f60">6379</span><span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">selector</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span><span style="color:#bbb">    </span><span style="color:#069;font-weight:bold">app</span>:<span style="color:#bbb"> </span>kv-redis-service<span style="color:#bbb">
-</span></code></pre></div><p>Run <code>$ kubectl apply -f services.yml</code> and you should get a response like below:
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="font-weight:bold">apiVersion</span>: v1  
+</span></span><span style="display:flex;"><span><span style="font-weight:bold">kind</span>: Service  
+</span></span><span style="display:flex;"><span><span style="font-weight:bold">metadata</span>:  
+</span></span><span style="display:flex;"><span>  <span style="font-weight:bold">name</span>: kv-redis-service  
+</span></span><span style="display:flex;"><span>  <span style="font-weight:bold">labels</span>:  
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">app</span>: kv-redis-service  
+</span></span><span style="display:flex;"><span><span style="font-weight:bold">spec</span>:  
+</span></span><span style="display:flex;"><span>  <span style="font-weight:bold">type</span>: ClusterIP  
+</span></span><span style="display:flex;"><span>  <span style="font-weight:bold">ports</span>:  
+</span></span><span style="display:flex;"><span>    - <span style="font-weight:bold">name</span>: http-port  
+</span></span><span style="display:flex;"><span>      <span style="font-weight:bold">port</span>: 6379  
+</span></span><span style="display:flex;"><span>      <span style="font-weight:bold">protocol</span>: TCP  
+</span></span><span style="display:flex;"><span>      <span style="font-weight:bold">targetPort</span>: 6379  
+</span></span><span style="display:flex;"><span>  <span style="font-weight:bold">selector</span>:  
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">app</span>: kv-redis-service
+</span></span></code></pre></div><p>Run <code>$ kubectl apply -f services.yml</code> and you should get a response like below:
 <code>service/kv-redis-service created</code> Then run,</p>
-<div class="highlight"><pre style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1</span>$ kubectl get svc
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2</span>NAME                  TYPE        CLUSTER-IP       EXTERNAL-IP   PORT<span style="color:#555">(</span>S<span style="color:#555">)</span>    AGE
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">3</span>kv-redis-service      ClusterIP   10.107.7.35      &lt;none&gt;        6379/TCP   77s
-</code></pre></div><p>Great! Our service is up. Now, the applications running in this cluster can connect to our new redis using the url <code>kv-redis-service:6379</code></p>
-<h3 id="deploying-the-application">Deploying the application</h3>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ kubectl get svc
+</span></span><span style="display:flex;"><span>NAME                  TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)    AGE
+</span></span><span style="display:flex;"><span>kv-redis-service      ClusterIP   10.107.7.35      &lt;none&gt;        6379/TCP   77s
+</span></span></code></pre></div><p>Great! Our service is up. Now, the applications running in this cluster can connect to our new redis using the url <code>kv-redis-service:6379</code></p>
+<h3 class="heading" id="deploying-the-application">
+  Deploying the application
+  <a class="anchor" href="#deploying-the-application">#</a>
+</h3>
 <p>We need to create a kubernetes <code>deployment</code> for our <code>key-value store</code> application. A docker image is available on public <a href="https://hub.docker.com/repository/docker/dockadigun/kv-app">dockerhub</a> , you can also create your own image from the example repository.
 To create deployment for our application, create a <code>deployments.yml</code> file paste the below content</p>
-<div class="highlight"><pre style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span><span style="color:#069;font-weight:bold">apiVersion</span>:<span style="color:#bbb"> </span>apps/v1<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span><span style="color:#bbb"></span><span style="color:#069;font-weight:bold">kind</span>:<span style="color:#bbb"> </span>Deployment<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span><span style="color:#bbb"></span><span style="color:#069;font-weight:bold">metadata</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">name</span>:<span style="color:#bbb"> </span>kv-app<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">labels</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span><span style="color:#bbb">    </span><span style="color:#069;font-weight:bold">web</span>:<span style="color:#bbb"> </span>app-service<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span><span style="color:#bbb"></span><span style="color:#069;font-weight:bold">spec</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">replicas</span>:<span style="color:#bbb"> </span><span style="color:#f60">1</span><span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">selector</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span><span style="color:#bbb">    </span><span style="color:#069;font-weight:bold">matchLabels</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span><span style="color:#bbb">      </span><span style="color:#069;font-weight:bold">web</span>:<span style="color:#bbb"> </span>app-service<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">template</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span><span style="color:#bbb">    </span><span style="color:#069;font-weight:bold">spec</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span><span style="color:#bbb">      </span><span style="color:#069;font-weight:bold">containers</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span><span style="color:#bbb">        </span>- <span style="color:#069;font-weight:bold">name</span>:<span style="color:#bbb"> </span>kv-app-container<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16</span><span style="color:#bbb">          </span><span style="color:#069;font-weight:bold">image</span>:<span style="color:#bbb"> </span>dockadigun/kv-app<span style="color:#bbb"> 
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17</span><span style="color:#bbb">          </span><span style="color:#069;font-weight:bold">ports</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18</span><span style="color:#bbb">            </span>- <span style="color:#069;font-weight:bold">containerPort</span>:<span style="color:#bbb"> </span><span style="color:#f60">7002</span><span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19</span><span style="color:#bbb">              </span><span style="color:#069;font-weight:bold">protocol</span>:<span style="color:#bbb"> </span>TCP<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20</span><span style="color:#bbb">              </span><span style="color:#069;font-weight:bold">name</span>:<span style="color:#bbb"> </span>access-port<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21</span><span style="color:#bbb">          </span><span style="color:#069;font-weight:bold">env</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22</span><span style="color:#bbb">            </span>- <span style="color:#069;font-weight:bold">name</span>:<span style="color:#bbb"> </span>PORT<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">23</span><span style="color:#bbb">              </span><span style="color:#069;font-weight:bold">value</span>:<span style="color:#bbb"> </span><span style="color:#c30">&#34;7002&#34;</span><span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">24</span><span style="color:#bbb">	  </span>- <span style="color:#069;font-weight:bold">name</span>:<span style="color:#bbb"> </span>REDIS_HOST<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">25</span><span style="color:#bbb">            </span><span style="color:#069;font-weight:bold">value</span>:<span style="color:#bbb"> </span><span style="color:#c30">&#34;kv-redis-service:6379&#34;</span><span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">26</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">imagePullPolicy</span>:<span style="color:#bbb"> </span>Always<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">27</span><span style="color:#bbb">    </span><span style="color:#069;font-weight:bold">metadata</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">28</span><span style="color:#bbb">      </span><span style="color:#069;font-weight:bold">labels</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">29</span><span style="color:#bbb">        </span><span style="color:#069;font-weight:bold">web</span>:<span style="color:#bbb"> </span>app-service<span style="color:#bbb">
-</span></code></pre></div><p>As you can see from the above, we&rsquo;re passing some values to our application through the container&rsquo;s environment variable, These variables are <code>PORT</code> - The port on which the application http service will run on and <code>REDIS_HOST</code> which is the accessible address for our previously created redis service. After we&rsquo;ve defined our deployment manifest, we need to apply it using kubectl. Run <code>$ kubectl apply -f deployments.yml</code> , you should get a response like this - <code>deployment.apps/kv-app created</code>, run <code>$ kubectl get pods -o wide</code> to check the status of our new deployment.</p>
-<div class="highlight"><pre style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1</span>$ kubectl apply -f deployments.yml
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2</span>deployment.apps/kv-app created
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">3</span>
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">4</span>$ kubectl get pods
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">5</span>NAME                     READY   STATUS    RESTARTS   AGE
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">6</span>kv-app-d584954bf-6xv4r   1/1     Running   <span style="color:#f60">0</span>          3m13s
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">7</span>
-</code></pre></div><p>If you get a response similar to the above, Yay! Our application is running. Next task is to expose this deployment to a service so that we can access it publicly. We will be exposing the deployment through a <code>ClusterIP</code> service and then we will use <code>Nginx Ingress Controller</code> to route or load-balance the incoming traffic into our deployment.
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="font-weight:bold">apiVersion</span>: apps/v1  
+</span></span><span style="display:flex;"><span><span style="font-weight:bold">kind</span>: Deployment  
+</span></span><span style="display:flex;"><span><span style="font-weight:bold">metadata</span>:  
+</span></span><span style="display:flex;"><span>  <span style="font-weight:bold">name</span>: kv-app  
+</span></span><span style="display:flex;"><span>  <span style="font-weight:bold">labels</span>:  
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">web</span>: app-service  
+</span></span><span style="display:flex;"><span><span style="font-weight:bold">spec</span>:  
+</span></span><span style="display:flex;"><span>  <span style="font-weight:bold">replicas</span>: 1  
+</span></span><span style="display:flex;"><span>  <span style="font-weight:bold">selector</span>:  
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">matchLabels</span>:  
+</span></span><span style="display:flex;"><span>      <span style="font-weight:bold">web</span>: app-service  
+</span></span><span style="display:flex;"><span>  <span style="font-weight:bold">template</span>:  
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">spec</span>:  
+</span></span><span style="display:flex;"><span>      <span style="font-weight:bold">containers</span>:  
+</span></span><span style="display:flex;"><span>        - <span style="font-weight:bold">name</span>: kv-app-container  
+</span></span><span style="display:flex;"><span>          <span style="font-weight:bold">image</span>: dockadigun/kv-app 
+</span></span><span style="display:flex;"><span>          <span style="font-weight:bold">ports</span>:  
+</span></span><span style="display:flex;"><span>            - <span style="font-weight:bold">containerPort</span>: 7002  
+</span></span><span style="display:flex;"><span>              <span style="font-weight:bold">protocol</span>: TCP  
+</span></span><span style="display:flex;"><span>              <span style="font-weight:bold">name</span>: access-port  
+</span></span><span style="display:flex;"><span>          <span style="font-weight:bold">env</span>:  
+</span></span><span style="display:flex;"><span>            - <span style="font-weight:bold">name</span>: PORT  
+</span></span><span style="display:flex;"><span>              <span style="font-weight:bold">value</span>: <span style="font-style:italic">&#34;7002&#34;</span>  
+</span></span><span style="display:flex;"><span>	  - <span style="font-weight:bold">name</span>: REDIS_HOST  
+</span></span><span style="display:flex;"><span>            <span style="font-weight:bold">value</span>: <span style="font-style:italic">&#34;kv-redis-service:6379&#34;</span>  
+</span></span><span style="display:flex;"><span>  <span style="font-weight:bold">imagePullPolicy</span>: Always  
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">metadata</span>:  
+</span></span><span style="display:flex;"><span>      <span style="font-weight:bold">labels</span>:  
+</span></span><span style="display:flex;"><span>        <span style="font-weight:bold">web</span>: app-service
+</span></span></code></pre></div><p>As you can see from the above, we&rsquo;re passing some values to our application through the container&rsquo;s environment variable, These variables are <code>PORT</code> - The port on which the application http service will run on and <code>REDIS_HOST</code> which is the accessible address for our previously created redis service. After we&rsquo;ve defined our deployment manifest, we need to apply it using kubectl. Run <code>$ kubectl apply -f deployments.yml</code> , you should get a response like this - <code>deployment.apps/kv-app created</code>, run <code>$ kubectl get pods -o wide</code> to check the status of our new deployment.</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ kubectl apply -f deployments.yml
+</span></span><span style="display:flex;"><span>deployment.apps/kv-app created
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>$ kubectl get pods
+</span></span><span style="display:flex;"><span>NAME                     READY   STATUS    RESTARTS   AGE
+</span></span><span style="display:flex;"><span>kv-app-d584954bf-6xv4r   1/1     Running   0          3m13s
+</span></span></code></pre></div><p>If you get a response similar to the above, Yay! Our application is running. Next task is to expose this deployment to a service so that we can access it publicly. We will be exposing the deployment through a <code>ClusterIP</code> service and then we will use <code>Nginx Ingress Controller</code> to route or load-balance the incoming traffic into our deployment.
 The first step is creating a <code>ClusterIP</code> service, we&rsquo;ve understood that <code>ClusterIP</code> service creates a network that can only be accessible within the cluster. To create the service, append the below content to <code>services.yml</code></p>
-<div class="highlight"><pre style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span>---<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span><span style="color:#bbb"></span><span style="color:#069;font-weight:bold">apiVersion</span>:<span style="color:#bbb"> </span>v1<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span><span style="color:#bbb"></span><span style="color:#069;font-weight:bold">kind</span>:<span style="color:#bbb"> </span>Service<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span><span style="color:#bbb"></span><span style="color:#069;font-weight:bold">metadata</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">name</span>:<span style="color:#bbb"> </span>app-service<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">labels</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span><span style="color:#bbb">    </span><span style="color:#069;font-weight:bold">web</span>:<span style="color:#bbb"> </span>app-service<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span><span style="color:#bbb"></span><span style="color:#069;font-weight:bold">spec</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">type</span>:<span style="color:#bbb"> </span>ClusterIP<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">ports</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span><span style="color:#bbb">    </span>- <span style="color:#069;font-weight:bold">name</span>:<span style="color:#bbb"> </span>http-port<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span><span style="color:#bbb">      </span><span style="color:#069;font-weight:bold">port</span>:<span style="color:#bbb"> </span><span style="color:#f60">7002</span><span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span><span style="color:#bbb">      </span><span style="color:#069;font-weight:bold">protocol</span>:<span style="color:#bbb"> </span>TCP<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span><span style="color:#bbb">      </span><span style="color:#069;font-weight:bold">targetPort</span>:<span style="color:#bbb"> </span><span style="color:#f60">7002</span><span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">selector</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16</span><span style="color:#bbb">    </span><span style="color:#069;font-weight:bold">web</span>:<span style="color:#bbb"> </span>app-service<span style="color:#bbb">
-</span></code></pre></div><p>Then, run <code>$ kubectl apply -f services.yml</code>, you should get a message <code>service/app-service created</code> as part of your response and then run <code>$ kubectl get svc</code> to see all created services.</p>
-<div class="highlight"><pre style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1</span>$ kubectl apply -f services.yml
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2</span>service/app-service created
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">3</span>
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">4</span>$ kubectl get svc
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">5</span>NAME                  TYPE        CLUSTER-IP       EXTERNAL-IP   PORT<span style="color:#555">(</span>S<span style="color:#555">)</span>    AGE
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">6</span>app-service           ClusterIP   10.102.142.208   &lt;none&gt;        7002/TCP   55s
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">7</span>kv-redis-service      ClusterIP   10.107.7.35      &lt;none&gt;        6379/TCP   31m
-</code></pre></div><p>Now, we have <code>app-service</code> which exposes our <code>kv-app</code> deployment and a <code>kv-redis-service</code> which exposes the redis server our app is connecting to for data storage. Few more steps and we will have a world-class service that could scale from 1 to 1000s replicas in a time of crises :-)</p>
-<h3 id="installing-and-setting-up-nginx-ingress-controller">Installing and setting up NGINX Ingress Controller</h3>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="font-weight:bold">---</span>  
+</span></span><span style="display:flex;"><span><span style="font-weight:bold">apiVersion</span>: v1  
+</span></span><span style="display:flex;"><span><span style="font-weight:bold">kind</span>: Service  
+</span></span><span style="display:flex;"><span><span style="font-weight:bold">metadata</span>:  
+</span></span><span style="display:flex;"><span>  <span style="font-weight:bold">name</span>: app-service  
+</span></span><span style="display:flex;"><span>  <span style="font-weight:bold">labels</span>:  
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">web</span>: app-service  
+</span></span><span style="display:flex;"><span><span style="font-weight:bold">spec</span>:  
+</span></span><span style="display:flex;"><span>  <span style="font-weight:bold">type</span>: ClusterIP  
+</span></span><span style="display:flex;"><span>  <span style="font-weight:bold">ports</span>:  
+</span></span><span style="display:flex;"><span>    - <span style="font-weight:bold">name</span>: http-port  
+</span></span><span style="display:flex;"><span>      <span style="font-weight:bold">port</span>: 7002  
+</span></span><span style="display:flex;"><span>      <span style="font-weight:bold">protocol</span>: TCP  
+</span></span><span style="display:flex;"><span>      <span style="font-weight:bold">targetPort</span>: 7002  
+</span></span><span style="display:flex;"><span>  <span style="font-weight:bold">selector</span>:  
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">web</span>: app-service
+</span></span></code></pre></div><p>Then, run <code>$ kubectl apply -f services.yml</code>, you should get a message <code>service/app-service created</code> as part of your response and then run <code>$ kubectl get svc</code> to see all created services.</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ kubectl apply -f services.yml
+</span></span><span style="display:flex;"><span>service/app-service created
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>$ kubectl get svc
+</span></span><span style="display:flex;"><span>NAME                  TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)    AGE
+</span></span><span style="display:flex;"><span>app-service           ClusterIP   10.102.142.208   &lt;none&gt;        7002/TCP   55s
+</span></span><span style="display:flex;"><span>kv-redis-service      ClusterIP   10.107.7.35      &lt;none&gt;        6379/TCP   31m
+</span></span></code></pre></div><p>Now, we have <code>app-service</code> which exposes our <code>kv-app</code> deployment and a <code>kv-redis-service</code> which exposes the redis server our app is connecting to for data storage. Few more steps and we will have a world-class service that could scale from 1 to 1000s replicas in a time of crises :-)</p>
+<h3 class="heading" id="installing-and-setting-up-nginx-ingress-controller">
+  Installing and setting up NGINX Ingress Controller
+  <a class="anchor" href="#installing-and-setting-up-nginx-ingress-controller">#</a>
+</h3>
 <p>NGINX Ingress controller is built around the <a href="http://kubernetes.io/docs/user-guide/ingress/">Kubernetes Ingress resource</a>, using a <a href="https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/#understanding-configmaps-and-pods">ConfigMap</a> to store the NGINX configuration. As i mentioned above, we&rsquo;ll be using NGINX ingress controller to route or load-balance requests to our <code>kv-app</code> service. We need to install Nginx Ingress Controller in our cluster. Installation steps varies depending on the environment or cloud platform that the cluster is running on. Here, i am running Docker Desktop for Mac which includes a single node local kubernetes cluster, i am going to go ahead and install nginx ingress controller, you can follow my steps if you&rsquo;re on Mac or use <a href="https://kubernetes.github.io/ingress-nginx/deploy/#provider-specific-steps">this link</a> to install a specific one for your environment or platform. Don&rsquo;t worry, it is very straight-forward. Firstly, we need to install components that are generic to all environments or platforms.
 Run</p>
-<div class="highlight"><pre style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1</span>$ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.30.0/deploy/static/mandatory.yaml
-</code></pre></div><p>this command will install all the required prerequisites for nginx ingress controller, and then you will need to run the command below if you&rsquo;re on Mac or use the link above to run the right command for your environment.</p>
-<div class="highlight"><pre style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1</span>kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.30.0/deploy/static/provider/cloud-generic.yaml
-</code></pre></div><p>the above command creates a <code>LoadBalancer</code> service using your provider&rsquo;s underlying resources for creating a <code>LoadBalancer</code>. To check if all installation goes well, run the bellow command and compare the responses to what i have here.</p>
-<div class="highlight"><pre style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1</span>$ kubectl get svc -n ingress-nginx
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2</span>NAME            TYPE           CLUSTER-IP       EXTERNAL-IP   PORT<span style="color:#555">(</span>S<span style="color:#555">)</span>                      AGE
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">3</span>ingress-nginx   LoadBalancer   10.103.137.101   localhost     80:32727/TCP,443:31170/TCP   1m
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">4</span>
-</code></pre></div><p>If you&rsquo;re running Kubernetes in a cloud platform, value of <code>EXTERNAL_IP</code> must be the value of the <code>LoadBalancer's IP address</code> service created for Nginx Ingress Controller, technically, your service should accessible through this IP address once Nginx Ingress controller transitioned to <code>RUNNING</code> state. Also, run <code>kubectl get pods -n ingress nginx</code> to verify that nginx pod is running</p>
-<div class="highlight"><pre style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1</span>$ kubectl get pods -n ingress nginx   
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2</span>NAME                                        READY   STATUS    RESTARTS   AGE
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">3</span>nginx-ingress-controller-7fbc8f8d75-lm6gd   1/1     Running   <span style="color:#f60">1</span>          10m
-</code></pre></div><p>You should have a response similar to the above. Now, we&rsquo;re ready to access our app. Just one more step away.</p>
-<h3 id="creating-ingress-resources">Creating Ingress resources</h3>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.30.0/deploy/static/mandatory.yaml
+</span></span></code></pre></div><p>this command will install all the required prerequisites for nginx ingress controller, and then you will need to run the command below if you&rsquo;re on Mac or use the link above to run the right command for your environment.</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-0.30.0/deploy/static/provider/cloud-generic.yaml
+</span></span></code></pre></div><p>the above command creates a <code>LoadBalancer</code> service using your provider&rsquo;s underlying resources for creating a <code>LoadBalancer</code>. To check if all installation goes well, run the bellow command and compare the responses to what i have here.</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ kubectl get svc -n ingress-nginx
+</span></span><span style="display:flex;"><span>NAME            TYPE           CLUSTER-IP       EXTERNAL-IP   PORT(S)                      AGE
+</span></span><span style="display:flex;"><span>ingress-nginx   LoadBalancer   10.103.137.101   localhost     80:32727/TCP,443:31170/TCP   1m
+</span></span></code></pre></div><p>If you&rsquo;re running Kubernetes in a cloud platform, value of <code>EXTERNAL_IP</code> must be the value of the <code>LoadBalancer's IP address</code> service created for Nginx Ingress Controller, technically, your service should accessible through this IP address once Nginx Ingress controller transitioned to <code>RUNNING</code> state. Also, run <code>kubectl get pods -n ingress nginx</code> to verify that nginx pod is running</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ kubectl get pods -n ingress nginx   
+</span></span><span style="display:flex;"><span>NAME                                        READY   STATUS    RESTARTS   AGE
+</span></span><span style="display:flex;"><span>nginx-ingress-controller-7fbc8f8d75-lm6gd   1/1     Running   1          10m
+</span></span></code></pre></div><p>You should have a response similar to the above. Now, we&rsquo;re ready to access our app. Just one more step away.</p>
+<h3 class="heading" id="creating-ingress-resources">
+  Creating Ingress resources
+  <a class="anchor" href="#creating-ingress-resources">#</a>
+</h3>
 <p>We need to create ingress resources that defines how we want our apps to be routed. Create an <code>ingress.yml</code> file and paste the below content</p>
-<div class="highlight"><pre style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span><span style="color:#069;font-weight:bold">apiVersion</span>:<span style="color:#bbb"> </span>networking.k8s.io/v1beta1<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span><span style="color:#bbb"></span><span style="color:#069;font-weight:bold">kind</span>:<span style="color:#bbb"> </span>Ingress<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span><span style="color:#bbb"></span><span style="color:#069;font-weight:bold">metadata</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">name</span>:<span style="color:#bbb"> </span>kv-ingress<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">annotations</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span><span style="color:#bbb">    </span><span style="color:#069;font-weight:bold">kubernetes.io/ingress.class</span>:<span style="color:#bbb"> </span><span style="color:#c30">&#34;nginx&#34;</span><span style="color:#bbb">    
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span><span style="color:#bbb"></span><span style="color:#069;font-weight:bold">spec</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">rules</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span><span style="color:#bbb">    </span>- <span style="color:#069;font-weight:bold">host</span>:<span style="color:#bbb"> </span><span style="color:#c30">&#34;example.kv&#34;</span><span style="color:#bbb"> </span><span style="color:#09f;font-style:italic"># or a registered domain</span><span style="color:#bbb">
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">http</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span><span style="color:#bbb">        </span><span style="color:#069;font-weight:bold">paths</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span><span style="color:#bbb">          </span>- <span style="color:#069;font-weight:bold">backend</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span><span style="color:#bbb">              </span><span style="color:#069;font-weight:bold">serviceName</span>:<span style="color:#bbb"> </span>app-service<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span><span style="color:#bbb">              </span><span style="color:#069;font-weight:bold">servicePort</span>:<span style="color:#bbb"> </span><span style="color:#f60">7002</span><span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span><span style="color:#bbb">  </span><span style="color:#09f;font-style:italic"># set default backend</span><span style="color:#bbb">
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">backend</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17</span><span style="color:#bbb">    </span><span style="color:#069;font-weight:bold">serviceName</span>:<span style="color:#bbb"> </span>app-service<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18</span><span style="color:#bbb">    </span><span style="color:#069;font-weight:bold">servicePort</span>:<span style="color:#bbb"> </span><span style="color:#f60">7002</span><span style="color:#bbb">
-</span></code></pre></div><p>Run <code>$ kubectl apply -f ingress.yml</code>  and verify that ingress resource is created by running <code>$ kubectl get ingress</code>, the response should be similar to this</p>
-<div class="highlight"><pre style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1</span>$ kubectl get ingress
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2</span>NAME          HOSTS        ADDRESS     PORTS     AGE                                                    
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">3</span>proxy-ingress example.kv   localhost   80, <span style="color:#f60">443</span>   10d
-</code></pre></div><p>If you have a registered domain name and you&rsquo;re not running a local kubernetes cluster, you can create an <code>A</code> record pointing to the <code>EXTERNAL-IP</code> of our nginx ingress service and you&rsquo;ll be able to access the service directly through your registered domain name once the DNS records is propagated(takes ~5mins). If you&rsquo;re running a local cluster, we can do the same thing locally by modifying system hosts records. Go to terminal and run <code>nano /etc/hosts</code> and append <code>127.0.0.1 example.kv</code> to the end of the file, save and close.</p>
-<h3 id="testing">Testing</h3>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="font-weight:bold">apiVersion</span>: networking.k8s.io/v1beta1  
+</span></span><span style="display:flex;"><span><span style="font-weight:bold">kind</span>: Ingress  
+</span></span><span style="display:flex;"><span><span style="font-weight:bold">metadata</span>:  
+</span></span><span style="display:flex;"><span>  <span style="font-weight:bold">name</span>: kv-ingress  
+</span></span><span style="display:flex;"><span>  <span style="font-weight:bold">annotations</span>:  
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">kubernetes.io/ingress.class</span>: <span style="font-style:italic">&#34;nginx&#34;</span>    
+</span></span><span style="display:flex;"><span><span style="font-weight:bold">spec</span>:  
+</span></span><span style="display:flex;"><span>  <span style="font-weight:bold">rules</span>:  
+</span></span><span style="display:flex;"><span>    - <span style="font-weight:bold">host</span>: <span style="font-style:italic">&#34;example.kv&#34;</span> <span style="font-style:italic"># or a registered domain</span>
+</span></span><span style="display:flex;"><span>  <span style="font-weight:bold">http</span>:  
+</span></span><span style="display:flex;"><span>        <span style="font-weight:bold">paths</span>:  
+</span></span><span style="display:flex;"><span>          - <span style="font-weight:bold">backend</span>:  
+</span></span><span style="display:flex;"><span>              <span style="font-weight:bold">serviceName</span>: app-service  
+</span></span><span style="display:flex;"><span>              <span style="font-weight:bold">servicePort</span>: 7002  
+</span></span><span style="display:flex;"><span>  <span style="font-style:italic"># set default backend</span>
+</span></span><span style="display:flex;"><span>  <span style="font-weight:bold">backend</span>:  
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">serviceName</span>: app-service  
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">servicePort</span>: 7002
+</span></span></code></pre></div><p>Run <code>$ kubectl apply -f ingress.yml</code>  and verify that ingress resource is created by running <code>$ kubectl get ingress</code>, the response should be similar to this</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ kubectl get ingress
+</span></span><span style="display:flex;"><span>NAME          HOSTS        ADDRESS     PORTS     AGE                                                    
+</span></span><span style="display:flex;"><span>proxy-ingress example.kv   localhost   80, 443   10d
+</span></span></code></pre></div><p>If you have a registered domain name and you&rsquo;re not running a local kubernetes cluster, you can create an <code>A</code> record pointing to the <code>EXTERNAL-IP</code> of our nginx ingress service and you&rsquo;ll be able to access the service directly through your registered domain name once the DNS records is propagated(takes ~5mins). If you&rsquo;re running a local cluster, we can do the same thing locally by modifying system hosts records. Go to terminal and run <code>nano /etc/hosts</code> and append <code>127.0.0.1 example.kv</code> to the end of the file, save and close.</p>
+<h3 class="heading" id="testing">
+  Testing
+  <a class="anchor" href="#testing">#</a>
+</h3>
 <p>Curling <code>curl http://example.kv/set?key=key&amp;value=value</code> should respond with a <code>200 OK</code> http status code. And, that&rsquo;s it. We&rsquo;re done.</p>
-<h3 id="adding-https-with-letsencrypt-and-cert-manager">Adding https with LetsEncrypt and <code>cert-manager</code></h3>
+<h3 class="heading" id="adding-https-with-letsencrypt-and-cert-manager">
+  Adding https with LetsEncrypt and <code>cert-manager</code>
+  <a class="anchor" href="#adding-https-with-letsencrypt-and-cert-manager">#</a>
+</h3>
 <p><code>Note: This step is only applicable to readers that are not running local kubernetes, have a registered domain and have an A record pointing to the EXTERNAL-IP of ingress-nginx service LoadBalance</code></p>
 <p>We can add free, automated certificate issuing and management to our service so that we&rsquo;re always running securely, <code>cert-manager</code> and <code>LetsEncrypt</code> can help us achieve this. Firstly, we need to install <code>cert-manager</code> components. The way that i&rsquo;ve found easiest is by applying <a href="https://github.com/jetstack/cert-manager/releases/download/v0.14.0/cert-manager.yaml">this</a> manifest.</p>
-<div class="highlight"><pre style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1</span>$ kubectl apply --validate<span style="color:#555">=</span><span style="color:#366">false</span> -f https://github.com/jetstack/cert-manager/releases/download/v0.14.0/cert-manager.yaml
-</code></pre></div><p>This will install <code>cert-manager</code> into your cluster, be it local or cloud based. Check for successful installation by running</p>
-<div class="highlight"><pre style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1</span>$ kubectl get pods -n cert-manager
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2</span>NAME                                       READY   STATUS    RESTARTS   AGE
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">3</span>cert-manager-5c6866597-zw7kh               1/1     Running   <span style="color:#f60">0</span>          2m
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">4</span>cert-manager-cainjector-577f6d9fd7-tr77l   1/1     Running   <span style="color:#f60">0</span>          2m
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">5</span>cert-manager-webhook-787858fcdb-nlzsq      1/1     Running   <span style="color:#f60">0</span>          2m
-</code></pre></div><p>If you get the above response, Congratulations. <code>cert-manager</code> is running successfully.</p>
-<h3 id="creating-issuer-and-certificate-object">Creating Issuer and Certificate object</h3>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v0.14.0/cert-manager.yaml
+</span></span></code></pre></div><p>This will install <code>cert-manager</code> into your cluster, be it local or cloud based. Check for successful installation by running</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ kubectl get pods -n cert-manager
+</span></span><span style="display:flex;"><span>NAME                                       READY   STATUS    RESTARTS   AGE
+</span></span><span style="display:flex;"><span>cert-manager-5c6866597-zw7kh               1/1     Running   0          2m
+</span></span><span style="display:flex;"><span>cert-manager-cainjector-577f6d9fd7-tr77l   1/1     Running   0          2m
+</span></span><span style="display:flex;"><span>cert-manager-webhook-787858fcdb-nlzsq      1/1     Running   0          2m
+</span></span></code></pre></div><p>If you get the above response, Congratulations. <code>cert-manager</code> is running successfully.</p>
+<h3 class="heading" id="creating-issuer-and-certificate-object">
+  Creating Issuer and Certificate object
+  <a class="anchor" href="#creating-issuer-and-certificate-object">#</a>
+</h3>
 <p>You can find more information about <code>Issuer</code> and <code>Certificate</code> on <a href="https://cert-manager.io/docs/concepts">cert-manage website</a>. Basically, all we need to do to activate automated https certificate creation and maintenance is a <code>Issuer</code> object , a <code>Certificate</code> object and a little modification in our <code>ingress.yml</code> file and we&rsquo;re set. Create a <code>tls.yml</code> and append the following contents.</p>
-<div class="highlight"><pre style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span><span style="color:#069;font-weight:bold">apiVersion</span>:<span style="color:#bbb"> </span>cert-manager.io/v1alpha2<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span><span style="color:#bbb"></span><span style="color:#069;font-weight:bold">kind</span>:<span style="color:#bbb"> </span>ClusterIssuer<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span><span style="color:#bbb"></span><span style="color:#069;font-weight:bold">metadata</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">name</span>:<span style="color:#bbb"> </span>cluster-issuer<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">namespace</span>:<span style="color:#bbb"> </span>cert-manager<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span><span style="color:#bbb"></span><span style="color:#069;font-weight:bold">spec</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">acme</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span><span style="color:#bbb">    </span><span style="color:#069;font-weight:bold">server</span>:<span style="color:#bbb"> </span>https://acme-staging-v02.api.letsencrypt.org/directory<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span><span style="color:#bbb">  </span><span style="color:#09f;font-style:italic">#server: https://acme-v02.api.letsencrypt.org/directory  </span><span style="color:#bbb">
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span><span style="color:#bbb">    </span><span style="color:#069;font-weight:bold">email</span>:<span style="color:#bbb"> </span>youremail@gmail.com<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span><span style="color:#bbb">    </span><span style="color:#069;font-weight:bold">privateKeySecretRef</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span><span style="color:#bbb">      </span><span style="color:#069;font-weight:bold">name</span>:<span style="color:#bbb"> </span>certs-key<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span><span style="color:#bbb">    </span><span style="color:#069;font-weight:bold">solvers</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span><span style="color:#bbb">    </span>- <span style="color:#069;font-weight:bold">http01</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span><span style="color:#bbb">        </span><span style="color:#069;font-weight:bold">ingress</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16</span><span style="color:#bbb">          </span><span style="color:#069;font-weight:bold">class</span>:<span style="color:#bbb"> </span>nginx<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17</span><span style="color:#bbb"></span>---<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18</span><span style="color:#bbb"></span><span style="color:#069;font-weight:bold">apiVersion</span>:<span style="color:#bbb"> </span>cert-manager.io/v1alpha2<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19</span><span style="color:#bbb"></span><span style="color:#069;font-weight:bold">kind</span>:<span style="color:#bbb"> </span>Certificate<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20</span><span style="color:#bbb"></span><span style="color:#069;font-weight:bold">metadata</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">name</span>:<span style="color:#bbb"> </span>tls-cert<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">namespace</span>:<span style="color:#bbb"> </span>cert-manager<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">23</span><span style="color:#bbb"></span><span style="color:#069;font-weight:bold">spec</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">24</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">secretName</span>:<span style="color:#bbb"> </span>certs-secret<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">25</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">issuerRef</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">26</span><span style="color:#bbb">    </span><span style="color:#069;font-weight:bold">name</span>:<span style="color:#bbb"> </span>cluster-issuer<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">27</span><span style="color:#bbb">    </span><span style="color:#069;font-weight:bold">kind</span>:<span style="color:#bbb"> </span>ClusterIssuer<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">28</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">commonName</span>:<span style="color:#bbb"> </span>example.kv<span style="color:#bbb"> </span><span style="color:#09f;font-style:italic"># or your host/domain name</span><span style="color:#bbb">
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">29</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">dnsNames</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">30</span><span style="color:#bbb">    </span>- example.kv<span style="color:#bbb"> </span><span style="color:#09f;font-style:italic"># or your host/domain name</span><span style="color:#bbb">
-</span></code></pre></div><p>The above <code>yaml</code> creates an issuer and a certificate object which would be used by <code>cert-manager</code> to create a certificate for <code>example.kv</code>. We can check if our certificate is ready by running</p>
-<div class="highlight"><pre style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1</span>$ kubectl get certs -n cert-manager
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2</span>NAME        READY   SECRET              AGE
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">3</span>tls-certs   True    certs-secret        10m
-</code></pre></div><p>When the value of <code>READY</code> transitioned to <code>true</code>, your certificate is ready to be used.
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="font-weight:bold">apiVersion</span>: cert-manager.io/v1alpha2  
+</span></span><span style="display:flex;"><span><span style="font-weight:bold">kind</span>: ClusterIssuer  
+</span></span><span style="display:flex;"><span><span style="font-weight:bold">metadata</span>:  
+</span></span><span style="display:flex;"><span>  <span style="font-weight:bold">name</span>: cluster-issuer  
+</span></span><span style="display:flex;"><span>  <span style="font-weight:bold">namespace</span>: cert-manager  
+</span></span><span style="display:flex;"><span><span style="font-weight:bold">spec</span>:  
+</span></span><span style="display:flex;"><span>  <span style="font-weight:bold">acme</span>:  
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">server</span>: https://acme-staging-v02.api.letsencrypt.org/directory  
+</span></span><span style="display:flex;"><span>  <span style="font-style:italic">#server: https://acme-v02.api.letsencrypt.org/directory  </span>
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">email</span>: youremail@gmail.com  
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">privateKeySecretRef</span>:  
+</span></span><span style="display:flex;"><span>      <span style="font-weight:bold">name</span>: certs-key  
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">solvers</span>:  
+</span></span><span style="display:flex;"><span>    - <span style="font-weight:bold">http01</span>:  
+</span></span><span style="display:flex;"><span>        <span style="font-weight:bold">ingress</span>:  
+</span></span><span style="display:flex;"><span>          <span style="font-weight:bold">class</span>: nginx  
+</span></span><span style="display:flex;"><span><span style="font-weight:bold">---</span>  
+</span></span><span style="display:flex;"><span><span style="font-weight:bold">apiVersion</span>: cert-manager.io/v1alpha2  
+</span></span><span style="display:flex;"><span><span style="font-weight:bold">kind</span>: Certificate  
+</span></span><span style="display:flex;"><span><span style="font-weight:bold">metadata</span>:  
+</span></span><span style="display:flex;"><span>  <span style="font-weight:bold">name</span>: tls-cert  
+</span></span><span style="display:flex;"><span>  <span style="font-weight:bold">namespace</span>: cert-manager  
+</span></span><span style="display:flex;"><span><span style="font-weight:bold">spec</span>:  
+</span></span><span style="display:flex;"><span>  <span style="font-weight:bold">secretName</span>: certs-secret  
+</span></span><span style="display:flex;"><span>  <span style="font-weight:bold">issuerRef</span>:  
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">name</span>: cluster-issuer  
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">kind</span>: ClusterIssuer  
+</span></span><span style="display:flex;"><span>  <span style="font-weight:bold">commonName</span>: example.kv <span style="font-style:italic"># or your host/domain name</span>
+</span></span><span style="display:flex;"><span>  <span style="font-weight:bold">dnsNames</span>:  
+</span></span><span style="display:flex;"><span>    - example.kv <span style="font-style:italic"># or your host/domain name</span>
+</span></span></code></pre></div><p>The above <code>yaml</code> creates an issuer and a certificate object which would be used by <code>cert-manager</code> to create a certificate for <code>example.kv</code>. We can check if our certificate is ready by running</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ kubectl get certs -n cert-manager
+</span></span><span style="display:flex;"><span>NAME        READY   SECRET              AGE
+</span></span><span style="display:flex;"><span>tls-certs   True    certs-secret        10m
+</span></span></code></pre></div><p>When the value of <code>READY</code> transitioned to <code>true</code>, your certificate is ready to be used.
 Let&rsquo;s modify our ingress resource to consume the new certificate we just created.</p>
-<div class="highlight"><pre style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span><span style="color:#069;font-weight:bold">apiVersion</span>:<span style="color:#bbb"> </span>networking.k8s.io/v1beta1<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span><span style="color:#bbb"></span><span style="color:#069;font-weight:bold">kind</span>:<span style="color:#bbb"> </span>Ingress<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span><span style="color:#bbb"></span><span style="color:#069;font-weight:bold">metadata</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">name</span>:<span style="color:#bbb"> </span>proxy-ingress<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">annotations</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span><span style="color:#bbb">    </span><span style="color:#069;font-weight:bold">kubernetes.io/ingress.class</span>:<span style="color:#bbb"> </span><span style="color:#c30">&#34;nginx&#34;</span><span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span><span style="color:#bbb">    </span><span style="color:#069;font-weight:bold">cert-manager.io/cluster-issuer</span>:<span style="color:#bbb"> </span><span style="color:#c30">&#34;cluster-issuer&#34;</span><span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span><span style="color:#bbb"></span><span style="color:#069;font-weight:bold">spec</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">tls</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span><span style="color:#bbb">    </span>- <span style="color:#069;font-weight:bold">hosts</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span><span style="color:#bbb">        </span>- <span style="color:#c30">&#34;example.kv&#34;</span><span style="color:#bbb"> </span><span style="color:#09f;font-style:italic"># or your host/domain name</span><span style="color:#bbb">
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">secretName</span>:<span style="color:#bbb"> </span>certs-secret<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">rules</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span><span style="color:#bbb">    </span>- <span style="color:#069;font-weight:bold">host</span>:<span style="color:#bbb"> </span><span style="color:#c30">&#34;example.kv&#34;</span><span style="color:#bbb"> </span><span style="color:#09f;font-style:italic"># or your host/domain name  </span><span style="color:#bbb">
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">http</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16</span><span style="color:#bbb">        </span><span style="color:#069;font-weight:bold">paths</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17</span><span style="color:#bbb">          </span>- <span style="color:#069;font-weight:bold">backend</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18</span><span style="color:#bbb">              </span><span style="color:#069;font-weight:bold">serviceName</span>:<span style="color:#bbb"> </span>app-service<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19</span><span style="color:#bbb">              </span><span style="color:#069;font-weight:bold">servicePort</span>:<span style="color:#bbb"> </span><span style="color:#f60">7002</span><span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">backend</span>:<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21</span><span style="color:#bbb">    </span><span style="color:#069;font-weight:bold">serviceName</span>:<span style="color:#bbb"> </span>app-service<span style="color:#bbb">  
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22</span><span style="color:#bbb">    </span><span style="color:#069;font-weight:bold">servicePort</span>:<span style="color:#bbb"> </span><span style="color:#f60">7002</span><span style="color:#bbb">
-</span></code></pre></div><p>Notice the new annotation <code>cert-manager.io/cluster-issuer: &quot;cluster-issuer&quot;</code> and the <code>spec.tls</code> value. This tells Nginx Ingress Controller to look for a certificate and apply it on the internal nginx proxy. Curling <code>curl https://example.kv/set?key=key&amp;value=value</code> must still have the same response as we&rsquo;ve done earlier. And then, we&rsquo;re done.</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="font-weight:bold">apiVersion</span>: networking.k8s.io/v1beta1  
+</span></span><span style="display:flex;"><span><span style="font-weight:bold">kind</span>: Ingress  
+</span></span><span style="display:flex;"><span><span style="font-weight:bold">metadata</span>:  
+</span></span><span style="display:flex;"><span>  <span style="font-weight:bold">name</span>: proxy-ingress  
+</span></span><span style="display:flex;"><span>  <span style="font-weight:bold">annotations</span>:  
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">kubernetes.io/ingress.class</span>: <span style="font-style:italic">&#34;nginx&#34;</span>  
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">cert-manager.io/cluster-issuer</span>: <span style="font-style:italic">&#34;cluster-issuer&#34;</span>  
+</span></span><span style="display:flex;"><span><span style="font-weight:bold">spec</span>:  
+</span></span><span style="display:flex;"><span>  <span style="font-weight:bold">tls</span>:  
+</span></span><span style="display:flex;"><span>    - <span style="font-weight:bold">hosts</span>:  
+</span></span><span style="display:flex;"><span>        - <span style="font-style:italic">&#34;example.kv&#34;</span> <span style="font-style:italic"># or your host/domain name</span>
+</span></span><span style="display:flex;"><span>  <span style="font-weight:bold">secretName</span>: certs-secret  
+</span></span><span style="display:flex;"><span>  <span style="font-weight:bold">rules</span>:  
+</span></span><span style="display:flex;"><span>    - <span style="font-weight:bold">host</span>: <span style="font-style:italic">&#34;example.kv&#34;</span> <span style="font-style:italic"># or your host/domain name  </span>
+</span></span><span style="display:flex;"><span>  <span style="font-weight:bold">http</span>:  
+</span></span><span style="display:flex;"><span>        <span style="font-weight:bold">paths</span>:  
+</span></span><span style="display:flex;"><span>          - <span style="font-weight:bold">backend</span>:  
+</span></span><span style="display:flex;"><span>              <span style="font-weight:bold">serviceName</span>: app-service  
+</span></span><span style="display:flex;"><span>              <span style="font-weight:bold">servicePort</span>: 7002  
+</span></span><span style="display:flex;"><span>  <span style="font-weight:bold">backend</span>:  
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">serviceName</span>: app-service  
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">servicePort</span>: 7002
+</span></span></code></pre></div><p>Notice the new annotation <code>cert-manager.io/cluster-issuer: &quot;cluster-issuer&quot;</code> and the <code>spec.tls</code> value. This tells Nginx Ingress Controller to look for a certificate and apply it on the internal nginx proxy. Curling <code>curl https://example.kv/set?key=key&amp;value=value</code> must still have the same response as we&rsquo;ve done earlier. And then, we&rsquo;re done.</p>
 <p>Thanks for following.</p>
+
+    
+  </div>
+
+  
+
+  
+
+  
+  
+
+<div class="single-pagination">
+    <hr />
+
+    <div class="flexnowrap">
+
+        <div class="single-pagination-prev">
+            
+            <div class="single-pagination-container-prev">
+                <div class="single-pagination-text">←</div>
+                <div class="single-pagination-text">
+                    <a href="/posts/a_create_docker_auth/">
+                        Creating Docker Registry Token Authentication Server with Go
+                    </a>
+                </div>
+            </div>
+            
+        </div>
+
+        <div class="single-pagination-next">
+            
+            <div class="single-pagination-container-next">
+                <div class="single-pagination-text">
+                    <a href="/posts/github_private_repo_access/">
+                        Setting up GitAction private repository access for Golang applications
+                    </a>
+                </div>
+                <div class="single-pagination-text">→</div>
+            </div>
+            
+        </div>
+
+    </div>
+
+    <hr />
+</div>
+
+
+
+  
+
+  
+
+  
+  <div class="back-to-top">
+    <a href="#top">
+      back to top
+    </a>
+  </div>
+  
 
 </div>
 
 
     </main>
+  </div>
+
+  
+  
+
+
+
+
 
     
-      
+
+
+
+
+  <footer>
     
-  </body>
+
+
+  </footer>
+
+  
+</body>
+
+<script src="/js/theme-switch.js"></script>
+<script defer src="/js/copy-code.js"></script>
 </html>

@@ -1,59 +1,179 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-us" lang="en-us">
-<head>
-  <link href="https://gmpg.org/xfn/11" rel="profile">
-  <meta http-equiv="content-type" content="text/html; charset=utf-8">
-  <meta name="generator" content="Hugo 0.66.0" />
+<html lang="en-us"
+  dir="ltr">
 
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <title>Creating Docker Registry Token Authentication Server with Go &middot; Lekan Adigun</title>
-  <meta name="description" content="" />
-
-  
-  <link type="text/css" rel="stylesheet" href="https://lekan.wtf/css/print.css" media="print">
-  <link type="text/css" rel="stylesheet" href="https://lekan.wtf/css/poole.css">
-  <link type="text/css" rel="stylesheet" href="https://lekan.wtf/css/syntax.css">
-  <link type="text/css" rel="stylesheet" href="https://lekan.wtf/css/hyde.css">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Abril+Fatface|PT+Sans:400,400i,700">
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+  <meta charset="utf-8">
+<meta name="viewport" content="width=device-width">
 
 
-  
-  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/apple-touch-icon-144-precomposed.png">
-  <link rel="shortcut icon" href="/favicon.png">
 
-  
-  
+
+
+
+
+
+    
+
+
+
+
+
+
+<link rel="icon" type="image/ico" href="http://localhost:1313//favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313//favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313//favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="http://localhost:1313//android-chrome-192x192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="http://localhost:1313//apple-touch-icon.png">
+
+<meta name="description" content=""/>
+
+
+
+<title>
+    
+    Creating Docker Registry Token Authentication Server with Go | Hammed Adigun
+    
+</title>
+
+<link rel="canonical" href="http://localhost:1313/posts/a_create_docker_auth/"/>
+
+<meta property="og:url" content="http://localhost:1313/posts/a_create_docker_auth/">
+  <meta property="og:site_name" content="Hammed Adigun">
+  <meta property="og:title" content="Creating Docker Registry Token Authentication Server with Go">
+  <meta property="og:description" content="Recently, I was working on a project that uses a private docker registry to store docker images produced by users. The access to these images needs to be controlled so that user foo MUST not be able to access(pull/push) images that belongs to user bar . Also, a user should be able to authenticate with the private docker registry from their local or remote development machine with the famous docker login command, additionally users should be able to perform basic docker operations — docker push, pull etc with proper authentication and authorization. This is similar to Google cloud’s grc.io container registry.">
+  <meta property="og:locale" content="en_us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2020-02-19T00:00:00+00:00">
+    <meta property="article:modified_time" content="2020-02-19T00:00:00+00:00">
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/assets/combined.min.0f4f5c64ee7100cff28e7c7366d922b5499829f72c91a53b9b17f236d85ad7e7.css" media="all">
+
+
+
+
+
+
+
+
+
+
+
+    
+
+
+
+
 </head>
 
-  <body class=" ">
-  <aside class="sidebar">
-  <div class="container sidebar-sticky">
-    <div class="sidebar-about">
-      <a href="https://lekan.wtf/"><h1>Lekan Adigun</h1></a>
-      <p class="lead">
-       SRE. Golang 
-      </p>
+
+
+
+
+
+
+<body class="auto">
+
+  <div class="content">
+    <header>
+      
+
+<div class="header">
+
+    
+
+    <h1 class="header-title">
+        <a href="http://localhost:1313/">Hammed Adigun</a>
+    </h1>
+
+    <div class="flex">
+        
+
+        
+        
+      
+        <p class="small ">
+            <a href="/posts" >
+                /posts
+            </a>
+        </p>
+        
+      
+        <p class="small ">
+            <a href="/projects" >
+                /projects
+            </a>
+        </p>
+        
+        
     </div>
 
-    <nav>
-      <ul class="sidebar-nav">
-        <li><a href="https://lekan.wtf/">Home</a> </li>
-        <li><a href="mailto:adigunhammed.lekan@gmail.com"> Email </a></li><li><a href="https://github.com/adigunhammedolalekan/"> Github </a></li><li><a href="https://twitter.com/L3kanAdigun/"> Twitter </a></li>
-      </ul>
-    </nav>
+    
 
-    <p>&copy; 2021. All rights reserved. </p>
+</div>
+
+    </header>
+
+    <main class="main">
+      
+
+
+
+
+<div class="breadcrumbs"><a href="/">~</a><span class="breadcrumbs-separator">/</span><a href="/posts/">Posts</a><span class="breadcrumbs-separator">/</span>
+        <a href="/posts/a_create_docker_auth/">Creating Docker Registry Token Authentication Server with Go</a></div>
+
+
+<div >
+
+  <div class="single-intro-container">
+
+    
+
+    <h1 class="single-title">Creating Docker Registry Token Authentication Server with Go</h1>
+    
+
+    
+
+    <p class="single-readtime">
+      
+      
+      
+      <time datetime="2020-02-19T00:00:00&#43;00:00">19 Feb 2020</time>
+      
+
+      
+    </p>
+
   </div>
-</aside>
 
-    <main class="content container">
-    <div class="post">
-  <h1>Creating Docker Registry Token Authentication Server with Go</h1>
-  <time datetime=2020-02-19T00:00:00Z class="post-date">Wed, Feb 19, 2020</time>
-  <p>Recently, I was working on a project that uses a private docker registry to store docker images produced by users. The access to these images needs to be controlled so that user <code>foo</code> MUST not be able to access(pull/push) images that belongs to user <code>bar</code> . Also, a user should be able to authenticate with the private docker registry from their local or remote development machine with the famous docker login command, additionally users should be able to perform basic docker operations — docker push, pull etc with proper authentication and authorization. This is similar to Google cloud’s grc.io container registry.</p>
-<h2 id="the-problem">The Problem</h2>
+  
+
+  
+
+  
+
+  
+
+  <div class="single-content">
+    <p>Recently, I was working on a project that uses a private docker registry to store docker images produced by users. The access to these images needs to be controlled so that user <code>foo</code> MUST not be able to access(pull/push) images that belongs to user <code>bar</code> . Also, a user should be able to authenticate with the private docker registry from their local or remote development machine with the famous docker login command, additionally users should be able to perform basic docker operations — docker push, pull etc with proper authentication and authorization. This is similar to Google cloud’s grc.io container registry.</p>
+<h2 class="heading" id="the-problem">
+  The Problem
+  <a class="anchor" href="#the-problem">#</a>
+</h2>
 <p>You can easily get up and running with the <a href="https://hub.docker.com/_/registry">registry docker image,</a> by running the command below, you’ll have a docker registry running on your machine:</p>
 <p><code>docker run -d -p 5000:5000 --restart always --name registry registry:2</code></p>
 <p>Boom! docker registry is up and running on localhost:5000 . But this is limited because of the following reasons</p>
@@ -65,12 +185,14 @@
 <p>You can take it a step further by configuring the registry to use a htpasswd file for authentication. By default, docker registry uses HTTP basic authentication to authenticates with the registry, the attached username and password would be compared against the values in the htpasswd file and if matches, all access would be granted to the client. As you can imagine, this is not what we want. Remember, we want each user to be able to authenticate individually, we also want different access level for these users, e.g we might want user foo to only be able to pull images while we might want user bar to be able to push and pull images.</p>
 </li>
 </ol>
-<h2 id="the-solution">The Solution</h2>
+<h2 class="heading" id="the-solution">
+  The Solution
+  <a class="anchor" href="#the-solution">#</a>
+</h2>
 <p>One of the methods of authenticating with a registry server is token method, where, according to a specification that can be found <a href="https://docs.docker.com/registry/spec/auth/">here,</a> we can create a custom, trusted token authentication server. The job of this token server is very specific, respond to successful authentication and authorization requests with a specially crafted JWT token, the documentation on how to create this token can be found <a href="https://docs.docker.com/registry/spec/auth/jwt/">here</a>.</p>
 <p>The question here now is: How can we achieve our goal by using this token authentication method.</p>
 <blockquote>
-<p>The solution we’re building is programming language agnostic because of the specification we’re building on-top, although Go programming language is used for this example, you can easily adapt the solution to your favourite programming language.</p>
-</blockquote>
+<p>The solution we’re building is programming language agnostic because of the specification we’re building on-top, although Go programming language is used for this example, you can easily adapt the solution to your favourite programming language.</p></blockquote>
 <p>Note: This post assumed you have the following installed on your machine.</p>
 <ul>
 <li>
@@ -84,19 +206,21 @@
 </li>
 </ul>
 <p>Firstly, let’s configure a bare minimum docker registry server using docker-compose</p>
-<div class="highlight"><pre style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1</span><span style="color:#069;font-weight:bold">version</span>:<span style="color:#bbb"> </span><span style="color:#c30">&#34;3&#34;</span><span style="color:#bbb">
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2</span><span style="color:#bbb"></span><span style="color:#069;font-weight:bold">services</span>:<span style="color:#bbb">
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">3</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">registry</span>:<span style="color:#bbb">
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">4</span><span style="color:#bbb">    </span><span style="color:#069;font-weight:bold">restart</span>:<span style="color:#bbb"> </span>on-failure<span style="color:#bbb">
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">5</span><span style="color:#bbb">    </span><span style="color:#069;font-weight:bold">image</span>:<span style="color:#bbb"> </span>registry:<span style="color:#f60">2</span><span style="color:#bbb">
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">6</span><span style="color:#bbb">    </span><span style="color:#069;font-weight:bold">ports</span>:<span style="color:#bbb">
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">7</span><span style="color:#bbb">      </span>- <span style="color:#f60">5010</span>:<span style="color:#f60">5000</span><span style="color:#bbb">
-</span></code></pre></div><p>When you run docker-compose up , a docker registry will start running on localhost:5010 . Note: i choose port :5010 for my new docker registry, you can use any available port on your machine.
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="font-weight:bold">version</span>: <span style="font-style:italic">&#34;3&#34;</span>
+</span></span><span style="display:flex;"><span><span style="font-weight:bold">services</span>:
+</span></span><span style="display:flex;"><span>  <span style="font-weight:bold">registry</span>:
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">restart</span>: <span style="font-weight:bold">on</span>-failure
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">image</span>: registry:2
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">ports</span>:
+</span></span><span style="display:flex;"><span>      - 5010:5000
+</span></span></code></pre></div><p>When you run docker-compose up , a docker registry will start running on localhost:5010 . Note: i choose port :5010 for my new docker registry, you can use any available port on your machine.
 Let’s perform some operations to make sure our local docker registry works as expected.</p>
-<pre><code>$ docker pull ubuntu*
+<pre class="mermaid">$ docker pull ubuntu*
 $ docker tag localhost:5010/ubuntu*
 $ docker push localhost:5010/ubuntu*
-</code></pre><p>The above commands pull an image from public docker registry(dockerhub) and then tag the image to include the url of our local registry, this instructs docker to push the image to the docker registry running at localhost:5010 when docker push is invoked, if all goes well, you should see the push progress indicator in your terminal, yay!!!</p>
+</pre>
+
+<p>The above commands pull an image from public docker registry(dockerhub) and then tag the image to include the url of our local registry, this instructs docker to push the image to the docker registry running at localhost:5010 when docker push is invoked, if all goes well, you should see the push progress indicator in your terminal, yay!!!</p>
 <p>Now, let’s configure our new docker registry server to use token authentication. First thing we want to do is to create a SSL certificate because it is a requirement for token authentication to work, registry server will forcefully quit when it is configured to use token authentication and SSL certificate is not provided. For this purpose, we’ll generate a self-signed SSL certificate with <a href="https://www.openssl.org/">openssl</a>.
 Before we continue, let’s create a basic project setup for our token authentication server. I am creating a new Go project, with go mod as my dependency manager.</p>
 <ul>
@@ -115,26 +239,26 @@ Both registry-auth/certs/RootCA.crt and registry-auth/certs/RootCA.key should be
 </ul>
 <p>Now, we’ve sorted SSL certificate generation. Note: In production, a valid SSL certificate must be provisioned with <a href="https://letsencrypt.org/">LetsEncrypt</a> or other similar services.
 Let’s move on to configuring our docker registry server to use token authentication and the self-signed certificate.</p>
-<div class="highlight"><pre style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span><span style="color:#069;font-weight:bold">version</span>:<span style="color:#bbb"> </span><span style="color:#c30">&#34;3&#34;</span><span style="color:#bbb">
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span><span style="color:#bbb"></span><span style="color:#069;font-weight:bold">services</span>:<span style="color:#bbb">
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">registry</span>:<span style="color:#bbb">
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span><span style="color:#bbb">    </span><span style="color:#069;font-weight:bold">restart</span>:<span style="color:#bbb"> </span>on-failure<span style="color:#bbb">
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span><span style="color:#bbb">    </span><span style="color:#069;font-weight:bold">image</span>:<span style="color:#bbb"> </span>registry:<span style="color:#f60">2</span><span style="color:#bbb">
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span><span style="color:#bbb">    </span><span style="color:#069;font-weight:bold">ports</span>:<span style="color:#bbb">
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span><span style="color:#bbb">      </span>- <span style="color:#f60">5010</span>:<span style="color:#f60">5000</span><span style="color:#bbb">
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span><span style="color:#bbb">    </span><span style="color:#069;font-weight:bold">environment</span>:<span style="color:#bbb">
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span><span style="color:#bbb">      </span>- REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY=/data<span style="color:#bbb">
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span><span style="color:#bbb">      </span>- REGISTRY_AUTH=token<span style="color:#bbb">
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span><span style="color:#bbb">      </span>- REGISTRY_AUTH_TOKEN_REALM=https://localhost:<span style="color:#f60">5011</span>/auth<span style="color:#bbb">
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span><span style="color:#bbb">      </span>- REGISTRY_AUTH_TOKEN_SERVICE=Authentication<span style="color:#bbb">
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span><span style="color:#bbb">      </span>- REGISTRY_AUTH_TOKEN_ISSUER=Example<span style="color:#bbb"> </span>Issuer<span style="color:#bbb">
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span><span style="color:#bbb">      </span>- REGISTRY_AUTH_TOKEN_ROOTCERTBUNDLE=/mnt/local/certs/RootCA.crt<span style="color:#bbb">
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span><span style="color:#bbb">      </span>- REGISTRY_HTTP_TLS_CERTIFICATE=/mnt/local/certs/RootCA.crt<span style="color:#bbb">
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16</span><span style="color:#bbb">      </span>- REGISTRY_HTTP_TLS_KEY=/mnt/local/certs/RootCA.key<span style="color:#bbb">
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17</span><span style="color:#bbb">    </span><span style="color:#069;font-weight:bold">volumes</span>:<span style="color:#bbb">
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18</span><span style="color:#bbb">      </span>- <span style="color:#c30">&#34;${HOME}/mnt/auth/registry/data:/mnt/registry/data&#34;</span><span style="color:#bbb">
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19</span><span style="color:#bbb">      </span>- <span style="color:#c30">&#34;./certs:/mnt/local/certs&#34;</span><span style="color:#bbb">
-</span></code></pre></div><p>The configuration are passed through environment variables, you can also mount a config.yml file into the container but generally, configuring with environment variable is easier and straightforward. As you can see from the docker-compose.yml snippet above, we mounted our certs directory into the container so that we can use our SSL certificate to secure our docker registry server.</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="font-weight:bold">version</span>: <span style="font-style:italic">&#34;3&#34;</span>
+</span></span><span style="display:flex;"><span><span style="font-weight:bold">services</span>:
+</span></span><span style="display:flex;"><span>  <span style="font-weight:bold">registry</span>:
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">restart</span>: <span style="font-weight:bold">on</span>-failure
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">image</span>: registry:2
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">ports</span>:
+</span></span><span style="display:flex;"><span>      - 5010:5000
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">environment</span>:
+</span></span><span style="display:flex;"><span>      - REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY=/data
+</span></span><span style="display:flex;"><span>      - REGISTRY_AUTH=token
+</span></span><span style="display:flex;"><span>      - REGISTRY_AUTH_TOKEN_REALM=https://localhost:5011/auth
+</span></span><span style="display:flex;"><span>      - REGISTRY_AUTH_TOKEN_SERVICE=Authentication
+</span></span><span style="display:flex;"><span>      - REGISTRY_AUTH_TOKEN_ISSUER=Example Issuer
+</span></span><span style="display:flex;"><span>      - REGISTRY_AUTH_TOKEN_ROOTCERTBUNDLE=/mnt/local/certs/RootCA.crt
+</span></span><span style="display:flex;"><span>      - REGISTRY_HTTP_TLS_CERTIFICATE=/mnt/local/certs/RootCA.crt
+</span></span><span style="display:flex;"><span>      - REGISTRY_HTTP_TLS_KEY=/mnt/local/certs/RootCA.key
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">volumes</span>:
+</span></span><span style="display:flex;"><span>      - <span style="font-style:italic">&#34;${HOME}/mnt/auth/registry/data:/mnt/registry/data&#34;</span>
+</span></span><span style="display:flex;"><span>      - <span style="font-style:italic">&#34;./certs:/mnt/local/certs&#34;</span>
+</span></span></code></pre></div><p>The configuration are passed through environment variables, you can also mount a config.yml file into the container but generally, configuring with environment variable is easier and straightforward. As you can see from the docker-compose.yml snippet above, we mounted our certs directory into the container so that we can use our SSL certificate to secure our docker registry server.</p>
 <ul>
 <li>
 <p>REGISTRY_AUTH=token which instructs the registry to activate token authentication method.</p>
@@ -155,234 +279,330 @@ Let’s move on to configuring our docker registry server to use token authentic
 <p>REGISTRY_HTTP_TLS_CERTIFICATE and REGISTRY_HTTP_TLS_KEY which specify the SSL certificate and key respectively.</p>
 </li>
 </ul>
-<h3 id="creating-the-token-authentication-server">Creating the token authentication server</h3>
+<h3 class="heading" id="creating-the-token-authentication-server">
+  Creating the token authentication server
+  <a class="anchor" href="#creating-the-token-authentication-server">#</a>
+</h3>
 <p>First of all, we need to understand what happens when users make an attempt to access our private docker registry without authentication. Basically, if the registry is configured to use token authentication like we’re doing, the configured token server will be called with the following parameters https://${SAMPLE_REGISTRY}/auth?service=registry.docker.io&amp;scope=repository:samalba/my-app:pull,push , the token server should first make an attempt to authenticate the user using the authentication credentials provided along with the request (HTTP basic authentication as of Docker 1.8), if the authentication succeeds, an authorization should follow using the scope parameter added to the request’s query parameters, the format of this scope is scope=repository:samalba/my-app:pull,push which contains basically the <strong>type</strong>, <strong>repository name</strong>, and **the requested actions. **These information should be use to determine if user should be given permission or not. Once it is decided whether to give users permission or not, authorization operation should return the list of permissions that should be granted the authorized user or an empty list should be return if the user is unauthorized to access the requested resources.</p>
 <p>Let’s write some code to make all of these explanation makes sense.</p>
-<div class="highlight"><pre style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span><span style="color:#069;font-weight:bold">import</span> (
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span>    <span style="color:#c30">&#34;github.com/docker/libtrust&#34;</span>
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span>    <span style="color:#c30">&#34;crypto/tls&#34;</span>
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span>    <span style="color:#c30">&#34;crypto/x509&#34;</span>
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span>)
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span><span style="color:#069;font-weight:bold">type</span> tokenServer <span style="color:#069;font-weight:bold">struct</span> {
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span>	privateKey libtrust.PrivateKey
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span>	pubKey     libtrust.PublicKey
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span>	crt, key   <span style="color:#078;font-weight:bold">string</span>
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span>}
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span><span style="color:#09f;font-style:italic">// newTokenServer creates a new tokenServer
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span><span style="color:#09f;font-style:italic"></span><span style="color:#069;font-weight:bold">func</span> <span style="color:#c0f">newTokenServer</span>(crt, key <span style="color:#078;font-weight:bold">string</span>) (<span style="color:#555">*</span>tokenServer, <span style="color:#078;font-weight:bold">error</span>) {
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span>	pk, prk, err <span style="color:#555">:=</span> <span style="color:#c0f">loadCertAndKey</span>(crt, key)
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span>	<span style="color:#069;font-weight:bold">if</span> err <span style="color:#555">!=</span> <span style="color:#069;font-weight:bold">nil</span> {
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span>		<span style="color:#069;font-weight:bold">return</span> <span style="color:#069;font-weight:bold">nil</span>, err
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16</span>	}
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17</span>	t <span style="color:#555">:=</span> <span style="color:#555">&amp;</span>tokenServer{privateKey: prk, pubKey: pk, crt: crt, key: key}
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18</span>	<span style="color:#069;font-weight:bold">return</span> t, <span style="color:#069;font-weight:bold">nil</span>
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19</span>}
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20</span>
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21</span><span style="color:#09f;font-style:italic">// loadCertAndKey from filesystem
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22</span><span style="color:#09f;font-style:italic"></span><span style="color:#069;font-weight:bold">func</span> <span style="color:#c0f">loadCertAndKey</span>(certFile, keyFile <span style="color:#078;font-weight:bold">string</span>) (libtrust.PublicKey, libtrust.PrivateKey, <span style="color:#078;font-weight:bold">error</span>) {
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">23</span>	cert, err <span style="color:#555">:=</span> tls.<span style="color:#c0f">LoadX509KeyPair</span>(certFile, keyFile)
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">24</span>	<span style="color:#069;font-weight:bold">if</span> err <span style="color:#555">!=</span> <span style="color:#069;font-weight:bold">nil</span> {
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">25</span>		<span style="color:#069;font-weight:bold">return</span> <span style="color:#069;font-weight:bold">nil</span>, <span style="color:#069;font-weight:bold">nil</span>, err
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">26</span>	}
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">27</span>	x509Cert, err <span style="color:#555">:=</span> x509.<span style="color:#c0f">ParseCertificate</span>(cert.Certificate[<span style="color:#f60">0</span>])
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">28</span>	<span style="color:#069;font-weight:bold">if</span> err <span style="color:#555">!=</span> <span style="color:#069;font-weight:bold">nil</span> {
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">29</span>		<span style="color:#069;font-weight:bold">return</span> <span style="color:#069;font-weight:bold">nil</span>, <span style="color:#069;font-weight:bold">nil</span>, err
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">30</span>	}
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">31</span>	pk, err <span style="color:#555">:=</span> libtrust.<span style="color:#c0f">FromCryptoPublicKey</span>(x509Cert.PublicKey)
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">32</span>	<span style="color:#069;font-weight:bold">if</span> err <span style="color:#555">!=</span> <span style="color:#069;font-weight:bold">nil</span> {
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">33</span>		<span style="color:#069;font-weight:bold">return</span> <span style="color:#069;font-weight:bold">nil</span>, <span style="color:#069;font-weight:bold">nil</span>, err
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">34</span>	}
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">35</span>	prk, err <span style="color:#555">:=</span> libtrust.<span style="color:#c0f">FromCryptoPrivateKey</span>(cert.PrivateKey)
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">36</span>	<span style="color:#069;font-weight:bold">if</span> err <span style="color:#555">!=</span> <span style="color:#069;font-weight:bold">nil</span> {
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">37</span>		<span style="color:#069;font-weight:bold">return</span> <span style="color:#069;font-weight:bold">nil</span>, <span style="color:#069;font-weight:bold">nil</span>, err
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">38</span>	}
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">39</span>}
-</code></pre></div><p>The above code setups the basic structure of our token server. Lines 6-10 defines a structure to hold some important values. Lines 12-19 is a helper function to form a usable tokenServer structure, this function basically loads in the certificate data into go struct so that we can use them later on to sign the JWTs we’re going to be producing. Lines 22-40 is a helper function to load raw certificate data into libtrust.Privatekey and libtrust.Publickey .</p>
-<div class="highlight"><pre style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span><span style="color:#069;font-weight:bold">type</span> Option <span style="color:#069;font-weight:bold">struct</span> {
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span>	issuer, typ, name, account, service <span style="color:#078;font-weight:bold">string</span>
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span>	actions []<span style="color:#078;font-weight:bold">string</span> <span style="color:#09f;font-style:italic">// requested actions
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span><span style="color:#09f;font-style:italic"></span>}
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span>
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span><span style="color:#069;font-weight:bold">type</span> Token <span style="color:#069;font-weight:bold">struct</span> {
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span>	Token       <span style="color:#078;font-weight:bold">string</span> <span style="color:#c30">`json:&#34;token&#34;`</span>
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span>	AccessToken <span style="color:#078;font-weight:bold">string</span> <span style="color:#c30">`json:&#34;access_token&#34;`</span>
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span>}
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span>
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span><span style="color:#069;font-weight:bold">func</span> (srv <span style="color:#555">*</span>tokenServer) <span style="color:#c0f">createToken</span>(opt <span style="color:#555">*</span>Option, actions []<span style="color:#078;font-weight:bold">string</span>) (<span style="color:#555">*</span>Token, <span style="color:#078;font-weight:bold">error</span>) {
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span>	<span style="color:#09f;font-style:italic">// sign any string to get the used signing Algorithm for the private key
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span><span style="color:#09f;font-style:italic"></span>	_, algo, err <span style="color:#555">:=</span> srv.privateKey.<span style="color:#c0f">Sign</span>(strings.<span style="color:#c0f">NewReader</span>(<span style="color:#c30">&#34;AUTH&#34;</span>), <span style="color:#f60">0</span>)
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span>	<span style="color:#069;font-weight:bold">if</span> err <span style="color:#555">!=</span> <span style="color:#069;font-weight:bold">nil</span> {
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span>		<span style="color:#069;font-weight:bold">return</span> <span style="color:#069;font-weight:bold">nil</span>, err
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16</span>	}
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17</span>	header <span style="color:#555">:=</span> token.Header{
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18</span>		Type:       <span style="color:#c30">&#34;JWT&#34;</span>,
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19</span>		SigningAlg: algo,
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20</span>		KeyID:      srv.pubKey.<span style="color:#c0f">KeyID</span>(),
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21</span>	}
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22</span>	headerJson, err <span style="color:#555">:=</span> json.<span style="color:#c0f">Marshal</span>(header)
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">23</span>	<span style="color:#069;font-weight:bold">if</span> err <span style="color:#555">!=</span> <span style="color:#069;font-weight:bold">nil</span> {
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">24</span>		<span style="color:#069;font-weight:bold">return</span> <span style="color:#069;font-weight:bold">nil</span>, err
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">25</span>	}
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">26</span>	now <span style="color:#555">:=</span> time.<span style="color:#c0f">Now</span>().<span style="color:#c0f">Unix</span>()
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">27</span>	exp <span style="color:#555">:=</span> now <span style="color:#555">+</span> time.<span style="color:#c0f">Now</span>().<span style="color:#c0f">Add</span>(<span style="color:#f60">24</span><span style="color:#555">*</span>time.Hour).<span style="color:#c0f">Unix</span>()
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">28</span>	claim <span style="color:#555">:=</span> token.ClaimSet{
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">29</span>		Issuer:     opt.issuer,
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">30</span>		Subject:    opt.account,
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">31</span>		Audience:   opt.service,
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">32</span>		Expiration: exp,
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">33</span>		NotBefore:  now <span style="color:#555">-</span> <span style="color:#f60">10</span>,
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">34</span>		IssuedAt:   now,
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">35</span>		JWTID:      fmt.<span style="color:#c0f">Sprintf</span>(<span style="color:#c30">&#34;%d&#34;</span>, rand.<span style="color:#c0f">Int63</span>()),
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">36</span>		Access:     []<span style="color:#555">*</span>token.ResourceActions{},
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">37</span>	}
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">38</span>	claim.Access = <span style="color:#366">append</span>(claim.Access, <span style="color:#555">&amp;</span>token.ResourceActions{
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">39</span>		Type:    opt.typ,
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">40</span>		Name:    opt.name,
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">41</span>		Actions: actions,
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">42</span>	})
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">43</span>	claimJson, err <span style="color:#555">:=</span> json.<span style="color:#c0f">Marshal</span>(claim)
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">44</span>	<span style="color:#069;font-weight:bold">if</span> err <span style="color:#555">!=</span> <span style="color:#069;font-weight:bold">nil</span> {
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">45</span>		<span style="color:#069;font-weight:bold">return</span> <span style="color:#069;font-weight:bold">nil</span>, err
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">46</span>	}
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">47</span>	payload <span style="color:#555">:=</span> fmt.<span style="color:#c0f">Sprintf</span>(<span style="color:#c30">&#34;%s%s%s&#34;</span>, <span style="color:#c0f">encodeBase64</span>(headerJson), token.TokenSeparator, <span style="color:#c0f">encodeBase64</span>(claimJson))
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">48</span>	sig, sigAlgo, err <span style="color:#555">:=</span> srv.privateKey.<span style="color:#c0f">Sign</span>(strings.<span style="color:#c0f">NewReader</span>(payload), <span style="color:#f60">0</span>)
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">49</span>	<span style="color:#069;font-weight:bold">if</span> err <span style="color:#555">!=</span> <span style="color:#069;font-weight:bold">nil</span> <span style="color:#555">&amp;&amp;</span> sigAlgo <span style="color:#555">!=</span> algo {
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">50</span>		<span style="color:#069;font-weight:bold">return</span> <span style="color:#069;font-weight:bold">nil</span>, err
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">51</span>	}
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">52</span>	tk <span style="color:#555">:=</span> fmt.<span style="color:#c0f">Sprintf</span>(<span style="color:#c30">&#34;%s%s%s&#34;</span>, payload, token.TokenSeparator, <span style="color:#c0f">encodeBase64</span>(sig))
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">53</span>	<span style="color:#069;font-weight:bold">return</span> <span style="color:#555">&amp;</span>Token{Token: tk, AccessToken: tk}, <span style="color:#069;font-weight:bold">nil</span>
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">54</span>}
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">55</span>
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">56</span>
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">57</span><span style="color:#069;font-weight:bold">func</span> (srv <span style="color:#555">*</span>tokenServer) <span style="color:#c0f">createTokenOption</span>(r <span style="color:#555">*</span>http.Request) <span style="color:#555">*</span>Option {
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">58</span>	opt <span style="color:#555">:=</span> <span style="color:#555">&amp;</span>Option{}
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">59</span>	q <span style="color:#555">:=</span> r.URL.<span style="color:#c0f">Query</span>()
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">60</span>
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">61</span>	opt.service = q.<span style="color:#c0f">Get</span>(<span style="color:#c30">&#34;service&#34;</span>)
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">62</span>	opt.account = q.<span style="color:#c0f">Get</span>(<span style="color:#c30">&#34;account&#34;</span>)
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">63</span>	opt.issuer = <span style="color:#c30">&#34;Sample Issuer&#34;</span> <span style="color:#09f;font-style:italic">// issuer value must match the value configured via docker-compose
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">64</span><span style="color:#09f;font-style:italic"></span>
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">65</span>	parts <span style="color:#555">:=</span> strings.<span style="color:#c0f">Split</span>(q.<span style="color:#c0f">Get</span>(<span style="color:#c30">&#34;scope&#34;</span>), <span style="color:#c30">&#34;:&#34;</span>)
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">66</span>	<span style="color:#069;font-weight:bold">if</span> <span style="color:#366">len</span>(parts) &gt; <span style="color:#f60">0</span> {
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">67</span>		opt.typ = parts[<span style="color:#f60">0</span>] <span style="color:#09f;font-style:italic">// repository
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">68</span><span style="color:#09f;font-style:italic"></span>	}
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">69</span>	<span style="color:#069;font-weight:bold">if</span> <span style="color:#366">len</span>(parts) &gt; <span style="color:#f60">1</span> {
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">70</span>		opt.name = parts[<span style="color:#f60">1</span>] <span style="color:#09f;font-style:italic">// foo/repoName
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">71</span><span style="color:#09f;font-style:italic"></span>	}
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">72</span>	<span style="color:#069;font-weight:bold">if</span> <span style="color:#366">len</span>(parts) &gt; <span style="color:#f60">2</span> {
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">73</span>		opt.actions = strings.<span style="color:#c0f">Split</span>(parts[<span style="color:#f60">2</span>], <span style="color:#c30">&#34;,&#34;</span>) <span style="color:#09f;font-style:italic">// requested actions
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">74</span><span style="color:#09f;font-style:italic"></span>	}
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">75</span>	<span style="color:#069;font-weight:bold">return</span> opt
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">76</span>}
-</code></pre></div><p>The above code made up the huge chunk of this whole solution. Lines 2-5 defined a struct Option{} to hold the docker registry request’s parameter, which are basically the values needed to create a valid JWT for our registry client. Lines 7-10 defined a Token{} struct to hold the value of the generated token. Lines 12-55 is a function that takes a Option{} and list of actions granted to authenticating user and then create a valid token according to <a href="https://github.com/docker/distribution/blob/1b9ab303a477ded9bdd3fc97e9119fa8f9e58fca/docs/spec/auth/jwt.md">THIS SPECIFICATION,</a> the code comments are straightforward and should be easy to follow. And lastly, Lines 58-77 parses the request’s data and create an Option{} from it, this will allow us to easily have access to the information we need to create a valid token.</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="font-weight:bold">import</span> (
+</span></span><span style="display:flex;"><span>    <span style="font-style:italic">&#34;github.com/docker/libtrust&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="font-style:italic">&#34;crypto/tls&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="font-style:italic">&#34;crypto/x509&#34;</span>
+</span></span><span style="display:flex;"><span>)
+</span></span><span style="display:flex;"><span><span style="font-weight:bold">type</span> tokenServer <span style="font-weight:bold">struct</span> {
+</span></span><span style="display:flex;"><span>	privateKey libtrust.PrivateKey
+</span></span><span style="display:flex;"><span>	pubKey     libtrust.PublicKey
+</span></span><span style="display:flex;"><span>	crt, key   <span style="">string</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="font-style:italic">// newTokenServer creates a new tokenServer</span>
+</span></span><span style="display:flex;"><span><span style="font-weight:bold">func</span> newTokenServer(crt, key <span style="">string</span>) (*tokenServer, <span style="">error</span>) {
+</span></span><span style="display:flex;"><span>	pk, prk, err := loadCertAndKey(crt, key)
+</span></span><span style="display:flex;"><span>	<span style="font-weight:bold">if</span> err != <span style="font-weight:bold">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="font-weight:bold">return</span> <span style="font-weight:bold">nil</span>, err
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	t := &amp;tokenServer{privateKey: prk, pubKey: pk, crt: crt, key: key}
+</span></span><span style="display:flex;"><span>	<span style="font-weight:bold">return</span> t, <span style="font-weight:bold">nil</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="font-style:italic">// loadCertAndKey from filesystem</span>
+</span></span><span style="display:flex;"><span><span style="font-weight:bold">func</span> loadCertAndKey(certFile, keyFile <span style="">string</span>) (libtrust.PublicKey, libtrust.PrivateKey, <span style="">error</span>) {
+</span></span><span style="display:flex;"><span>	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
+</span></span><span style="display:flex;"><span>	<span style="font-weight:bold">if</span> err != <span style="font-weight:bold">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="font-weight:bold">return</span> <span style="font-weight:bold">nil</span>, <span style="font-weight:bold">nil</span>, err
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	x509Cert, err := x509.ParseCertificate(cert.Certificate[0])
+</span></span><span style="display:flex;"><span>	<span style="font-weight:bold">if</span> err != <span style="font-weight:bold">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="font-weight:bold">return</span> <span style="font-weight:bold">nil</span>, <span style="font-weight:bold">nil</span>, err
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	pk, err := libtrust.FromCryptoPublicKey(x509Cert.PublicKey)
+</span></span><span style="display:flex;"><span>	<span style="font-weight:bold">if</span> err != <span style="font-weight:bold">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="font-weight:bold">return</span> <span style="font-weight:bold">nil</span>, <span style="font-weight:bold">nil</span>, err
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	prk, err := libtrust.FromCryptoPrivateKey(cert.PrivateKey)
+</span></span><span style="display:flex;"><span>	<span style="font-weight:bold">if</span> err != <span style="font-weight:bold">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="font-weight:bold">return</span> <span style="font-weight:bold">nil</span>, <span style="font-weight:bold">nil</span>, err
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>The above code setups the basic structure of our token server. Lines 6-10 defines a structure to hold some important values. Lines 12-19 is a helper function to form a usable tokenServer structure, this function basically loads in the certificate data into go struct so that we can use them later on to sign the JWTs we’re going to be producing. Lines 22-40 is a helper function to load raw certificate data into libtrust.Privatekey and libtrust.Publickey .</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="font-weight:bold">type</span> Option <span style="font-weight:bold">struct</span> {
+</span></span><span style="display:flex;"><span>	issuer, typ, name, account, service <span style="">string</span>
+</span></span><span style="display:flex;"><span>	actions []<span style="">string</span> <span style="font-style:italic">// requested actions</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="font-weight:bold">type</span> Token <span style="font-weight:bold">struct</span> {
+</span></span><span style="display:flex;"><span>	Token       <span style="">string</span> <span style="font-style:italic">`json:&#34;token&#34;`</span>
+</span></span><span style="display:flex;"><span>	AccessToken <span style="">string</span> <span style="font-style:italic">`json:&#34;access_token&#34;`</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="font-weight:bold">func</span> (srv *tokenServer) createToken(opt *Option, actions []<span style="">string</span>) (*Token, <span style="">error</span>) {
+</span></span><span style="display:flex;"><span>	<span style="font-style:italic">// sign any string to get the used signing Algorithm for the private key</span>
+</span></span><span style="display:flex;"><span>	_, algo, err := srv.privateKey.Sign(strings.NewReader(<span style="font-style:italic">&#34;AUTH&#34;</span>), 0)
+</span></span><span style="display:flex;"><span>	<span style="font-weight:bold">if</span> err != <span style="font-weight:bold">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="font-weight:bold">return</span> <span style="font-weight:bold">nil</span>, err
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	header := token.Header{
+</span></span><span style="display:flex;"><span>		Type:       <span style="font-style:italic">&#34;JWT&#34;</span>,
+</span></span><span style="display:flex;"><span>		SigningAlg: algo,
+</span></span><span style="display:flex;"><span>		KeyID:      srv.pubKey.KeyID(),
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	headerJson, err := json.Marshal(header)
+</span></span><span style="display:flex;"><span>	<span style="font-weight:bold">if</span> err != <span style="font-weight:bold">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="font-weight:bold">return</span> <span style="font-weight:bold">nil</span>, err
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	now := time.Now().Unix()
+</span></span><span style="display:flex;"><span>	exp := now + time.Now().Add(24*time.Hour).Unix()
+</span></span><span style="display:flex;"><span>	claim := token.ClaimSet{
+</span></span><span style="display:flex;"><span>		Issuer:     opt.issuer,
+</span></span><span style="display:flex;"><span>		Subject:    opt.account,
+</span></span><span style="display:flex;"><span>		Audience:   opt.service,
+</span></span><span style="display:flex;"><span>		Expiration: exp,
+</span></span><span style="display:flex;"><span>		NotBefore:  now - 10,
+</span></span><span style="display:flex;"><span>		IssuedAt:   now,
+</span></span><span style="display:flex;"><span>		JWTID:      fmt.Sprintf(<span style="font-style:italic">&#34;%d&#34;</span>, rand.Int63()),
+</span></span><span style="display:flex;"><span>		Access:     []*token.ResourceActions{},
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	claim.Access = append(claim.Access, &amp;token.ResourceActions{
+</span></span><span style="display:flex;"><span>		Type:    opt.typ,
+</span></span><span style="display:flex;"><span>		Name:    opt.name,
+</span></span><span style="display:flex;"><span>		Actions: actions,
+</span></span><span style="display:flex;"><span>	})
+</span></span><span style="display:flex;"><span>	claimJson, err := json.Marshal(claim)
+</span></span><span style="display:flex;"><span>	<span style="font-weight:bold">if</span> err != <span style="font-weight:bold">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="font-weight:bold">return</span> <span style="font-weight:bold">nil</span>, err
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	payload := fmt.Sprintf(<span style="font-style:italic">&#34;%s%s%s&#34;</span>, encodeBase64(headerJson), token.TokenSeparator, encodeBase64(claimJson))
+</span></span><span style="display:flex;"><span>	sig, sigAlgo, err := srv.privateKey.Sign(strings.NewReader(payload), 0)
+</span></span><span style="display:flex;"><span>	<span style="font-weight:bold">if</span> err != <span style="font-weight:bold">nil</span> &amp;&amp; sigAlgo != algo {
+</span></span><span style="display:flex;"><span>		<span style="font-weight:bold">return</span> <span style="font-weight:bold">nil</span>, err
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	tk := fmt.Sprintf(<span style="font-style:italic">&#34;%s%s%s&#34;</span>, payload, token.TokenSeparator, encodeBase64(sig))
+</span></span><span style="display:flex;"><span>	<span style="font-weight:bold">return</span> &amp;Token{Token: tk, AccessToken: tk}, <span style="font-weight:bold">nil</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="font-weight:bold">func</span> (srv *tokenServer) createTokenOption(r *http.Request) *Option {
+</span></span><span style="display:flex;"><span>	opt := &amp;Option{}
+</span></span><span style="display:flex;"><span>	q := r.URL.Query()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	opt.service = q.Get(<span style="font-style:italic">&#34;service&#34;</span>)
+</span></span><span style="display:flex;"><span>	opt.account = q.Get(<span style="font-style:italic">&#34;account&#34;</span>)
+</span></span><span style="display:flex;"><span>	opt.issuer = <span style="font-style:italic">&#34;Sample Issuer&#34;</span> <span style="font-style:italic">// issuer value must match the value configured via docker-compose</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	parts := strings.Split(q.Get(<span style="font-style:italic">&#34;scope&#34;</span>), <span style="font-style:italic">&#34;:&#34;</span>)
+</span></span><span style="display:flex;"><span>	<span style="font-weight:bold">if</span> len(parts) &gt; 0 {
+</span></span><span style="display:flex;"><span>		opt.typ = parts[0] <span style="font-style:italic">// repository</span>
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="font-weight:bold">if</span> len(parts) &gt; 1 {
+</span></span><span style="display:flex;"><span>		opt.name = parts[1] <span style="font-style:italic">// foo/repoName</span>
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="font-weight:bold">if</span> len(parts) &gt; 2 {
+</span></span><span style="display:flex;"><span>		opt.actions = strings.Split(parts[2], <span style="font-style:italic">&#34;,&#34;</span>) <span style="font-style:italic">// requested actions</span>
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="font-weight:bold">return</span> opt
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>The above code made up the huge chunk of this whole solution. Lines 2-5 defined a struct Option{} to hold the docker registry request’s parameter, which are basically the values needed to create a valid JWT for our registry client. Lines 7-10 defined a Token{} struct to hold the value of the generated token. Lines 12-55 is a function that takes a Option{} and list of actions granted to authenticating user and then create a valid token according to <a href="https://github.com/docker/distribution/blob/1b9ab303a477ded9bdd3fc97e9119fa8f9e58fca/docs/spec/auth/jwt.md">THIS SPECIFICATION,</a> the code comments are straightforward and should be easy to follow. And lastly, Lines 58-77 parses the request’s data and create an Option{} from it, this will allow us to easily have access to the information we need to create a valid token.</p>
 <p><strong>Putting it all together.</strong></p>
-<div class="highlight"><pre style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span><span style="color:#069;font-weight:bold">func</span> (srv <span style="color:#555">*</span>tokenServer) <span style="color:#c0f">ServeHTTP</span>(w http.ResponseWriter, r <span style="color:#555">*</span>http.Request) {
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span>	username, password, ok <span style="color:#555">:=</span> r.<span style="color:#c0f">BasicAuth</span>()
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span>	<span style="color:#069;font-weight:bold">if</span> !ok {
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span>		http.<span style="color:#c0f">Error</span>(w, <span style="color:#c30">&#34;auth credentials not found&#34;</span>, http.StatusUnauthorized)
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span>		<span style="color:#069;font-weight:bold">return</span>
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span>	}
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span>	<span style="color:#09f;font-style:italic">// compare username and password against your datasets
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span><span style="color:#09f;font-style:italic"></span>	<span style="color:#09f;font-style:italic">// our example only allows foo:bar
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span><span style="color:#09f;font-style:italic"></span>	<span style="color:#069;font-weight:bold">if</span> username <span style="color:#555">!=</span> <span style="color:#c30">&#34;foo&#34;</span> <span style="color:#555">||</span> password <span style="color:#555">!=</span> <span style="color:#c30">&#34;bar&#34;</span> {
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span>		http.<span style="color:#c0f">Error</span>(w, <span style="color:#c30">&#34;invalid auth credentials&#34;</span>, http.StatusUnauthorized)
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span>		<span style="color:#069;font-weight:bold">return</span>
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span>	}
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span>	<span style="color:#09f;font-style:italic">// do authorization check
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span><span style="color:#09f;font-style:italic"></span>	opt <span style="color:#555">:=</span> srv.<span style="color:#c0f">createTokenOption</span>(r)
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span>	actions <span style="color:#555">:=</span> srv.<span style="color:#c0f">authorize</span>(opt)
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16</span>	tk, err <span style="color:#555">:=</span> srv.<span style="color:#c0f">createToken</span>(opt, actions)
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17</span>	<span style="color:#069;font-weight:bold">if</span> err <span style="color:#555">!=</span> <span style="color:#069;font-weight:bold">nil</span> {
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18</span>		http.<span style="color:#c0f">Error</span>(w, <span style="color:#c30">&#34;server error&#34;</span>, http.StatusInternalServerError)
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19</span>		<span style="color:#069;font-weight:bold">return</span>
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20</span>	}
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21</span>	srv.<span style="color:#c0f">ok</span>(w, tk)
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22</span>}
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">23</span>
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">24</span><span style="color:#069;font-weight:bold">func</span> (srv <span style="color:#555">*</span>tokenServer) <span style="color:#c0f">authorize</span>(opt <span style="color:#555">*</span>Option) []<span style="color:#078;font-weight:bold">string</span> {
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">25</span>	<span style="color:#09f;font-style:italic">// do proper comparison to check for user&#39;s access
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">26</span><span style="color:#09f;font-style:italic"></span>	<span style="color:#09f;font-style:italic">// against the requested actions
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">27</span><span style="color:#09f;font-style:italic"></span>	<span style="color:#069;font-weight:bold">if</span> opt.account <span style="color:#555">==</span> <span style="color:#c30">&#34;foo&#34;</span> {
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">28</span>		<span style="color:#069;font-weight:bold">return</span> []<span style="color:#078;font-weight:bold">string</span>{<span style="color:#c30">&#34;pull&#34;</span>, <span style="color:#c30">&#34;push&#34;</span>}
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">29</span>	}
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">30</span>	<span style="color:#069;font-weight:bold">if</span> opt.account <span style="color:#555">==</span> <span style="color:#c30">&#34;bar&#34;</span> {
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">31</span>		<span style="color:#069;font-weight:bold">return</span> []<span style="color:#078;font-weight:bold">string</span>{<span style="color:#c30">&#34;pull&#34;</span>}
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">32</span>	}
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">33</span>	<span style="color:#09f;font-style:italic">// unauthorized, no permission is granted
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">34</span><span style="color:#09f;font-style:italic"></span>	<span style="color:#069;font-weight:bold">return</span> []<span style="color:#078;font-weight:bold">string</span>{}
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">35</span>}
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">36</span>
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">37</span><span style="color:#069;font-weight:bold">func</span> (srv <span style="color:#555">*</span>tokenServer) <span style="color:#c0f">run</span>() <span style="color:#078;font-weight:bold">error</span> {
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">38</span>	addr <span style="color:#555">:=</span> fmt.<span style="color:#c0f">Sprintf</span>(<span style="color:#c30">&#34;:%s&#34;</span>, os.<span style="color:#c0f">Getenv</span>(<span style="color:#c30">&#34;PORT&#34;</span>))
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">39</span>	http.<span style="color:#c0f">Handle</span>(<span style="color:#c30">&#34;/auth&#34;</span>, srv)
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">40</span>	<span style="color:#069;font-weight:bold">return</span> http.<span style="color:#c0f">ListenAndServeTLS</span>(addr, srv.crt, srv.key, <span style="color:#069;font-weight:bold">nil</span>)
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">41</span>}
-</code></pre></div><p><code>tokenServer</code> implements http.Handler function so that we can handle authentication and authorization requests from our private docker registry. The first thing we did was retrieve username and password from the request, as expected we immediately return http 401 error if this values are absent. We also did a static comparison to simulate real life authentication, in production you would normally compare these authentication credentials against a real datastore. And then we went ahead to extract Option{} out of our http request, we then do a dummy authorization by passing opt to a fake authorize function. Again, in real life or production scenario, authorize function would work according to your business logic. And finally, we generate our token using the list of authorized actions returned from calling authorize function. Lines 37-41 setup an https server and therefore our token authentication server is read to issue out valid JWT tokens.</p>
-<h3 id="containerizing-the-token-authentication-server"><strong>Containerizing the token authentication server</strong></h3>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="font-weight:bold">func</span> (srv *tokenServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+</span></span><span style="display:flex;"><span>	username, password, ok := r.BasicAuth()
+</span></span><span style="display:flex;"><span>	<span style="font-weight:bold">if</span> !ok {
+</span></span><span style="display:flex;"><span>		http.Error(w, <span style="font-style:italic">&#34;auth credentials not found&#34;</span>, http.StatusUnauthorized)
+</span></span><span style="display:flex;"><span>		<span style="font-weight:bold">return</span>
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="font-style:italic">// compare username and password against your datasets</span>
+</span></span><span style="display:flex;"><span>	<span style="font-style:italic">// our example only allows foo:bar</span>
+</span></span><span style="display:flex;"><span>	<span style="font-weight:bold">if</span> username != <span style="font-style:italic">&#34;foo&#34;</span> || password != <span style="font-style:italic">&#34;bar&#34;</span> {
+</span></span><span style="display:flex;"><span>		http.Error(w, <span style="font-style:italic">&#34;invalid auth credentials&#34;</span>, http.StatusUnauthorized)
+</span></span><span style="display:flex;"><span>		<span style="font-weight:bold">return</span>
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="font-style:italic">// do authorization check</span>
+</span></span><span style="display:flex;"><span>	opt := srv.createTokenOption(r)
+</span></span><span style="display:flex;"><span>	actions := srv.authorize(opt)
+</span></span><span style="display:flex;"><span>	tk, err := srv.createToken(opt, actions)
+</span></span><span style="display:flex;"><span>	<span style="font-weight:bold">if</span> err != <span style="font-weight:bold">nil</span> {
+</span></span><span style="display:flex;"><span>		http.Error(w, <span style="font-style:italic">&#34;server error&#34;</span>, http.StatusInternalServerError)
+</span></span><span style="display:flex;"><span>		<span style="font-weight:bold">return</span>
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	srv.ok(w, tk)
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="font-weight:bold">func</span> (srv *tokenServer) authorize(opt *Option) []<span style="">string</span> {
+</span></span><span style="display:flex;"><span>	<span style="font-style:italic">// do proper comparison to check for user&#39;s access</span>
+</span></span><span style="display:flex;"><span>	<span style="font-style:italic">// against the requested actions</span>
+</span></span><span style="display:flex;"><span>	<span style="font-weight:bold">if</span> opt.account == <span style="font-style:italic">&#34;foo&#34;</span> {
+</span></span><span style="display:flex;"><span>		<span style="font-weight:bold">return</span> []<span style="">string</span>{<span style="font-style:italic">&#34;pull&#34;</span>, <span style="font-style:italic">&#34;push&#34;</span>}
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="font-weight:bold">if</span> opt.account == <span style="font-style:italic">&#34;bar&#34;</span> {
+</span></span><span style="display:flex;"><span>		<span style="font-weight:bold">return</span> []<span style="">string</span>{<span style="font-style:italic">&#34;pull&#34;</span>}
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="font-style:italic">// unauthorized, no permission is granted</span>
+</span></span><span style="display:flex;"><span>	<span style="font-weight:bold">return</span> []<span style="">string</span>{}
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="font-weight:bold">func</span> (srv *tokenServer) run() <span style="">error</span> {
+</span></span><span style="display:flex;"><span>	addr := fmt.Sprintf(<span style="font-style:italic">&#34;:%s&#34;</span>, os.Getenv(<span style="font-style:italic">&#34;PORT&#34;</span>))
+</span></span><span style="display:flex;"><span>	http.Handle(<span style="font-style:italic">&#34;/auth&#34;</span>, srv)
+</span></span><span style="display:flex;"><span>	<span style="font-weight:bold">return</span> http.ListenAndServeTLS(addr, srv.crt, srv.key, <span style="font-weight:bold">nil</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><code>tokenServer</code> implements http.Handler function so that we can handle authentication and authorization requests from our private docker registry. The first thing we did was retrieve username and password from the request, as expected we immediately return http 401 error if this values are absent. We also did a static comparison to simulate real life authentication, in production you would normally compare these authentication credentials against a real datastore. And then we went ahead to extract Option{} out of our http request, we then do a dummy authorization by passing opt to a fake authorize function. Again, in real life or production scenario, authorize function would work according to your business logic. And finally, we generate our token using the list of authorized actions returned from calling authorize function. Lines 37-41 setup an https server and therefore our token authentication server is read to issue out valid JWT tokens.</p>
+<h3 class="heading" id="containerizing-the-token-authentication-server">
+  <strong>Containerizing the token authentication server</strong>
+  <a class="anchor" href="#containerizing-the-token-authentication-server">#</a>
+</h3>
 <p>We need to package our token authentication server into a container so that we can run it along the docker registry in a simple docker-compose.yml file.</p>
-<div class="highlight"><pre style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1</span>FROM alpine:<span style="color:#f60">3.2</span>
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2</span>RUN apk update <span style="color:#555">&amp;&amp;</span> apk add <span style="color:#555">--</span>no<span style="color:#555">-</span>cache ca<span style="color:#555">-</span>certificates
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">3</span>ADD . <span style="color:#555">/</span>app
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">4</span>WORKDIR <span style="color:#555">/</span>app
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">5</span>RUN chmod <span style="color:#555">+</span>x <span style="color:#555">/</span>app<span style="color:#555">/</span>sample<span style="color:#555">-</span>auth
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">6</span>ENTRYPOINT [ <span style="color:#c30">&#34;/app/sample-auth&#34;</span> ]
-</code></pre></div><p>We need to create a bash file, we’re naming it build.sh , it’s just a simple file to group our command so that we won’t need to be repeating commands every single time.</p>
-<div class="highlight"><pre style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span><span style="color:#099">#!/bin/bash
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span><span style="color:#099"></span><span style="color:#09f;font-style:italic"># Generate a random uuid to use as a docker tag</span>
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span><span style="color:#033">NEW_UUID</span><span style="color:#555">=</span><span style="color:#069;font-weight:bold">$(</span>cat /dev/urandom | <span style="color:#033">LC_CTYPE</span><span style="color:#555">=</span>C tr -dc <span style="color:#c30">&#39;a-zA-Z0-9&#39;</span> | fold -w <span style="color:#f60">8</span> | head -n 1<span style="color:#069;font-weight:bold">)</span>
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span><span style="color:#09f;font-style:italic"># build binary</span>
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span><span style="color:#366">export</span> <span style="color:#033">GOOS</span><span style="color:#555">=</span>linux <span style="color:#555">&amp;&amp;</span> go build -o sample-auth main.go
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span><span style="color:#09f;font-style:italic"># build docker image</span>
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span>docker build -t <span style="color:#c30">&#34;sample-auth&#34;</span> .
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span><span style="color:#09f;font-style:italic"># tag image</span>
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span>docker tag sample-auth localhost:5010/sample-auth:<span style="color:#a00">${</span><span style="color:#033">NEW_UUID</span><span style="color:#a00">}</span>
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span><span style="color:#09f;font-style:italic"># push image to registry running at localhost:5010</span>
-<span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span>docker push localhost:5010/sample-auth:<span style="color:#a00">${</span><span style="color:#033">NEW_UUID</span><span style="color:#a00">}</span>
-</code></pre></div><p>Your final docker-compose.yml file should look like the one pasted below —</p>
-<div class="highlight"><pre style="background-color:#f0f3f3;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1</span><span style="color:#069;font-weight:bold">version</span>:<span style="color:#bbb"> </span><span style="color:#c30">&#34;3&#34;</span><span style="color:#bbb">
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2</span><span style="color:#bbb">
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3</span><span style="color:#bbb"></span><span style="color:#069;font-weight:bold">services</span>:<span style="color:#bbb">
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">sample-server</span>:<span style="color:#bbb">
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5</span><span style="color:#bbb">    </span><span style="color:#069;font-weight:bold">build</span>:<span style="color:#bbb"> </span>./<span style="color:#bbb">
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6</span><span style="color:#bbb">    </span><span style="color:#069;font-weight:bold">container_name</span>:<span style="color:#bbb"> </span>sample-server<span style="color:#bbb">
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7</span><span style="color:#bbb">    </span><span style="color:#069;font-weight:bold">restart</span>:<span style="color:#bbb"> </span>on-failure<span style="color:#bbb">
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8</span><span style="color:#bbb">    </span><span style="color:#069;font-weight:bold">environment</span>:<span style="color:#bbb">
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9</span><span style="color:#bbb">      </span>- PORT=<span style="color:#f60">5008</span><span style="color:#bbb">
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10</span><span style="color:#bbb">    </span><span style="color:#069;font-weight:bold">ports</span>:<span style="color:#bbb">
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11</span><span style="color:#bbb">      </span>- <span style="color:#f60">5011</span>:<span style="color:#f60">5008</span><span style="color:#bbb">
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12</span><span style="color:#bbb">    </span><span style="color:#069;font-weight:bold">volumes</span>:<span style="color:#bbb">
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13</span><span style="color:#bbb">      </span>- <span style="color:#c30">&#34;./certs:/mnt/certs&#34;</span><span style="color:#bbb">
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14</span><span style="color:#bbb">
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15</span><span style="color:#bbb">  </span><span style="color:#069;font-weight:bold">docker-registry</span>:<span style="color:#bbb">
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16</span><span style="color:#bbb">    </span><span style="color:#069;font-weight:bold">restart</span>:<span style="color:#bbb"> </span>always<span style="color:#bbb">
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17</span><span style="color:#bbb">    </span><span style="color:#069;font-weight:bold">image</span>:<span style="color:#bbb"> </span>registry:<span style="color:#f60">2</span><span style="color:#bbb">
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18</span><span style="color:#bbb">    </span><span style="color:#069;font-weight:bold">ports</span>:<span style="color:#bbb">
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19</span><span style="color:#bbb">      </span>- <span style="color:#f60">5010</span>:<span style="color:#f60">5000</span><span style="color:#bbb">
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20</span><span style="color:#bbb">    </span><span style="color:#069;font-weight:bold">environment</span>:<span style="color:#bbb">
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21</span><span style="color:#bbb">      </span>- REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY=/data<span style="color:#bbb">
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22</span><span style="color:#bbb">      </span>- REGISTRY_AUTH=token<span style="color:#bbb">
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">23</span><span style="color:#bbb">      </span>- REGISTRY_AUTH_TOKEN_REALM=https://localhost:<span style="color:#f60">5011</span>/auth<span style="color:#bbb">
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">24</span><span style="color:#bbb">      </span>- REGISTRY_AUTH_TOKEN_SERVICE=Authentication<span style="color:#bbb">
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">25</span><span style="color:#bbb">      </span>- REGISTRY_AUTH_TOKEN_ISSUER=Sample<span style="color:#bbb"> </span>Issuer<span style="color:#bbb">
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">26</span><span style="color:#bbb">      </span>- REGISTRY_AUTH_TOKEN_ROOTCERTBUNDLE=/mnt/local/certs/RootCA.crt<span style="color:#bbb">
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">27</span><span style="color:#bbb">      </span>- REGISTRY_HTTP_TLS_CERTIFICATE=/mnt/local/certs/RootCA.crt<span style="color:#bbb">
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">28</span><span style="color:#bbb">      </span>- REGISTRY_HTTP_TLS_KEY=/mnt/local/certs/RootCA.key<span style="color:#bbb">
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">29</span><span style="color:#bbb">    </span><span style="color:#069;font-weight:bold">volumes</span>:<span style="color:#bbb">
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">30</span><span style="color:#bbb">      </span>- <span style="color:#c30">&#34;${HOME}/mnt/auth/registry/data:/mnt/registry/data&#34;</span><span style="color:#bbb">
-</span><span style="margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">31</span><span style="color:#bbb">      </span>- <span style="color:#c30">&#34;./certs:/mnt/local/certs&#34;</span><span style="color:#bbb">
-</span></code></pre></div><p>Use docker-compose upstart up the app, both registry and the token authentication server should start.</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span>FROM alpine:3.2
+</span></span><span style="display:flex;"><span>RUN apk update &amp;&amp; apk add --no-cache ca-certificates
+</span></span><span style="display:flex;"><span>ADD . /app
+</span></span><span style="display:flex;"><span>WORKDIR /app
+</span></span><span style="display:flex;"><span>RUN chmod +x /app/sample-auth
+</span></span><span style="display:flex;"><span>ENTRYPOINT [ <span style="font-style:italic">&#34;/app/sample-auth&#34;</span> ]
+</span></span></code></pre></div><p>We need to create a bash file, we’re naming it build.sh , it’s just a simple file to group our command so that we won’t need to be repeating commands every single time.</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span><span style="">#!/bin/bash
+</span></span></span><span style="display:flex;"><span><span style=""></span><span style="font-style:italic"># Generate a random uuid to use as a docker tag</span>
+</span></span><span style="display:flex;"><span>NEW_UUID=<span style="font-weight:bold">$(</span>cat /dev/urandom | LC_CTYPE=C tr -dc <span style="font-style:italic">&#39;a-zA-Z0-9&#39;</span> | fold -w 8 | head -n 1<span style="font-weight:bold">)</span>
+</span></span><span style="display:flex;"><span><span style="font-style:italic"># build binary</span>
+</span></span><span style="display:flex;"><span>export GOOS=linux &amp;&amp; go build -o sample-auth main.go
+</span></span><span style="display:flex;"><span><span style="font-style:italic"># build docker image</span>
+</span></span><span style="display:flex;"><span>docker build -t <span style="font-style:italic">&#34;sample-auth&#34;</span> .
+</span></span><span style="display:flex;"><span><span style="font-style:italic"># tag image</span>
+</span></span><span style="display:flex;"><span>docker tag sample-auth localhost:5010/sample-auth:<span style="font-weight:bold;font-style:italic">${</span>NEW_UUID<span style="font-weight:bold;font-style:italic">}</span>
+</span></span><span style="display:flex;"><span><span style="font-style:italic"># push image to registry running at localhost:5010</span>
+</span></span><span style="display:flex;"><span>docker push localhost:5010/sample-auth:<span style="font-weight:bold;font-style:italic">${</span>NEW_UUID<span style="font-weight:bold;font-style:italic">}</span>
+</span></span></code></pre></div><p>Your final docker-compose.yml file should look like the one pasted below —</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="font-weight:bold">version</span>: <span style="font-style:italic">&#34;3&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="font-weight:bold">services</span>:
+</span></span><span style="display:flex;"><span>  <span style="font-weight:bold">sample-server</span>:
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">build</span>: ./
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">container_name</span>: sample-server
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">restart</span>: <span style="font-weight:bold">on</span>-failure
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">environment</span>:
+</span></span><span style="display:flex;"><span>      - PORT=5008
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">ports</span>:
+</span></span><span style="display:flex;"><span>      - 5011:5008
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">volumes</span>:
+</span></span><span style="display:flex;"><span>      - <span style="font-style:italic">&#34;./certs:/mnt/certs&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="font-weight:bold">docker-registry</span>:
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">restart</span>: always
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">image</span>: registry:2
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">ports</span>:
+</span></span><span style="display:flex;"><span>      - 5010:5000
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">environment</span>:
+</span></span><span style="display:flex;"><span>      - REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY=/data
+</span></span><span style="display:flex;"><span>      - REGISTRY_AUTH=token
+</span></span><span style="display:flex;"><span>      - REGISTRY_AUTH_TOKEN_REALM=https://localhost:5011/auth
+</span></span><span style="display:flex;"><span>      - REGISTRY_AUTH_TOKEN_SERVICE=Authentication
+</span></span><span style="display:flex;"><span>      - REGISTRY_AUTH_TOKEN_ISSUER=Sample Issuer
+</span></span><span style="display:flex;"><span>      - REGISTRY_AUTH_TOKEN_ROOTCERTBUNDLE=/mnt/local/certs/RootCA.crt
+</span></span><span style="display:flex;"><span>      - REGISTRY_HTTP_TLS_CERTIFICATE=/mnt/local/certs/RootCA.crt
+</span></span><span style="display:flex;"><span>      - REGISTRY_HTTP_TLS_KEY=/mnt/local/certs/RootCA.key
+</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">volumes</span>:
+</span></span><span style="display:flex;"><span>      - <span style="font-style:italic">&#34;${HOME}/mnt/auth/registry/data:/mnt/registry/data&#34;</span>
+</span></span><span style="display:flex;"><span>      - <span style="font-style:italic">&#34;./certs:/mnt/local/certs&#34;</span>
+</span></span></code></pre></div><p>Use docker-compose upstart up the app, both registry and the token authentication server should start.</p>
 <p><strong>Testing our implementation</strong>
 On first try, the push should be rejected anddocker client should force you to authenticate. Use foo and bar for your username and password respectively and you should get a Login Succeeded response after which you can now push and pull images from our new docker registry. Voila!</p>
 <p>Side note: I put together a simple package that does most of the work describes here. If you’re interested, <a href="https://github.com/adigunhammedolalekan/registry-auth">it is here on my Github,</a> also the code written in this post can be found <a href="https://github.com/adigunhammedolalekan/secure-docker-registry">HERE</a></p>
 <p>Feel free to DM me on <a href="https://twitter.com/L3kanAdigun">Twitter</a> if there’s any issue you want to point out or if there’s any way i can help. Happy coding!</p>
 
+    
+  </div>
+
+  
+  
+  
+  <script defer
+    type="module"
+    id="mermaid_script"
+    data-light-theme="default"
+    data-dark-theme="dark"
+    src='/js/mermaid.js'>
+  </script>
+  
+
+  
+
+  
+  
+
+<div class="single-pagination">
+    <hr />
+
+    <div class="flexnowrap">
+
+        <div class="single-pagination-prev">
+            
+            <div class="single-pagination-container-prev">
+                <div class="single-pagination-text">←</div>
+                <div class="single-pagination-text">
+                    <a href="/posts/b_create_dynamic_image/">
+                        Building Docker Images Dynamically with Go
+                    </a>
+                </div>
+            </div>
+            
+        </div>
+
+        <div class="single-pagination-next">
+            
+            <div class="single-pagination-container-next">
+                <div class="single-pagination-text">
+                    <a href="/posts/go-app-k8s/">
+                        Golang Application on Kubernetes
+                    </a>
+                </div>
+                <div class="single-pagination-text">→</div>
+            </div>
+            
+        </div>
+
+    </div>
+
+    <hr />
+</div>
+
+
+
+  
+
+  
+
+  
+  <div class="back-to-top">
+    <a href="#top">
+      back to top
+    </a>
+  </div>
+  
+
 </div>
 
 
     </main>
+  </div>
+
+  
+  
+
+
+
+
 
     
-      
+
+
+
+
+  <footer>
     
-  </body>
+
+
+  </footer>
+
+  
+</body>
+
+<script src="/js/theme-switch.js"></script>
+<script defer src="/js/copy-code.js"></script>
 </html>

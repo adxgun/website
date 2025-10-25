@@ -16,7 +16,7 @@ Boom! docker registry is up and running on localhost:5000 . But this is limited 
 
 1. If this were to be on a cloud VM/server, anyone with an access to the host IP would be able to pull and push images to our precious private docker registry.
 
-1. You can take it a step further by configuring the registry to use a htpasswd file for authentication. By default, docker registry uses HTTP basic authentication to authenticates with the registry, the attached username and password would be compared against the values in the htpasswd file and if matches, all access would be granted to the client. As you can imagine, this is not what we want. Remember, we want each user to be able to authenticate individually, we also want different access level for these users, e.g we might want user foo to only be able to pull images while we might want user bar to be able to push and pull images.
+2. You can take it a step further by configuring the registry to use a htpasswd file for authentication. By default, docker registry uses HTTP basic authentication to authenticates with the registry, the attached username and password would be compared against the values in the htpasswd file and if matches, all access would be granted to the client. As you can imagine, this is not what we want. Remember, we want each user to be able to authenticate individually, we also want different access level for these users, e.g we might want user foo to only be able to pull images while we might want user bar to be able to push and pull images.
 
 ## The Solution
 
