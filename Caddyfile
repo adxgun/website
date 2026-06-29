@@ -1,0 +1,19 @@
+hammed.live {
+    root * /var/www/hammed.live
+    file_server
+
+    # Serve pre-compressed assets when available
+    encode zstd gzip
+
+    # Cache static assets
+    @static {
+        path *.js *.css *.svg *.ttf *.woff2 *.png *.jpg *.gif *.webp *.ico
+    }
+    header @static Cache-Control "max-age=31536000, no-transform, public"
+
+    # Clean 404 page
+    handle_errors {
+        rewrite * /404.html
+        file_server
+    }
+}

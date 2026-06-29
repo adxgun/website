@@ -1,0 +1,141 @@
+##############################################################################
+# .github/workflows/build.yml  (lives in the APPLICATION repo)
+#
+# On push to main or staging:
+#   1. Builds the Go service Docker image
+#   2. Pushes it to GitHub Container Registry (ghcr.io)
+#   3. Triggers a deployment in the INFRA repo via repository_dispatch
+#
+# Required secrets:
+#   INFRA_REPO_PAT — A GitHub PAT (classic or fine-grained) with permission
+#                    to trigger workflows in the infra repo.
+#                    Fine-grained: grant "Contents: write" on the infra repo.
+#
+# Required variables (Settings → Variables → Actions):
+#   INFRA_REPO — The infra repo in "owner/repo" format, e.g. "acme/infra"
+##############################################################################
+
+name: Build & Push
+
+on:
+  push:
+    branches:
+      - master
+    paths-ignore:
+      - "**.md"
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment"
+        required: true
+        default: "production"
+        type: choice
+        options:
+          - production
+
+permissions:
+  contents: read
+  packages: write    # push to GHCR
+
+concurrency:
+  group: build-${{ github.ref_name }}
+  cancel-in-progress: true
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}   # e.g. ghcr.io/acme/myapp
+  BUILD_ENV: ${{ github.event_name == 'workflow_dispatch' && inputs.environment || (github.ref_name == 'master' && 'production' || 'staging') }}
+
+jobs:
+  # ════════════════════════════════════════════════════════════════════════
+  #  Build & push image
+  # ════════════════════════════════════════════════════════════════════════
+  build:
+    name: Build & Push Image
+    runs-on: ubuntu-latest
+
+    outputs:
+      image_tag: ${{ steps.resolve_tag.outputs.tag }}
+      image_full: ${{ steps.resolve_tag.outputs.image }}
+      image_sha: ${{ steps.resolve_tag.outputs.sha_image }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=staging,enable=${{ github.ref_name == 'staging' }}
+            type=raw,value=latest,enable=${{ github.ref_name == 'master' }}
+            type=sha,prefix=,format=short
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+
+      - name: Build & push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64
+
+      # ── Resolve the single deployable tag ─────────────────────────────
+      - name: Resolve image tag
+        id: resolve_tag
+        run: |
+          if [ "${{ github.ref_name }}" = "master" ]; then
+            TAG="latest"
+          else
+            TAG="staging"
+          fi
+          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG}"
+          SHA_TAG="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:$(echo ${{ github.sha }} | cut -c1-7)"
+          echo "image=${IMAGE}" >> "$GITHUB_OUTPUT"
+          echo "sha_image=${SHA_TAG}" >> "$GITHUB_OUTPUT"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+
+  # ════════════════════════════════════════════════════════════════════════
+  #  Trigger deploy in the infra repo
+  # ════════════════════════════════════════════════════════════════════════
+  trigger-deploy:
+    name: Trigger Deploy (${{ github.ref_name == 'master' && 'production' || 'staging' }})
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Dispatch deploy event to infra repo
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.INFRA_REPO_PAT }}
+          repository: ${{ vars.INFRA_REPO }}
+          event-type: deploy
+          client-payload: |
+            {
+              "environment": "${{ github.ref_name == 'master' && 'production' || 'staging' }}",
+              "image": "${{ needs.build.outputs.image_full }}",
+              "image_tag": "${{ needs.build.outputs.image_tag }}",
+              "sha": "${{ github.sha }}",
+              "sha_short": "${{ github.sha }}",
+              "actor": "${{ github.actor }}",
+              "app_repo": "${{ github.repository }}",
+              "run_url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+              "app_type": "web",
+              "app_name": "hammed.live"
+            }

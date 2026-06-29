@@ -1,0 +1,8 @@
+public/
+.git/
+.idea/
+resources/
+*.sh
+Caddyfile
+scripts/
+keys/
