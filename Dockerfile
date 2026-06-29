@@ -1,7 +1,7 @@
 FROM hugomods/hugo:git AS build
 WORKDIR /app
 COPY . .
-RUN git submodule update --init --recursive && \
+RUN git clone https://github.com/tomfran/typo themes/typo && \
     hugo --gc --minify
 
 FROM alpine:3
