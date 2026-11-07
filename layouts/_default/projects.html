@@ -1,0 +1,13 @@
+{{ define "main" }}
+<div class="wrap page">
+  <header class="page-head">
+    <p class="eyebrow">Open source</p>
+    <h1>{{ .Title }}</h1>
+    {{ with .Content }}<div class="prose lede">{{ . }}</div>{{ end }}
+  </header>
+  {{ partial "featured-project.html" . }}
+  <div class="cards">
+    {{ range site.Data.projects.items }}{{ partial "project-card.html" . }}{{ end }}
+  </div>
+</div>
+{{ end }}

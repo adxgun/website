@@ -1,0 +1,8 @@
+<article class="card">
+  <header>
+    <h3><a href="{{ .url }}" target="_blank" rel="noopener">{{ .name }}</a></h3>
+    <span class="lang lang-{{ .lang | lower }}">{{ .lang }}</span>
+  </header>
+  <p>{{ .summary }}</p>
+  <a class="card-link" href="{{ .url }}" target="_blank" rel="noopener">View on GitHub <span aria-hidden="true">↗</span></a>
+</article>

@@ -1,0 +1,16 @@
+{{ define "main" }}
+<article class="wrap narrow page">
+  <header class="page-head">
+    {{ if eq .Section "posts" }}<p class="eyebrow"><a href="{{ "/posts/" | relURL }}">← Writing</a></p>{{ end }}
+    <h1>{{ .Title }}</h1>
+    {{ if eq .Section "posts" }}
+    <p class="meta">
+      <time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format (site.Params.singleDateFormat | default "2 Jan 2006") }}</time>
+      · {{ .ReadingTime }} min read
+      {{ with .Params.tags }}· {{ range $i, $t := . }}{{ if $i }}, {{ end }}<a href="{{ "/tags/" | relURL }}{{ $t | urlize }}/">#{{ $t }}</a>{{ end }}{{ end }}
+    </p>
+    {{ end }}
+  </header>
+  <div class="prose">{{ .Content }}</div>
+</article>
+{{ end }}

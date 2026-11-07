@@ -1,9 +1,7 @@
 ---
 title: "Projects"
-description: "Projects in my portfolio."
-hideBackToTop: false
-hidePagination: true
+description: "Open-source tools and experiments by Hammed Adigun."
+layout: "projects"
 ---
 
-[sarabi](https://github.com/adxgun/sarabi) \
-A simple, fullstack application deployment tool.
+Open-source tools, libraries and experiments — mostly Go, mostly about deploying, securing and running backend systems.

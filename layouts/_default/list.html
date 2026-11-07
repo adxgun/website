@@ -1,0 +1,17 @@
+{{ define "main" }}
+<div class="wrap narrow page">
+  <header class="page-head">
+    <p class="eyebrow">{{ if eq .Kind "term" }}Tagged{{ else }}Writing{{ end }}</p>
+    <h1>{{ if eq .Kind "term" }}#{{ .Title | lower }}{{ else }}{{ .Title }}{{ end }}</h1>
+    {{ with .Content }}<div class="prose">{{ . }}</div>{{ end }}
+  </header>
+  {{ if eq .Kind "taxonomy" }}
+  <ul class="chips">{{ range .Pages }}<li><a href="{{ .RelPermalink }}">#{{ .Title | lower }}</a></li>{{ end }}</ul>
+  {{ else }}
+  {{ range .Pages.GroupByDate "2006" }}
+  <h2 class="year">{{ .Key }}</h2>
+  {{ partial "post-list.html" .Pages }}
+  {{ end }}
+  {{ end }}
+</div>
+{{ end }}

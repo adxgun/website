@@ -1,92 +1,99 @@
 baseURL = 'https://hammed.live'
 languageCode = 'en-us'
 title = 'Hammed Adigun'
-theme = 'typo'
 
 [taxonomies]
 tag = 'tags'
 
 [params]
-# Home meta description
-description = "Hammed Adigun - Software Engineer. Passionate about backend and infrastructure engineering. Go (Golang) enthusiast."
-
-# Appearance settings
-theme = 'auto'
-colorPalette = 'default'
-hideHeader = false
-
-# Intro on main page, content in markdown
-homeIntroTitle = '👋 Hi there!'
-homeIntroContent = """
-I'm Hammed, a Software Engineer based in the UK, passionate about backend and infrastructure engineering. I enjoy building products and being part of fast-paced startup environments where ideas quickly turn into real-world impact.
-
-I’ve been writing **Go (Golang)** for the past five years, and it’s still my go-to language for building reliable systems. Before that, I spent a good amount of time with Java (which I still think is an excellent language). These days, I’ve been **tinkering with Rust** and exploring how it can fit into my toolset.
-
-Most of my experience comes from working in the **UK fintech space**, where I’ve helped build everything from **credit systems** and **personal credit health & monitoring tools** to **wealth management** and **investment banking platforms**, some of which are used by hundreds of thousands of people worldwide.
-
-Beyond work, I love experimenting with side projects that push my understanding of technology. Some of my open-source work includes [sarabi](https://github.com/adxgun/sarabi)(which hosts this website), [registry-auth](https://github.com/adxgun/registry-auth), and [more](https://github.com/adxgun). Recently, I’ve been exploring LLMs usages through silly experiments like restaurant menu extraction from images to structured JSON APIs, among others.
-
-**Some tools that I love to use:** Go, Java, Docker, CI/CD, Redis, PostgresSQL
-
-### 🚀 Opportunities
-
-I’m currently looking for opportunities as a Founding Engineer.
-If you’re building something exciting and need a hands-on engineer to help bring it to life, let’s connect!
-"""
-
+description = "Hammed Adigun — Senior Software Engineer in London building payments, credit and ledger systems, developer platforms and applied AI."
+role = "Senior Software Engineer"
+location = "Senior Software Engineer · London, UK"
 singleDateFormat = '2 Jan 2006'
 
-# Collection to display on home
-# homeCollectionTitle = 'Posts'
-# homeCollection = 'posts'
+headline = "I build <em>money-critical</em> backends and the platforms they run on."
+intro = """
+Backend and distributed systems engineer working across payments, credit and ledgers, developer platforms, and LLM-powered workflows. Founding-engineer energy, production-grade habits.
+"""
+focus = ["Distributed systems", "Payments & ledgers", "Platform engineering", "Applied AI"]
 
-# Lists parameters
-paginationSize = 100
-listSummaries = true
-listDateFormat = '02 Jan 2006'
+aboutTitle = "Building systems where correctness matters"
+about = """
+I'm Hammed, a software engineer in London with years of experience in fintech, building well-known products used by millions of people and automating workflows with AI. I've built credit card systems, a credit monitoring product that people use to keep an eye on their credit health, infrastructure for deploying web applications, and CRM tools. I've done this in both large organisations and startups.
 
-# Footer
-showFooter = false
+I build high-performance software end to end and I'm very proficient with AI tools. What I enjoy most is working out what actually needs to be built, getting the right people aligned on it, and owning it until it works in production.
 
-# Breadcrumbs
-[params.breadcrumbs]
-enabled = true
-showCurrentPage = true
-home = "~"
+I'm calm when things go wrong, and I write things down. I care about clear API contracts, honest status updates and design docs other people can pick up without me. I've led small teams by setting direction and unblocking people, not by handing out tickets.
 
-# Social icons
-[[params.social]]
-name = "linkedin"
-url = "https://www.linkedin.com/in/adxgun/"
+Outside work, I hack on open-source projects. [sarabi](https://github.com/adxgun/sarabi) is a deployment tool that hosts this site, and [registry-auth](https://github.com/adxgun/registry-auth), a token authentication server for Docker registries, is used in production by [Apptainer](https://apptainer.org). I also practise data structures and algorithms in my spare time to keep my fundamentals sharp.
+"""
+
+[[params.strengths]]
+title = "Ownership"
+text = "I take things from idea to production and stay with them afterwards. If it's mine, it gets done properly."
+
+[[params.strengths]]
+title = "Clarity in ambiguity"
+text = "I'm comfortable starting from a vague brief. I break it down, make the trade-offs visible and get to a plan the team believes in."
+
+[[params.strengths]]
+title = "Working across functions"
+text = "I translate between engineering and the business, whether that's compliance, operations, product or finance, so everyone understands what we're building and why."
+
+[[params.strengths]]
+title = "Judgement under pressure"
+text = "I think about how things fail before they do, and I stay steady and methodical when they do."
+
+[[params.strengths]]
+title = "Leading and lifting others"
+text = "I've led small teams through delivery, I write things down so others can move without me, and I enjoy helping people grow."
+
+contact = """
+I enjoy working with small, ambitious teams on hard backend and platform problems. If you're building something interesting, I'd love to hear about it.
+"""
+
+[[params.skills]]
+group = "Languages"
+items = ["Go", "Java", "Python", "Rust", "C++", "TypeScript / React", "SQL"]
+
+[[params.skills]]
+group = "Systems"
+items = ["Distributed systems", "Event-driven microservices", "API design", "Data consistency", "Platform engineering"]
+
+[[params.skills]]
+group = "Infra & data"
+items = ["AWS", "Kafka", "RabbitMQ", "PostgreSQL", "Docker", "Kubernetes", "Terraform", "CI/CD"]
+
+[[params.skills]]
+group = "Domain"
+items = ["Card issuing", "Lending", "Ledgers", "Reconciliation", "LLM workflows"]
 
 [[params.social]]
 name = "github"
+label = "GitHub"
 url = "https://github.com/adxgun"
 
-# Main menu pages
-# [[params.menu]]
-# name = "home"
-# url = "/"
+[[params.social]]
+name = "linkedin"
+label = "LinkedIn"
+url = "https://www.linkedin.com/in/adxgun/"
 
 [[params.menu]]
-name = "posts"
-url = "/posts"
-
-# [[params.menu]]
-# name = "about"
-# url = "/about"
+name = "about"
+url = "/#about"
 
 [[params.menu]]
 name = "projects"
-url = "/projects"
+url = "/projects/"
 
-# [[params.menu]]
-# name = "tags"
-# url = "/tags"
-
+[[params.menu]]
+name = "writing"
+url = "/posts/"
 
 # Syntax highlight on code blocks
 [markup]
+[markup.goldmark.renderer]
+unsafe = true
 [markup.highlight]
 style = 'bw'
 

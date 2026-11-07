@@ -1,0 +1,27 @@
+{{ with site.Data.projects.featured }}
+<article class="featured">
+  <div class="featured-copy">
+    <p class="eyebrow">Featured project</p>
+    <h3><a href="{{ .url }}" target="_blank" rel="noopener">{{ .name }}</a></h3>
+    <p class="lede">{{ .summary }}</p>
+    <ul class="checks">
+      {{ range .points }}<li>{{ . }}</li>{{ end }}
+    </ul>
+    <p class="actions">
+      <a class="btn" href="{{ .url }}" target="_blank" rel="noopener">Source on GitHub</a>
+      {{ with .site }}<a class="btn ghost" href="{{ . }}" target="_blank" rel="noopener">Read the docs</a>{{ end }}
+    </p>
+  </div>
+  <div class="terminal" aria-hidden="true">
+    <div class="terminal-bar"><i></i><i></i><i></i><span>~/my-app</span></div>
+<pre><span class="p">$</span> sarabi deploy --env prod
+<span class="m">→</span> building image from Dockerfile
+<span class="m">→</span> provisioning postgres <span class="d">(private)</span>
+<span class="m">→</span> backing up database
+<span class="m">→</span> issuing TLS certificate
+<span class="ok">✓</span> live at https://my-app.dev
+<span class="p">$</span> sarabi rollback --env prod <span class="c">a1b2c3</span>
+<span class="ok">✓</span> rolled back</pre>
+  </div>
+</article>
+{{ end }}

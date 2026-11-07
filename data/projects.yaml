@@ -1,0 +1,53 @@
+# Selected open-source work from github.com/adxgun
+featured:
+  name: sarabi
+  url: https://github.com/adxgun/sarabi
+  site: https://doc.sarabi.dev
+  lang: Go
+  summary: A simple, full-stack application deployment tool for lazy devs — and the thing that hosts this website.
+  points:
+    - Deploy any app that has a Dockerfile, backend and static frontend together, in a single step.
+    - Unlimited environments (dev, prod, pr-123…), each with its own URL, database and config.
+    - Provisions PostgreSQL, MySQL, MongoDB and Redis — locked down from the internet by default, with automatic backups to S3-compatible storage.
+    - Automatic HTTPS via Caddy, log retention, horizontal replicas and one-command rollbacks.
+
+items:
+  - name: registry-auth
+    url: https://github.com/adxgun/registry-auth
+    lang: Go
+    summary: A pluggable token authentication server for self-hosted Docker registries — bring your own authentication and per-repository authorization logic instead of a single htpasswd user. Used in production by Apptainer.
+
+  - name: autocert-cache
+    url: https://github.com/adxgun/autocert-cache
+    lang: Go
+    summary: A database-backed cache for Go's autocert, so Let's Encrypt certificates survive container redeploys.
+
+  - name: luna
+    url: https://github.com/adxgun/luna
+    lang: Go
+    summary: Build websocket servers in a minute — a small Go library for realtime messaging, with a companion Android client.
+
+  - name: cab
+    url: https://github.com/adxgun/cab
+    lang: Go
+    summary: A ride-sharing backend in Go — riders, drivers and trips.
+
+  - name: microservices
+    url: https://github.com/adxgun/microservices
+    lang: Go
+    summary: Event-driven microservices wired together with Apache Pulsar.
+
+  - name: go-contacts
+    url: https://github.com/adxgun/go-contacts
+    lang: Go
+    summary: A getting-started REST API in Go with JWT auth and PostgreSQL — the companion to one of my most-read posts.
+
+  - name: secure-chat
+    url: https://github.com/adxgun/secure-chat
+    lang: Go
+    summary: A TCP-based, end-to-end encrypted chat service.
+
+  - name: easyphotoupload
+    url: https://github.com/adxgun/easyphotoupload
+    lang: Java
+    summary: Compress images on Android before upload for faster, cheaper transfers.

@@ -1,0 +1,34 @@
+# Work history — intentionally written without employer names or metrics.
+- role: Senior Software Engineer · Founding Engineer, Credit
+  context: International payments fintech
+  points:
+    - Took a credit card product from zero to launch as a founding engineer on the credit team.
+    - Built an LLM-powered investigation system for Compliance that automates intake, de-duplication, evidence gathering and first-pass case summaries — replacing manual bookkeeping with a complete, auditable record.
+    - Designed integrations across card network, ledger, credit bureau and notification services, owning API contracts, retries, failure handling and consistency across distributed boundaries.
+    - Led the loan repayment collections service end to end — payment-method setup, scheduled collection attempts, state lifecycle, ledger postings and history APIs.
+    - Built reconciliation and money-movement flows with double-entry correctness guarantees.
+  tags: [Go, Java, Distributed systems, Ledgers, Applied AI]
+
+- role: Software Engineer · Infrastructure & Developer Platform
+  context: Wealth-management technology
+  points:
+    - Built an internal developer platform (PaaS) with near-instant push-to-live deploys to secure URLs.
+    - Shipped ephemeral per-branch preview environments with on-demand test databases, so every feature branch could be deployed and tested in isolation.
+    - Built config and secrets management with reviewable changes and full audit logs, plus self-serve network configuration for exposed endpoints.
+    - Helped build multi-tenant tooling to deploy a white-label product into each client's own domain and cloud.
+  tags: [Go, Docker, Kubernetes, Platform engineering]
+
+- role: Associate · Analyst, Investment Banking Engineering
+  context: Global investment bank
+  points:
+    - Promoted to Associate; built CRM products for investment bankers globally alongside product managers and senior architects.
+    - Built a case management platform with public APIs reused by other systems as a backend, including secure document storage with virus scanning and signed upload/download.
+    - Built Java/Spring Boot microservices on AWS with Kafka, Kinesis and DynamoDB, and Go migration tooling for moving CRM data into a cloud data warehouse.
+    - Built infrastructure with Terraform, Docker and Kubernetes, backed by a strong unit and integration testing culture.
+  tags: [Java, Spring Boot, AWS, Kafka, Terraform]
+
+- role: Summer Analyst · Equity Capital Markets Engineering
+  context: Global investment bank
+  points:
+    - Designed and shipped end-to-end "test deal" support on a deal execution platform, letting teams dry-run new deal structures and run health checks without polluting regulatory reporting or analytics.
+  tags: [Java, React, RabbitMQ]

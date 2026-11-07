@@ -1,470 +1,149 @@
-<!DOCTYPE html>
-<html lang="en-us"
-  dir="ltr">
-
-<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
-  <meta charset="utf-8">
-<meta name="viewport" content="width=device-width">
-
-
-
-
-
-
-
-
-    
-
-
-
-
-
-
-<link rel="icon" type="image/ico" href="http://localhost:1313//favicon.ico">
-<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313//favicon-16x16.png">
-<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313//favicon-32x32.png">
-<link rel="icon" type="image/png" sizes="192x192" href="http://localhost:1313//android-chrome-192x192.png">
-<link rel="apple-touch-icon" sizes="180x180" href="http://localhost:1313//apple-touch-icon.png">
-
-<meta name="description" content=""/>
-
-
-
-<title>
-    
-    Unit Testing REST Services in Go | Hammed Adigun
-    
-</title>
-
-<link rel="canonical" href="http://localhost:1313/posts/golang_automated_testing/"/>
-
-<meta property="og:url" content="http://localhost:1313/posts/golang_automated_testing/">
-  <meta property="og:site_name" content="Hammed Adigun">
-  <meta property="og:title" content="Unit Testing REST Services in Go">
-  <meta property="og:description" content="Building software is a complex process. A software project perceived to be simple when started can easily grow to having thousands of lines of code. Also, unforeseen circumstances are common occurrence for any software project and this can cause a lot of unplanned changes. Making changes to a software can be very hard and unpredictable, especially when it is not done carefully, there has been many real life instances where numerous problems or bugs were introduce to a software due to some changes made to it. This is also known as regression bug - a bug introduced as a result of a change or changes in a system. Writing automated tests is a great solution to minimising regression bug. Alongside with preventing regression bug, here are some other benefits of automated testing.">
-  <meta property="og:locale" content="en_us">
-  <meta property="og:type" content="article">
-    <meta property="article:section" content="posts">
-    <meta property="article:published_time" content="2021-08-22T00:00:00+00:00">
-    <meta property="article:modified_time" content="2021-08-22T00:00:00+00:00">
-
-
-
-
-
-
-
-
-
-
-
-
-
-<link rel="stylesheet" href="/assets/combined.min.0f4f5c64ee7100cff28e7c7366d922b5499829f72c91a53b9b17f236d85ad7e7.css" media="all">
-
-
-
-
-
-
-
-
-
-
-
-    
-
-
-
-
-</head>
-
-
-
-
-
-
-
-<body class="auto">
-
-  <div class="content">
-    <header>
-      
-
-<div class="header">
-
-    
-
-    <h1 class="header-title">
-        <a href="http://localhost:1313/">Hammed Adigun</a>
-    </h1>
-
-    <div class="flex">
-        
-
-        
-        
-      
-        <p class="small ">
-            <a href="/posts" >
-                /posts
-            </a>
-        </p>
-        
-      
-        <p class="small ">
-            <a href="/projects" >
-                /projects
-            </a>
-        </p>
-        
-        
-    </div>
-
-    
-
-</div>
-
-    </header>
-
-    <main class="main">
-      
-
-
-
-
-<div class="breadcrumbs"><a href="/">~</a><span class="breadcrumbs-separator">/</span><a href="/posts/">Posts</a><span class="breadcrumbs-separator">/</span>
-        <a href="/posts/golang_automated_testing/">Unit Testing REST Services in Go</a></div>
-
-
-<div >
-
-  <div class="single-intro-container">
-
-    
-
-    <h1 class="single-title">Unit Testing REST Services in Go</h1>
-    
-
-    
-
-    <p class="single-readtime">
-      
-      
-      
-      <time datetime="2021-08-22T00:00:00&#43;00:00">22 Aug 2021</time>
-      
-
-      
-    </p>
-
-  </div>
-
-  
-
-  
-
-  
-
-  
-
-  <div class="single-content">
-    <p>Building software is a complex process. A software project perceived to be simple when started can easily grow to having thousands of lines of code. Also, unforeseen circumstances are common occurrence for any software project and this can cause a lot of unplanned changes. Making changes to a software can be very hard and unpredictable, especially when it is not done carefully, there has been many real life instances where numerous problems or bugs were introduce to a software due to some changes made to it. This is also known as regression bug - a bug introduced as a result of a change or changes in a system.
-Writing automated tests is a great solution to minimising regression bug. Alongside with preventing regression bug, here are some other benefits of automated testing.</p>
-<ul>
-<li>Enhance fast iterable feature development.</li>
-<li>Faster &amp; more accurate - Can you manually test 100s of HTTP endpoints in secs? Test automation can!</li>
-<li>Easier code improvement &amp; maintainability</li>
-</ul>
-<p>Of course, you can read more about the numerous benefits you can acquire by writing automated tests - <a href="https://www.testim.io/blog/test-automation-benefits/">https://www.testim.io/blog/test-automation-benefits/</a></p>
-<p>One aspect of software development cycle where there&rsquo;s less learning resources is automated testing. I personally had problems understanding why automated testing is needed and most importantly, how to do it right. Why i have to write code to test my code? Sounds elegant but some things don&rsquo;t really make sense until you see how much values they bring.</p>
-<p>In this article, we&rsquo;re going to see how to write automated tests for Go REST services. Hopefully, someone out there would find it useful!</p>
-<h4 class="heading" id="assumptions">
-  Assumptions
-  <a class="anchor" href="#assumptions">#</a>
-</h4>
-<p>I assume you have basic knowledge of how HTTP request &amp; response works, Golang knowledge is not essential as you can apply the principles in other languages, although many Golang specific library and semantics are used, it shouldn&rsquo;t be too hard to take the principles and use them in other programming environments.</p>
-<h3 class="heading" id="so-what-are-unit-tests">
-  So what are Unit tests?
-  <a class="anchor" href="#so-what-are-unit-tests">#</a>
-</h3>
-<p>Before we dive in, i think it&rsquo;s important to understand what Unit tests are. A Unit test is similar to what the name suggests, it is written to test a unit section or function in a particular software program, it is done to make sure a unit/function in a program behaves as expected, it is often written to mimic multiple functional scenarios ensuring the program unit behaves as expected when tested under all these scenarios. One important characteristics of Unit tests is <code>Speed</code>. Unit tests should
-run very quickly because the programmer would run them multiple times during the course of development.</p>
-<h3 class="heading" id="the-nethttphttptest-package">
-  The <code>net/http/httptest</code> Package
-  <a class="anchor" href="#the-nethttphttptest-package">#</a>
-</h3>
-<p>The Go standard library does not only provide rich packages to write http servers but it also provide rich packages to test them. The best place to look when looking to test REST services in Go is in the <code>net/http/httptest</code> package. It provides a hassle free components to test http handlers. As we&rsquo;ll soon see, this package provide a way to create <code>http.Request</code> and <code>http.ResponseWriter</code> object which are important parts of any Go http handler. You can read more about this package <a href="https://pkg.go.dev/net/http/httptest">HERE - GoDoc</a></p>
-<h3 class="heading" id="golang-interfaces">
-  Golang Interfaces
-  <a class="anchor" href="#golang-interfaces">#</a>
-</h3>
-<p><em>Don&rsquo;t worry - I am not moving away from our topic.</em> Interfaces in Golang are essential when writing tests - especially unit tests. They provide an excellent way to abstract concrete implementation of a logical function. Consider an example below:</p>
-<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="font-weight:bold">type</span> Greeter <span style="font-weight:bold">interface</span> {
-</span></span><span style="display:flex;"><span>    Greet(name <span style="">string</span>) (<span style="">string</span>, <span style="">error</span>)
-</span></span><span style="display:flex;"><span>}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="font-weight:bold">type</span> realGreeter <span style="font-weight:bold">struct</span> {
-</span></span><span style="display:flex;"><span>    c RestClient
-</span></span><span style="display:flex;"><span>} 
-</span></span><span style="display:flex;"><span><span style="font-weight:bold">func</span> (r *realGreeter) Greet(name <span style="">string</span>) (<span style="">string</span>, <span style="">error</span>) {
-</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">if</span> r.c.Authorized(name) {
-</span></span><span style="display:flex;"><span>        <span style="font-weight:bold">return</span> <span style="font-style:italic">&#34;Hello &#34;</span> + name, <span style="font-weight:bold">nil</span>
-</span></span><span style="display:flex;"><span>    }
-</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">return</span> <span style="font-style:italic">&#34;&#34;</span>, errors.New(<span style="font-style:italic">&#34;You&#39;re not allowed to be greeted&#34;</span>)
-</span></span><span style="display:flex;"><span>}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="font-weight:bold">type</span> fakeGreeter <span style="font-weight:bold">struct</span> {}
-</span></span><span style="display:flex;"><span><span style="font-weight:bold">func</span> (r *fakeGreeter) Greet(name <span style="">string</span>) (<span style="">string</span>, <span style="">error</span>) {
-</span></span><span style="display:flex;"><span>   <span style="font-weight:bold">return</span> <span style="font-style:italic">&#34;Hi, Mr. &#34;</span> + name
-</span></span><span style="display:flex;"><span>}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="font-weight:bold">type</span> GreeterEngine <span style="font-weight:bold">struct</span> {
-</span></span><span style="display:flex;"><span>    greeter Greeter
-</span></span><span style="display:flex;"><span>}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="font-weight:bold">func</span> main() {
-</span></span><span style="display:flex;"><span>    env := os.Getenv(<span style="font-style:italic">&#34;ENV&#34;</span>)
-</span></span><span style="display:flex;"><span>    g := &amp;realGreeter{}
-</span></span><span style="display:flex;"><span>    <span style="font-weight:bold">if</span> env == <span style="font-style:italic">&#34;local&#34;</span> {
-</span></span><span style="display:flex;"><span>        g = &amp;fakeGreeter{}
-</span></span><span style="display:flex;"><span>    }
-</span></span><span style="display:flex;"><span>    engine := &amp;GreeterEnginer{greeter: g}
-</span></span><span style="display:flex;"><span>    r, err := engine.greeter.Greet(<span style="font-style:italic">&#34;Robot&#34;</span>)
-</span></span><span style="display:flex;"><span>    assert.Nil(err)
-</span></span><span style="display:flex;"><span>    assert.Equals(r, <span style="font-style:italic">&#34;Hi, Mr. Robot&#34;</span>)
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><p>Long piece of code, i know and i wish i could make it shorter :(</p>
-<p>The main point to be noted in the code snippet above is how we switch the implementation of a <code>Greeter</code> in a <code>GreeterEngine</code> based on the environment our code is executed in. This is a very useful trick when writing test, <code>Unit test</code> is about control - you should be able to control scenarios and outcomes because that is how you get power to test your systems as you see fit. The above example can also be related to a real life case where you can switch a real implementation of
-a function(e.g a function that makes HTTP or database calls as part of it operation) to a fake function(e.g a function that mocks HTTP or database calls). As we&rsquo;ll soon see later in this post, interfaces are used heavily when mocking service dependencies which is one of the most important aspect of unit testing.</p>
-<h3 class="heading" id="mocking">
-  Mocking
-  <a class="anchor" href="#mocking">#</a>
-</h3>
-<p>Mocking is the process of creating objects and functions that simulates or mimics the behavior of real or actual objects/functions. REST services code structures are often complex with many dependencies. One of the best way to isolate these dependencies without too much hassles and unnecessary resources wasting is mocking. Let&rsquo;s assume you need to test an API endpoint that accepts user details, performs data transformation and finally, persist the data. Your responsibility as a unit tester is to make sure you successfully accept, process and make calls to the database to persist the data, whether database connection succeeds or not is NOT your responsibility which is why you would <code>mock</code> this aspect. Unit testing is also about assumption, putting it mildly &ndash; <strong>Assuming database connection state is X, then API behavior should be Y</strong></p>
-<p>Enough talking, show me the code!</p>
-<h2 class="heading" id="an-example">
-  An Example
-  <a class="anchor" href="#an-example">#</a>
-</h2>
-<p>We are going ahead to create a simple sample project to demonstrate testing REST services. We want a simple system that creates blog posts via an endpoint plus another endpoint that retrieves the created posts &ndash; we are picking a well understood example simply because it&rsquo;ll allow us focus more on how unit testing works rather than the example project itself.</p>
-<p>Let&rsquo;s dive in!</p>
-<p>Quickly download and open the completed code for this project. It is hosted on <a href="https://github.com/adigunhammedolalekan/rest-services-testing">GITHUB</a></p>
-<p>We will first take a quick overview of the external packages we&rsquo;ll be using in this project. Below is a list and a brief explanation of what each package is used for in this sample project.</p>
-<ul>
-<li>chi <a href="https://github.com/go-chi/chi">Github</a> - <code>Github:</code> lightweight, idiomatic and composable router for building Go HTTP services. Like we&rsquo;ve seen in the description, we use this package to create our REST service.</li>
-<li>testify <a href="https://github.com/stretchr/testify">Github</a> - <code>Github: </code>A toolkit with common assertions and mocks that plays nicely with the standard library. &ndash; This is used in this example to facilitate easy testing.</li>
-<li>gomock <a href="github.com/golang/mock">Github</a> - <code>Github: </code> GoMock is a mocking framework for the Go programming language. An initial setup steps is required to use GoMock, latest installation instruction can be found <a href="https://github.com/golang/mock">HERE</a> &ndash; This package is used to mock test dependencies.</li>
-</ul>
-<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="font-weight:bold">package</span> handlers
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="font-weight:bold">import</span> (
-</span></span><span style="display:flex;"><span>	<span style="font-style:italic">&#34;encoding/json&#34;</span>
-</span></span><span style="display:flex;"><span>	<span style="font-style:italic">&#34;github.com/adigunhammedolalekan/rest-unit-testing-sample/repository&#34;</span>
-</span></span><span style="display:flex;"><span>	<span style="font-style:italic">&#34;github.com/go-chi/render&#34;</span>
-</span></span><span style="display:flex;"><span>	<span style="font-style:italic">&#34;net/http&#34;</span>
-</span></span><span style="display:flex;"><span>)
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="font-weight:bold">type</span> Handler <span style="font-weight:bold">struct</span> {
-</span></span><span style="display:flex;"><span>	repo repository.Repository
-</span></span><span style="display:flex;"><span>}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="font-weight:bold">func</span> New(repo repository.Repository) *Handler {
-</span></span><span style="display:flex;"><span>	<span style="font-weight:bold">return</span> &amp;Handler{repo: repo}
-</span></span><span style="display:flex;"><span>}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="font-weight:bold">func</span> (handler *Handler) CreatePostHandler(w http.ResponseWriter, r *http.Request) {
-</span></span><span style="display:flex;"><span>	<span style="font-weight:bold">var</span> body <span style="font-weight:bold">struct</span>{
-</span></span><span style="display:flex;"><span>		Title <span style="">string</span> <span style="font-style:italic">`json:&#34;title&#34;`</span>
-</span></span><span style="display:flex;"><span>		Body <span style="">string</span> <span style="font-style:italic">`json:&#34;body&#34;`</span>
-</span></span><span style="display:flex;"><span>	}
-</span></span><span style="display:flex;"><span>	<span style="font-weight:bold">if</span> err := json.NewDecoder(r.Body).Decode(&amp;body); err != <span style="font-weight:bold">nil</span> {
-</span></span><span style="display:flex;"><span>		render.Status(r, http.StatusBadRequest)
-</span></span><span style="display:flex;"><span>		render.Respond(w, r, &amp;response{Success: <span style="font-weight:bold">false</span>, Message: <span style="font-style:italic">&#34;malformed body&#34;</span>})
-</span></span><span style="display:flex;"><span>		<span style="font-weight:bold">return</span>
-</span></span><span style="display:flex;"><span>	}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	token := r.Header.Get(<span style="font-style:italic">&#34;x-auth-token&#34;</span>)
-</span></span><span style="display:flex;"><span>	user, err := handler.repo.GetUser(token)
-</span></span><span style="display:flex;"><span>	<span style="font-weight:bold">if</span> err != <span style="font-weight:bold">nil</span> {
-</span></span><span style="display:flex;"><span>		render.Status(r, http.StatusForbidden)
-</span></span><span style="display:flex;"><span>		render.Respond(w, r, &amp;response{Success: <span style="font-weight:bold">false</span>, Message: <span style="font-style:italic">&#34;forbidden&#34;</span>})
-</span></span><span style="display:flex;"><span>		<span style="font-weight:bold">return</span>
-</span></span><span style="display:flex;"><span>	}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	p, err := handler.repo.CreatePost(user.ID.String(), body.Title, body.Body)
-</span></span><span style="display:flex;"><span>	<span style="font-weight:bold">if</span> err != <span style="font-weight:bold">nil</span> {
-</span></span><span style="display:flex;"><span>		render.Status(r, http.StatusInternalServerError)
-</span></span><span style="display:flex;"><span>		render.Respond(w, r, &amp;response{Success: <span style="font-weight:bold">false</span>, Message: <span style="font-style:italic">&#34;server error&#34;</span>})
-</span></span><span style="display:flex;"><span>		<span style="font-weight:bold">return</span>
-</span></span><span style="display:flex;"><span>	}
-</span></span><span style="display:flex;"><span>	render.Status(r, http.StatusOK)
-</span></span><span style="display:flex;"><span>	render.Respond(w, r, &amp;response{Success: <span style="font-weight:bold">true</span>, Message: <span style="font-style:italic">&#34;post.created&#34;</span>, Data: p})
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><p>The code block above contains an http handler - <code>CreatePostHandler</code>. This handler is self explanatory but let&rsquo;s see a detailed explanation below.</p>
-<p>Line 19-22 defined a temporary struct to hold a Post data sent by a client. Line 23-27 decodes the request&rsquo;s JSON body into our defined temp struct, this will return a <code>400 - Badrequest</code> error when a malformed or non-JSON body is detected. Line 29-35 performs authorization check to ensure the user that&rsquo;s about to create a post is allowed to do so. In this example, we used a fictional authentication and authorization system in order to keep the example simple and not take our eyes off the goal. And, finally Line 37-45 send the new Post to a persistence layer, error is returned if there were problems while interacting with the persistence layer or a success message is returned otherwise.</p>
-<p>Let&rsquo;s look at how to test this handler.</p>
-<p>The first step is to generate mocks for our persistence layer, i explained previously how dependent services needs to be mocked in other to have control and test our service as we see fit &ndash; which is exactly what we are going to do here because database is a service we depend on. For this purpose, we will be using <code>GoMock</code>.</p>
-<p>Change to the project root directory and run the command below(assuming you installed <code>mockgen</code>):</p>
-<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>mockgen -source=repo.go -destination=../mocks/repository_mock.go -package=mocks
-</span></span></code></pre></div><p>The above command will generate mock implementations for <code>repository/repo.go</code> and put them in <code>mocks</code> directory/package. We will be using the generated code to mock our database dependency.</p>
-<p>We&rsquo;ll go ahead and separate our test code into three main parts - <code>arrange</code>, <code>act</code> and <code>assert</code>, this pattern is common and considered to be the best way to write good tests. Let&rsquo;s take advantage of it!</p>
-<p>Before that, let&rsquo;s take a look at steps involved in each stage.</p>
-<ul>
-<li>Create an implementation of <code>http.ResponseWriter</code> provided to us by the <code>net/http/httptest</code> package. And, create a new mock Controller.</li>
-</ul>
-<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span>w := httptest.NewRecorder()
-</span></span><span style="display:flex;"><span>ctrl := gomock.NewController(t)
-</span></span><span style="display:flex;"><span><span style="font-weight:bold">defer</span> ctrl.Finish()
-</span></span></code></pre></div><ul>
-<li>Setup a mock http request, you can customize this request according to your test need. In this project, We simply added a dummy Post{} object in the body of the request, we also added a mock authorization token to satisfy the requirement for our &lsquo;Fictional&rsquo; auth and authz system.</li>
-</ul>
-<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span>    <span style="font-weight:bold">type</span> body <span style="font-weight:bold">struct</span>{
-</span></span><span style="display:flex;"><span>		Title <span style="">string</span> <span style="font-style:italic">`json:&#34;title&#34;`</span>
-</span></span><span style="display:flex;"><span>		Body <span style="">string</span> <span style="font-style:italic">`json:&#34;body&#34;`</span>
-</span></span><span style="display:flex;"><span>	}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	mockToken := uuid.New().String()
-</span></span><span style="display:flex;"><span>	mockPost := &amp;body{Title: <span style="font-style:italic">&#34;Test Title&#34;</span>, Body: <span style="font-style:italic">&#34;Test Body&#34;</span>}
-</span></span><span style="display:flex;"><span>	mockUser := &amp;types.User{ID: uuid.New(), Name: <span style="font-style:italic">&#34;Tester&#34;</span>}
-</span></span><span style="display:flex;"><span>	buf := &amp;bytes.Buffer{}
-</span></span><span style="display:flex;"><span>	err := json.NewEncoder(buf).Encode(mockPost)
-</span></span><span style="display:flex;"><span>	assert.Nil(t, err)
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	r := httptest.NewRequest(<span style="font-style:italic">&#34;POST&#34;</span>, <span style="font-style:italic">&#34;/&#34;</span>, buf)
-</span></span><span style="display:flex;"><span>	r.Header.Add(<span style="font-style:italic">&#34;x-auth-token&#34;</span>, mockToken)
-</span></span></code></pre></div><ul>
-<li>Create mock instance for <code>Repository</code> &ndash; which represents our persistence layer that we&rsquo;re specifically interested in mocking out. Also, set expectations. Setting expectations is how we make sure nothing else happens except for what we&rsquo;ve actually written in our http handler. It is also a way to control our mock, tell it what input to expect, how many times it is expected to be called and set an output. This aspect can be a little bit confusing but it&rsquo;s very key to writing good unit tests for http handlers.</li>
-</ul>
-<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span>    repo := mocks.NewMockRepository(ctrl)
-</span></span><span style="display:flex;"><span>	repo.EXPECT().GetUser(mockToken).Return(mockUser, <span style="font-weight:bold">nil</span>).Times(1)
-</span></span><span style="display:flex;"><span>	repo.EXPECT().CreatePost(mockUser.ID.String(), mockPost.Title, mockPost.Body).Return(&amp;types.Post{}, <span style="font-weight:bold">nil</span>).Times(1)
-</span></span></code></pre></div><ul>
-<li>Execute handler and assert expectations. This is where we execute our http handler &ndash; <code>In a non-test context, this is equivalent to making http request to our handler</code>. We also check if we have expected http statuscode and response body &ndash; This makes sense because this is what our users would do. By making sure we have the expected/correct statuscode, we&rsquo;ve effectively tested this http handler.</li>
-</ul>
-<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span>    handler := New(repo)
-</span></span><span style="display:flex;"><span>	handler.CreatePostHandler(w, r)
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    assert.Equal(t, http.StatusOK, w.Code)
-</span></span><span style="display:flex;"><span>    assert.True(t, strings.Contains(w.Body.String(), <span style="font-style:italic">&#34;post.created&#34;</span>))
-</span></span></code></pre></div><p>Putting it all together,</p>
-<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="font-weight:bold">func</span> TestHandler_CreatePostHandler(t *testing.T) {
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    <span style="font-style:italic">// arrange</span>
-</span></span><span style="display:flex;"><span>	w := httptest.NewRecorder()
-</span></span><span style="display:flex;"><span>	ctrl := gomock.NewController(t)
-</span></span><span style="display:flex;"><span>	<span style="font-weight:bold">defer</span> ctrl.Finish()
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	<span style="font-weight:bold">type</span> body <span style="font-weight:bold">struct</span>{
-</span></span><span style="display:flex;"><span>		Title <span style="">string</span> <span style="font-style:italic">`json:&#34;title&#34;`</span>
-</span></span><span style="display:flex;"><span>		Body <span style="">string</span> <span style="font-style:italic">`json:&#34;body&#34;`</span>
-</span></span><span style="display:flex;"><span>	}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	mockToken := uuid.New().String()
-</span></span><span style="display:flex;"><span>	mockPost := &amp;body{Title: <span style="font-style:italic">&#34;Test Title&#34;</span>, Body: <span style="font-style:italic">&#34;Test Body&#34;</span>}
-</span></span><span style="display:flex;"><span>	mockUser := &amp;types.User{ID: uuid.New(), Name: <span style="font-style:italic">&#34;Tester&#34;</span>}
-</span></span><span style="display:flex;"><span>	buf := &amp;bytes.Buffer{}
-</span></span><span style="display:flex;"><span>	err := json.NewEncoder(buf).Encode(mockPost)
-</span></span><span style="display:flex;"><span>	assert.Nil(t, err)
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	r := httptest.NewRequest(<span style="font-style:italic">&#34;POST&#34;</span>, <span style="font-style:italic">&#34;/&#34;</span>, buf)
-</span></span><span style="display:flex;"><span>	r.Header.Add(<span style="font-style:italic">&#34;x-auth-token&#34;</span>, mockToken)
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	repo := mocks.NewMockRepository(ctrl)
-</span></span><span style="display:flex;"><span>	repo.EXPECT().GetUser(mockToken).Return(mockUser, <span style="font-weight:bold">nil</span>).Times(1)
-</span></span><span style="display:flex;"><span>	repo.EXPECT().CreatePost(mockUser.ID.String(), mockPost.Title, mockPost.Body).Return(&amp;types.Post{}, <span style="font-weight:bold">nil</span>).Times(1)
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    <span style="font-style:italic">// act</span>
-</span></span><span style="display:flex;"><span>	handler := New(repo)
-</span></span><span style="display:flex;"><span>	handler.CreatePostHandler(w, r)
-</span></span><span style="display:flex;"><span>    
-</span></span><span style="display:flex;"><span>    <span style="font-style:italic">// assert</span>
-</span></span><span style="display:flex;"><span>	assert.Equal(t, http.StatusOK, w.Code)
-</span></span><span style="display:flex;"><span>	assert.True(t, strings.Contains(w.Body.String(), <span style="font-style:italic">&#34;post.created&#34;</span>))
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><p>Full code, including the 2nd endpoint(to get created posts) and it test can be found in the <a href="https://github.com/adigunhammedolalekan/rest-services-testing">LINKED</a> github repository.</p>
-<p>Thanks for reading. I am actively taking feedback via email or my <a href="https://twitter.com/@L3kanAdigun">Twitter DM</a>.</p>
-<p>Happy coding :)</p>
-
-    
-  </div>
-
-  
-
-  
-
-  
-  
-
-<div class="single-pagination">
-    <hr />
-
-    <div class="flexnowrap">
-
-        <div class="single-pagination-prev">
-            
-            <div class="single-pagination-container-prev">
-                <div class="single-pagination-text">←</div>
-                <div class="single-pagination-text">
-                    <a href="/posts/github_private_repo_access/">
-                        Setting up GitAction private repository access for Golang applications
-                    </a>
-                </div>
-            </div>
-            
-        </div>
-
-        <div class="single-pagination-next">
-            
-        </div>
-
-    </div>
-
-    <hr />
-</div>
-
-
-
-  
-
-  
-
-  
-  <div class="back-to-top">
-    <a href="#top">
-      back to top
-    </a>
-  </div>
-  
-
-</div>
-
-
-    </main>
-  </div>
-
-  
-  
-
-
-
-
-
-    
-
-
-
-
-  <footer>
-    
-
-
-  </footer>
-
-  
-</body>
-
-<script src="/js/theme-switch.js"></script>
-<script defer src="/js/copy-code.js"></script>
-</html>
+<!doctype html><html lang=en-us><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>Unit Testing REST Services in Go · Hammed Adigun</title>
+<meta name=description content="Building software is a complex process. A software project perceived to be simple when started can easily grow to having thousands of lines of code. Also, …"><meta property="og:title" content="Unit Testing REST Services in Go"><meta property="og:type" content="article"><meta property="og:url" content="https://hammed.live/posts/golang_automated_testing/"><link rel=canonical href=https://hammed.live/posts/golang_automated_testing/><link rel=icon href=/favicon.svg type=image/svg+xml><script>(function(){var e=localStorage.getItem("theme");e&&(document.documentElement.dataset.theme=e)})()</script><link rel=stylesheet href=/css/main.min.6b75c21c66200b38c007c3137bdff1aed49252b3fc892a37cc7f5e75b1a958f0.css integrity="sha256-a3XCHGYgCzjAB8MTe9/xrtSSUrP8iSo3zH9edbGpWPA="></head><body class=inner><a class=skip href=#main>Skip to content</a><header class=site-header><div class="wrap nav"><a class=brand href=/ aria-label=Home><span class=brand-mark aria-hidden=true>HA</span>
+<span class=brand-name>Hammed Adigun</span></a><nav aria-label=Main><ul><li><a href=/#about>about</a></li><li><a href=/projects/>projects</a></li><li><a href=/posts/ aria-current=page>writing</a></li><li><button class=theme-toggle type=button aria-label="Toggle colour theme" title="Toggle theme"><svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg><svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/></svg></button></li></ul></nav></div></header><main id=main><article class="wrap narrow page"><header class=page-head><p class=eyebrow><a href=/posts/>← Writing</a></p><h1>Unit Testing REST Services in Go</h1><p class=meta><time datetime=2021-08-22>22 Aug 2021</time>
+· 10 min read</p></header><div class=prose><p>Building software is a complex process. A software project perceived to be simple when started can easily grow to having thousands of lines of code. Also, unforeseen circumstances are common occurrence for any software project and this can cause a lot of unplanned changes. Making changes to a software can be very hard and unpredictable, especially when it is not done carefully, there has been many real life instances where numerous problems or bugs were introduce to a software due to some changes made to it. This is also known as regression bug - a bug introduced as a result of a change or changes in a system.
+Writing automated tests is a great solution to minimising regression bug. Alongside with preventing regression bug, here are some other benefits of automated testing.</p><ul><li>Enhance fast iterable feature development.</li><li>Faster & more accurate - Can you manually test 100s of HTTP endpoints in secs? Test automation can!</li><li>Easier code improvement & maintainability</li></ul><p>Of course, you can read more about the numerous benefits you can acquire by writing automated tests - <a href=https://www.testim.io/blog/test-automation-benefits/>https://www.testim.io/blog/test-automation-benefits/</a></p><p>One aspect of software development cycle where there&rsquo;s less learning resources is automated testing. I personally had problems understanding why automated testing is needed and most importantly, how to do it right. Why i have to write code to test my code? Sounds elegant but some things don&rsquo;t really make sense until you see how much values they bring.</p><p>In this article, we&rsquo;re going to see how to write automated tests for Go REST services. Hopefully, someone out there would find it useful!</p><h4 id=assumptions>Assumptions</h4><p>I assume you have basic knowledge of how HTTP request & response works, Golang knowledge is not essential as you can apply the principles in other languages, although many Golang specific library and semantics are used, it shouldn&rsquo;t be too hard to take the principles and use them in other programming environments.</p><h3 id=so-what-are-unit-tests>So what are Unit tests?</h3><p>Before we dive in, i think it&rsquo;s important to understand what Unit tests are. A Unit test is similar to what the name suggests, it is written to test a unit section or function in a particular software program, it is done to make sure a unit/function in a program behaves as expected, it is often written to mimic multiple functional scenarios ensuring the program unit behaves as expected when tested under all these scenarios. One important characteristics of Unit tests is <code>Speed</code>. Unit tests should
+run very quickly because the programmer would run them multiple times during the course of development.</p><h3 id=the-nethttphttptest-package>The <code>net/http/httptest</code> Package</h3><p>The Go standard library does not only provide rich packages to write http servers but it also provide rich packages to test them. The best place to look when looking to test REST services in Go is in the <code>net/http/httptest</code> package. It provides a hassle free components to test http handlers. As we&rsquo;ll soon see, this package provide a way to create <code>http.Request</code> and <code>http.ResponseWriter</code> object which are important parts of any Go http handler. You can read more about this package <a href=https://pkg.go.dev/net/http/httptest>HERE - GoDoc</a></p><h3 id=golang-interfaces>Golang Interfaces</h3><p><em>Don&rsquo;t worry - I am not moving away from our topic.</em> Interfaces in Golang are essential when writing tests - especially unit tests. They provide an excellent way to abstract concrete implementation of a logical function. Consider an example below:</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=font-weight:700>type</span> Greeter <span style=font-weight:700>interface</span> {
+</span></span><span style=display:flex><span>    Greet(name <span>string</span>) (<span>string</span>, <span>error</span>)
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=font-weight:700>type</span> realGreeter <span style=font-weight:700>struct</span> {
+</span></span><span style=display:flex><span>    c RestClient
+</span></span><span style=display:flex><span>} 
+</span></span><span style=display:flex><span><span style=font-weight:700>func</span> (r *realGreeter) Greet(name <span>string</span>) (<span>string</span>, <span>error</span>) {
+</span></span><span style=display:flex><span>    <span style=font-weight:700>if</span> r.c.Authorized(name) {
+</span></span><span style=display:flex><span>        <span style=font-weight:700>return</span> <span style=font-style:italic>&#34;Hello &#34;</span> + name, <span style=font-weight:700>nil</span>
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>    <span style=font-weight:700>return</span> <span style=font-style:italic>&#34;&#34;</span>, errors.New(<span style=font-style:italic>&#34;You&#39;re not allowed to be greeted&#34;</span>)
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=font-weight:700>type</span> fakeGreeter <span style=font-weight:700>struct</span> {}
+</span></span><span style=display:flex><span><span style=font-weight:700>func</span> (r *fakeGreeter) Greet(name <span>string</span>) (<span>string</span>, <span>error</span>) {
+</span></span><span style=display:flex><span>   <span style=font-weight:700>return</span> <span style=font-style:italic>&#34;Hi, Mr. &#34;</span> + name
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=font-weight:700>type</span> GreeterEngine <span style=font-weight:700>struct</span> {
+</span></span><span style=display:flex><span>    greeter Greeter
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=font-weight:700>func</span> main() {
+</span></span><span style=display:flex><span>    env := os.Getenv(<span style=font-style:italic>&#34;ENV&#34;</span>)
+</span></span><span style=display:flex><span>    g := &amp;realGreeter{}
+</span></span><span style=display:flex><span>    <span style=font-weight:700>if</span> env == <span style=font-style:italic>&#34;local&#34;</span> {
+</span></span><span style=display:flex><span>        g = &amp;fakeGreeter{}
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>    engine := &amp;GreeterEnginer{greeter: g}
+</span></span><span style=display:flex><span>    r, err := engine.greeter.Greet(<span style=font-style:italic>&#34;Robot&#34;</span>)
+</span></span><span style=display:flex><span>    assert.Nil(err)
+</span></span><span style=display:flex><span>    assert.Equals(r, <span style=font-style:italic>&#34;Hi, Mr. Robot&#34;</span>)
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>Long piece of code, i know and i wish i could make it shorter :(</p><p>The main point to be noted in the code snippet above is how we switch the implementation of a <code>Greeter</code> in a <code>GreeterEngine</code> based on the environment our code is executed in. This is a very useful trick when writing test, <code>Unit test</code> is about control - you should be able to control scenarios and outcomes because that is how you get power to test your systems as you see fit. The above example can also be related to a real life case where you can switch a real implementation of
+a function(e.g a function that makes HTTP or database calls as part of it operation) to a fake function(e.g a function that mocks HTTP or database calls). As we&rsquo;ll soon see later in this post, interfaces are used heavily when mocking service dependencies which is one of the most important aspect of unit testing.</p><h3 id=mocking>Mocking</h3><p>Mocking is the process of creating objects and functions that simulates or mimics the behavior of real or actual objects/functions. REST services code structures are often complex with many dependencies. One of the best way to isolate these dependencies without too much hassles and unnecessary resources wasting is mocking. Let&rsquo;s assume you need to test an API endpoint that accepts user details, performs data transformation and finally, persist the data. Your responsibility as a unit tester is to make sure you successfully accept, process and make calls to the database to persist the data, whether database connection succeeds or not is NOT your responsibility which is why you would <code>mock</code> this aspect. Unit testing is also about assumption, putting it mildly &ndash; <strong>Assuming database connection state is X, then API behavior should be Y</strong></p><p>Enough talking, show me the code!</p><h2 id=an-example>An Example</h2><p>We are going ahead to create a simple sample project to demonstrate testing REST services. We want a simple system that creates blog posts via an endpoint plus another endpoint that retrieves the created posts &ndash; we are picking a well understood example simply because it&rsquo;ll allow us focus more on how unit testing works rather than the example project itself.</p><p>Let&rsquo;s dive in!</p><p>Quickly download and open the completed code for this project. It is hosted on <a href=https://github.com/adigunhammedolalekan/rest-services-testing>GITHUB</a></p><p>We will first take a quick overview of the external packages we&rsquo;ll be using in this project. Below is a list and a brief explanation of what each package is used for in this sample project.</p><ul><li>chi <a href=https://github.com/go-chi/chi>Github</a> - <code>Github:</code> lightweight, idiomatic and composable router for building Go HTTP services. Like we&rsquo;ve seen in the description, we use this package to create our REST service.</li><li>testify <a href=https://github.com/stretchr/testify>Github</a> - <code>Github: </code>A toolkit with common assertions and mocks that plays nicely with the standard library. &ndash; This is used in this example to facilitate easy testing.</li><li>gomock <a href=github.com/golang/mock>Github</a> - <code>Github: </code>GoMock is a mocking framework for the Go programming language. An initial setup steps is required to use GoMock, latest installation instruction can be found <a href=https://github.com/golang/mock>HERE</a> &ndash; This package is used to mock test dependencies.</li></ul><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=font-weight:700>package</span> handlers
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=font-weight:700>import</span> (
+</span></span><span style=display:flex><span>	<span style=font-style:italic>&#34;encoding/json&#34;</span>
+</span></span><span style=display:flex><span>	<span style=font-style:italic>&#34;github.com/adigunhammedolalekan/rest-unit-testing-sample/repository&#34;</span>
+</span></span><span style=display:flex><span>	<span style=font-style:italic>&#34;github.com/go-chi/render&#34;</span>
+</span></span><span style=display:flex><span>	<span style=font-style:italic>&#34;net/http&#34;</span>
+</span></span><span style=display:flex><span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=font-weight:700>type</span> Handler <span style=font-weight:700>struct</span> {
+</span></span><span style=display:flex><span>	repo repository.Repository
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=font-weight:700>func</span> New(repo repository.Repository) *Handler {
+</span></span><span style=display:flex><span>	<span style=font-weight:700>return</span> &amp;Handler{repo: repo}
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=font-weight:700>func</span> (handler *Handler) CreatePostHandler(w http.ResponseWriter, r *http.Request) {
+</span></span><span style=display:flex><span>	<span style=font-weight:700>var</span> body <span style=font-weight:700>struct</span>{
+</span></span><span style=display:flex><span>		Title <span>string</span> <span style=font-style:italic>`json:&#34;title&#34;`</span>
+</span></span><span style=display:flex><span>		Body <span>string</span> <span style=font-style:italic>`json:&#34;body&#34;`</span>
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>	<span style=font-weight:700>if</span> err := json.NewDecoder(r.Body).Decode(&amp;body); err != <span style=font-weight:700>nil</span> {
+</span></span><span style=display:flex><span>		render.Status(r, http.StatusBadRequest)
+</span></span><span style=display:flex><span>		render.Respond(w, r, &amp;response{Success: <span style=font-weight:700>false</span>, Message: <span style=font-style:italic>&#34;malformed body&#34;</span>})
+</span></span><span style=display:flex><span>		<span style=font-weight:700>return</span>
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	token := r.Header.Get(<span style=font-style:italic>&#34;x-auth-token&#34;</span>)
+</span></span><span style=display:flex><span>	user, err := handler.repo.GetUser(token)
+</span></span><span style=display:flex><span>	<span style=font-weight:700>if</span> err != <span style=font-weight:700>nil</span> {
+</span></span><span style=display:flex><span>		render.Status(r, http.StatusForbidden)
+</span></span><span style=display:flex><span>		render.Respond(w, r, &amp;response{Success: <span style=font-weight:700>false</span>, Message: <span style=font-style:italic>&#34;forbidden&#34;</span>})
+</span></span><span style=display:flex><span>		<span style=font-weight:700>return</span>
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	p, err := handler.repo.CreatePost(user.ID.String(), body.Title, body.Body)
+</span></span><span style=display:flex><span>	<span style=font-weight:700>if</span> err != <span style=font-weight:700>nil</span> {
+</span></span><span style=display:flex><span>		render.Status(r, http.StatusInternalServerError)
+</span></span><span style=display:flex><span>		render.Respond(w, r, &amp;response{Success: <span style=font-weight:700>false</span>, Message: <span style=font-style:italic>&#34;server error&#34;</span>})
+</span></span><span style=display:flex><span>		<span style=font-weight:700>return</span>
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>	render.Status(r, http.StatusOK)
+</span></span><span style=display:flex><span>	render.Respond(w, r, &amp;response{Success: <span style=font-weight:700>true</span>, Message: <span style=font-style:italic>&#34;post.created&#34;</span>, Data: p})
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>The code block above contains an http handler - <code>CreatePostHandler</code>. This handler is self explanatory but let&rsquo;s see a detailed explanation below.</p><p>Line 19-22 defined a temporary struct to hold a Post data sent by a client. Line 23-27 decodes the request&rsquo;s JSON body into our defined temp struct, this will return a <code>400 - Badrequest</code> error when a malformed or non-JSON body is detected. Line 29-35 performs authorization check to ensure the user that&rsquo;s about to create a post is allowed to do so. In this example, we used a fictional authentication and authorization system in order to keep the example simple and not take our eyes off the goal. And, finally Line 37-45 send the new Post to a persistence layer, error is returned if there were problems while interacting with the persistence layer or a success message is returned otherwise.</p><p>Let&rsquo;s look at how to test this handler.</p><p>The first step is to generate mocks for our persistence layer, i explained previously how dependent services needs to be mocked in other to have control and test our service as we see fit &ndash; which is exactly what we are going to do here because database is a service we depend on. For this purpose, we will be using <code>GoMock</code>.</p><p>Change to the project root directory and run the command below(assuming you installed <code>mockgen</code>):</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell><span style=display:flex><span>mockgen -source=repo.go -destination=../mocks/repository_mock.go -package=mocks
+</span></span></code></pre></div><p>The above command will generate mock implementations for <code>repository/repo.go</code> and put them in <code>mocks</code> directory/package. We will be using the generated code to mock our database dependency.</p><p>We&rsquo;ll go ahead and separate our test code into three main parts - <code>arrange</code>, <code>act</code> and <code>assert</code>, this pattern is common and considered to be the best way to write good tests. Let&rsquo;s take advantage of it!</p><p>Before that, let&rsquo;s take a look at steps involved in each stage.</p><ul><li>Create an implementation of <code>http.ResponseWriter</code> provided to us by the <code>net/http/httptest</code> package. And, create a new mock Controller.</li></ul><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span>w := httptest.NewRecorder()
+</span></span><span style=display:flex><span>ctrl := gomock.NewController(t)
+</span></span><span style=display:flex><span><span style=font-weight:700>defer</span> ctrl.Finish()
+</span></span></code></pre></div><ul><li>Setup a mock http request, you can customize this request according to your test need. In this project, We simply added a dummy Post{} object in the body of the request, we also added a mock authorization token to satisfy the requirement for our &lsquo;Fictional&rsquo; auth and authz system.</li></ul><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span>    <span style=font-weight:700>type</span> body <span style=font-weight:700>struct</span>{
+</span></span><span style=display:flex><span>		Title <span>string</span> <span style=font-style:italic>`json:&#34;title&#34;`</span>
+</span></span><span style=display:flex><span>		Body <span>string</span> <span style=font-style:italic>`json:&#34;body&#34;`</span>
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	mockToken := uuid.New().String()
+</span></span><span style=display:flex><span>	mockPost := &amp;body{Title: <span style=font-style:italic>&#34;Test Title&#34;</span>, Body: <span style=font-style:italic>&#34;Test Body&#34;</span>}
+</span></span><span style=display:flex><span>	mockUser := &amp;types.User{ID: uuid.New(), Name: <span style=font-style:italic>&#34;Tester&#34;</span>}
+</span></span><span style=display:flex><span>	buf := &amp;bytes.Buffer{}
+</span></span><span style=display:flex><span>	err := json.NewEncoder(buf).Encode(mockPost)
+</span></span><span style=display:flex><span>	assert.Nil(t, err)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	r := httptest.NewRequest(<span style=font-style:italic>&#34;POST&#34;</span>, <span style=font-style:italic>&#34;/&#34;</span>, buf)
+</span></span><span style=display:flex><span>	r.Header.Add(<span style=font-style:italic>&#34;x-auth-token&#34;</span>, mockToken)
+</span></span></code></pre></div><ul><li>Create mock instance for <code>Repository</code> &ndash; which represents our persistence layer that we&rsquo;re specifically interested in mocking out. Also, set expectations. Setting expectations is how we make sure nothing else happens except for what we&rsquo;ve actually written in our http handler. It is also a way to control our mock, tell it what input to expect, how many times it is expected to be called and set an output. This aspect can be a little bit confusing but it&rsquo;s very key to writing good unit tests for http handlers.</li></ul><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span>    repo := mocks.NewMockRepository(ctrl)
+</span></span><span style=display:flex><span>	repo.EXPECT().GetUser(mockToken).Return(mockUser, <span style=font-weight:700>nil</span>).Times(1)
+</span></span><span style=display:flex><span>	repo.EXPECT().CreatePost(mockUser.ID.String(), mockPost.Title, mockPost.Body).Return(&amp;types.Post{}, <span style=font-weight:700>nil</span>).Times(1)
+</span></span></code></pre></div><ul><li>Execute handler and assert expectations. This is where we execute our http handler &ndash; <code>In a non-test context, this is equivalent to making http request to our handler</code>. We also check if we have expected http statuscode and response body &ndash; This makes sense because this is what our users would do. By making sure we have the expected/correct statuscode, we&rsquo;ve effectively tested this http handler.</li></ul><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span>    handler := New(repo)
+</span></span><span style=display:flex><span>	handler.CreatePostHandler(w, r)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    assert.Equal(t, http.StatusOK, w.Code)
+</span></span><span style=display:flex><span>    assert.True(t, strings.Contains(w.Body.String(), <span style=font-style:italic>&#34;post.created&#34;</span>))
+</span></span></code></pre></div><p>Putting it all together,</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=font-weight:700>func</span> TestHandler_CreatePostHandler(t *testing.T) {
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=font-style:italic>// arrange</span>
+</span></span><span style=display:flex><span>	w := httptest.NewRecorder()
+</span></span><span style=display:flex><span>	ctrl := gomock.NewController(t)
+</span></span><span style=display:flex><span>	<span style=font-weight:700>defer</span> ctrl.Finish()
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=font-weight:700>type</span> body <span style=font-weight:700>struct</span>{
+</span></span><span style=display:flex><span>		Title <span>string</span> <span style=font-style:italic>`json:&#34;title&#34;`</span>
+</span></span><span style=display:flex><span>		Body <span>string</span> <span style=font-style:italic>`json:&#34;body&#34;`</span>
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	mockToken := uuid.New().String()
+</span></span><span style=display:flex><span>	mockPost := &amp;body{Title: <span style=font-style:italic>&#34;Test Title&#34;</span>, Body: <span style=font-style:italic>&#34;Test Body&#34;</span>}
+</span></span><span style=display:flex><span>	mockUser := &amp;types.User{ID: uuid.New(), Name: <span style=font-style:italic>&#34;Tester&#34;</span>}
+</span></span><span style=display:flex><span>	buf := &amp;bytes.Buffer{}
+</span></span><span style=display:flex><span>	err := json.NewEncoder(buf).Encode(mockPost)
+</span></span><span style=display:flex><span>	assert.Nil(t, err)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	r := httptest.NewRequest(<span style=font-style:italic>&#34;POST&#34;</span>, <span style=font-style:italic>&#34;/&#34;</span>, buf)
+</span></span><span style=display:flex><span>	r.Header.Add(<span style=font-style:italic>&#34;x-auth-token&#34;</span>, mockToken)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	repo := mocks.NewMockRepository(ctrl)
+</span></span><span style=display:flex><span>	repo.EXPECT().GetUser(mockToken).Return(mockUser, <span style=font-weight:700>nil</span>).Times(1)
+</span></span><span style=display:flex><span>	repo.EXPECT().CreatePost(mockUser.ID.String(), mockPost.Title, mockPost.Body).Return(&amp;types.Post{}, <span style=font-weight:700>nil</span>).Times(1)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=font-style:italic>// act</span>
+</span></span><span style=display:flex><span>	handler := New(repo)
+</span></span><span style=display:flex><span>	handler.CreatePostHandler(w, r)
+</span></span><span style=display:flex><span>    
+</span></span><span style=display:flex><span>    <span style=font-style:italic>// assert</span>
+</span></span><span style=display:flex><span>	assert.Equal(t, http.StatusOK, w.Code)
+</span></span><span style=display:flex><span>	assert.True(t, strings.Contains(w.Body.String(), <span style=font-style:italic>&#34;post.created&#34;</span>))
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>Full code, including the 2nd endpoint(to get created posts) and it test can be found in the <a href=https://github.com/adigunhammedolalekan/rest-services-testing>LINKED</a> github repository.</p><p>Thanks for reading. I am actively taking feedback via email or my <a href=https://twitter.com/@L3kanAdigun>Twitter DM</a>.</p><p>Happy coding :)</p></div></article></main><footer class=site-footer><div class="wrap footer-inner"><p>© 2026 Hammed Adigun. Built with Hugo, deployed with <a href=https://github.com/adxgun/sarabi>sarabi</a>.</p><ul class=social><li><a href=https://github.com/adxgun rel="me noopener" target=_blank aria-label=Github><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentcolor" stroke="none" d="M12 .5A11.5 11.5.0 008.36 22.91c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.53-1.33-1.28-1.69-1.28-1.69-1.05-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.68.0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05.0.0.97-.31 3.17 1.18a11 11 0 015.77.0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09.0 4.41-2.69 5.38-5.26 5.67.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5.0 0012 .5z"/></svg>
+<span>GitHub</span></a></li><li><a href=https://www.linkedin.com/in/adxgun/ rel="me noopener" target=_blank aria-label=Linkedin><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentcolor" stroke="none" d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85.0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6.0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06.0 110-4.13 2.06 2.06.0 010 4.13zM7.12 20.45H3.56V9h3.56v11.45zM22.22.0H1.77C.79.0.0.77.0 1.73v20.54C0 23.23.79 24 1.77 24h20.45c.98.0 1.78-.77 1.78-1.73V1.73C24 .77 23.2.0 22.22.0z"/></svg>
+<span>LinkedIn</span></a></li></ul></div></footer><script src=/js/site.min.00d5a645332fd5dee8885b145572cb32de693c5d01238d91ccfba41fac6c36ac.js defer></script></body></html>

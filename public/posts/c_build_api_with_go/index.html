@@ -1,1097 +1,497 @@
-<!DOCTYPE html>
-<html lang="en-us"
-  dir="ltr">
-
-<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
-  <meta charset="utf-8">
-<meta name="viewport" content="width=device-width">
-
-
-
-
-
-
-
-
-    
-
-
-
-
-
-
-<link rel="icon" type="image/ico" href="http://localhost:1313//favicon.ico">
-<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313//favicon-16x16.png">
-<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313//favicon-32x32.png">
-<link rel="icon" type="image/png" sizes="192x192" href="http://localhost:1313//android-chrome-192x192.png">
-<link rel="apple-touch-icon" sizes="180x180" href="http://localhost:1313//apple-touch-icon.png">
-
-<meta name="description" content=""/>
-
-
-
-<title>
-    
-    Build and Deploy a secure REST API with Go, Postgresql, JWT and GORM | Hammed Adigun
-    
-</title>
-
-<link rel="canonical" href="http://localhost:1313/posts/c_build_api_with_go/"/>
-
-<meta property="og:url" content="http://localhost:1313/posts/c_build_api_with_go/">
-  <meta property="og:site_name" content="Hammed Adigun">
-  <meta property="og:title" content="Build and Deploy a secure REST API with Go, Postgresql, JWT and GORM">
-  <meta property="og:description" content="In this tutorial, we are going to learn how to develop and deploy a secure REST api using Go Programming language.
-Why Go? # Go is a very interesting programming language, it is a strongly typed language which compiles very fast, it performance is likened to that of C&#43;&#43;, go has goroutines — a much more efficient replacement for Threads, and also go give you the freedom to static type on the web — I understand this is not new, i just love Go’s way.">
-  <meta property="og:locale" content="en_us">
-  <meta property="og:type" content="article">
-    <meta property="article:section" content="posts">
-    <meta property="article:published_time" content="2018-05-04T00:00:00+00:00">
-    <meta property="article:modified_time" content="2018-05-04T00:00:00+00:00">
-
-
-
-
-
-
-
-
-
-
-
-
-
-<link rel="stylesheet" href="/assets/combined.min.0f4f5c64ee7100cff28e7c7366d922b5499829f72c91a53b9b17f236d85ad7e7.css" media="all">
-
-
-
-
-
-
-
-
-
-
-
-    
-
-
-
-
-</head>
-
-
-
-
-
-
-
-<body class="auto">
-
-  <div class="content">
-    <header>
-      
-
-<div class="header">
-
-    
-
-    <h1 class="header-title">
-        <a href="http://localhost:1313/">Hammed Adigun</a>
-    </h1>
-
-    <div class="flex">
-        
-
-        
-        
-      
-        <p class="small ">
-            <a href="/posts" >
-                /posts
-            </a>
-        </p>
-        
-      
-        <p class="small ">
-            <a href="/projects" >
-                /projects
-            </a>
-        </p>
-        
-        
-    </div>
-
-    
-
-</div>
-
-    </header>
-
-    <main class="main">
-      
-
-
-
-
-<div class="breadcrumbs"><a href="/">~</a><span class="breadcrumbs-separator">/</span><a href="/posts/">Posts</a><span class="breadcrumbs-separator">/</span>
-        <a href="/posts/c_build_api_with_go/">Build and Deploy a secure REST API with Go, Postgresql, JWT and GORM</a></div>
-
-
-<div >
-
-  <div class="single-intro-container">
-
-    
-
-    <h1 class="single-title">Build and Deploy a secure REST API with Go, Postgresql, JWT and GORM</h1>
-    
-
-    
-
-    <p class="single-readtime">
-      
-      
-      
-      <time datetime="2018-05-04T00:00:00&#43;00:00">4 May 2018</time>
-      
-
-      
-    </p>
-
-  </div>
-
-  
-
-  
-
-  
-
-  
-
-  <div class="single-content">
-    <p>In this tutorial, we are going to learn how to develop and deploy a secure REST api using Go Programming language.</p>
-<h2 class="heading" id="why-go">
-  Why Go?
-  <a class="anchor" href="#why-go">#</a>
-</h2>
-<p>Go is a very interesting programming language, it is a strongly typed language which compiles very fast, it performance is likened to that of C++, go has goroutines — a much more efficient replacement for Threads, and also go give you the freedom to static type on the web — I understand this is not new, i just love Go’s way.</p>
-<h2 class="heading" id="what-are-we-building">
-  What are we building?
-  <a class="anchor" href="#what-are-we-building">#</a>
-</h2>
-<p>We are going to build a **contact/phonebook manager App, **our API will allow users to add contacts to their profiles, they will be able to retrieve it in case their phone got lost.</p>
-<h2 class="heading" id="prerequisites">
-  Prerequisites
-  <a class="anchor" href="#prerequisites">#</a>
-</h2>
-<p>This lesson assumed you already installed the following packages</p>
-<ul>
-<li>
-<p>Go</p>
-</li>
-<li>
-<p>Postgresql</p>
-</li>
-<li>
-<p>GoLand IDE — optional(I am going to be using it for this tutorial)</p>
-</li>
-</ul>
-<p>I also assumed you have setup your GOPATH. Check this if you haven’t <a href="https://github.com/golang/go/wiki/SettingGOPATH">https://github.com/golang/go/wiki/SettingGOPATH</a></p>
-<p>Let’s do it!</p>
-<h2 class="heading" id="what-is-rest">
-  What is REST?
-  <a class="anchor" href="#what-is-rest">#</a>
-</h2>
-<p>REST stands for Representational State Transfer, it is the mechanism used by modern client apps to communicate with databases and servers via http — <a href="https://en.wikipedia.org/wiki/Representational_state_transfer">https://en.wikipedia.org/wiki/Representational_state_transfer</a>
-So, you have a new startup idea or you want to build that awesome side project? REST protocol is mostly the way to go.</p>
-<h2 class="heading" id="building-the-app">
-  Building the App
-  <a class="anchor" href="#building-the-app">#</a>
-</h2>
-<p>We start by identifying the package dependencies we are going to need for this project, luckily for us, Go standard library is rich enough to build a complete website without using a third party framework(i hope i am right) — see net.http package, but to make our work easier, we are going to need the following packages,</p>
-<ul>
-<li>
-<p>gorilla/mux — A powerful URL router and dispatcher. We use this package to match URL paths with their handlers.</p>
-</li>
-<li>
-<p>jinzhu/gorm — The fantastic ORM library for Golang, aims to be developer friendly. We use this ORM(Object relational mapper) package to interact smoothly with our database</p>
-</li>
-<li>
-<p>dgrijalva/jwt-go — Used to sign and verify JWT tokens</p>
-</li>
-<li>
-<p>joho/godotenv — Used to load .env files into the project</p>
-</li>
-</ul>
-<p>To install any of this package, open terminal and run</p>
-<p>go get github.com/{package-name}</p>
-<p>This command will install the packages into your GOPATH.</p>
-<h3 class="heading" id="project-structure">
-  Project Structure
-  <a class="anchor" href="#project-structure">#</a>
-</h3>
-<p>
-
-
-
-
-
-
-
-
-
-
-
-<figure class="">
-
-    <div class="img-container" >
-        <img loading="lazy" alt="Check the left sidebar to see project structure" src="https://cdn-images-1.medium.com/max/2732/1*3MJjEDEI7i29eJecxxfopA.png" >
-    </div>
-
-    
-</figure>
-<em>Check the left sidebar to see project structure</em></p>
-<p>utils.go</p>
-<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="font-weight:bold">package</span> utils
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="font-weight:bold">import</span> (
-</span></span><span style="display:flex;"><span>	<span style="font-style:italic">&#34;encoding/json&#34;</span>
-</span></span><span style="display:flex;"><span>	<span style="font-style:italic">&#34;net/http&#34;</span>
-</span></span><span style="display:flex;"><span>)
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="font-weight:bold">func</span> Message(status <span style="">bool</span>, message <span style="">string</span>) (<span style="font-weight:bold">map</span>[<span style="">string</span>]<span style="font-weight:bold">interface</span>{}) {
-</span></span><span style="display:flex;"><span>	<span style="font-weight:bold">return</span> <span style="font-weight:bold">map</span>[<span style="">string</span>]<span style="font-weight:bold">interface</span>{} {<span style="font-style:italic">&#34;status&#34;</span> : status, <span style="font-style:italic">&#34;message&#34;</span> : message}
-</span></span><span style="display:flex;"><span>}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="font-weight:bold">func</span> Respond(w http.ResponseWriter, data <span style="font-weight:bold">map</span>[<span style="">string</span>] <span style="font-weight:bold">interface</span>{})  {
-</span></span><span style="display:flex;"><span>	w.Header().Add(<span style="font-style:italic">&#34;Content-Type&#34;</span>, <span style="font-style:italic">&#34;application/json&#34;</span>)
-</span></span><span style="display:flex;"><span>	json.NewEncoder(w).Encode(data)
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><p>utils.go contain handy utils functions to build json messages and return a json response. Note the two function Message() and Respond() before we proceed.</p>
-<h3 class="heading" id="more-about-jwt">
-  More about JWT
-  <a class="anchor" href="#more-about-jwt">#</a>
-</h3>
-<p>JSON Web Tokens are an open, industry standard <a href="https://tools.ietf.org/html/rfc7519">RFC 7519</a> method for representing claims securely between two parties. It is easy to identify web application users through sessions, however, when your web apps API is interacting with say an Android or IOS client, sessions becomes unusable because of the stateless nature of the http request. With JWT, we can create a unique token for each authenticated user, this token would be included in the header of the subsequent request made to the API server, this method allow us to identify every users that make calls to our API. Lets see the implementation below</p>
-<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="font-weight:bold">package</span> app
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="font-weight:bold">import</span> (
-</span></span><span style="display:flex;"><span>	<span style="font-style:italic">&#34;net/http&#34;</span>
-</span></span><span style="display:flex;"><span>	u <span style="font-style:italic">&#34;lens/utils&#34;</span>
-</span></span><span style="display:flex;"><span>	<span style="font-style:italic">&#34;strings&#34;</span>
-</span></span><span style="display:flex;"><span>	<span style="font-style:italic">&#34;go-contacts/models&#34;</span>
-</span></span><span style="display:flex;"><span>	jwt <span style="font-style:italic">&#34;github.com/dgrijalva/jwt-go&#34;</span>
-</span></span><span style="display:flex;"><span>	<span style="font-style:italic">&#34;os&#34;</span>
-</span></span><span style="display:flex;"><span>	<span style="font-style:italic">&#34;context&#34;</span>
-</span></span><span style="display:flex;"><span>	<span style="font-style:italic">&#34;fmt&#34;</span>
-</span></span><span style="display:flex;"><span>)
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="font-weight:bold">var</span> JwtAuthentication = <span style="font-weight:bold">func</span>(next http.Handler) http.Handler {
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	<span style="font-weight:bold">return</span> http.HandlerFunc(<span style="font-weight:bold">func</span>(w http.ResponseWriter, r *http.Request) {
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>		notAuth := []<span style="">string</span>{<span style="font-style:italic">&#34;/api/user/new&#34;</span>, <span style="font-style:italic">&#34;/api/user/login&#34;</span>} <span style="font-style:italic">//List of endpoints that doesn&#39;t require auth</span>
-</span></span><span style="display:flex;"><span>		requestPath := r.URL.Path <span style="font-style:italic">//current request path</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>		<span style="font-style:italic">//check if request does not need authentication, serve the request if it doesn&#39;t need it</span>
-</span></span><span style="display:flex;"><span>		<span style="font-weight:bold">for</span> _, value := <span style="font-weight:bold">range</span> notAuth {
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>			<span style="font-weight:bold">if</span> value == requestPath {
-</span></span><span style="display:flex;"><span>				next.ServeHTTP(w, r)
-</span></span><span style="display:flex;"><span>				<span style="font-weight:bold">return</span>
-</span></span><span style="display:flex;"><span>			}
-</span></span><span style="display:flex;"><span>		}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>		response := make(<span style="font-weight:bold">map</span>[<span style="">string</span>] <span style="font-weight:bold">interface</span>{})
-</span></span><span style="display:flex;"><span>		tokenHeader := r.Header.Get(<span style="font-style:italic">&#34;Authorization&#34;</span>) <span style="font-style:italic">//Grab the token from the header</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>		<span style="font-weight:bold">if</span> tokenHeader == <span style="font-style:italic">&#34;&#34;</span> { <span style="font-style:italic">//Token is missing, returns with error code 403 Unauthorized</span>
-</span></span><span style="display:flex;"><span>			response = u.Message(<span style="font-weight:bold">false</span>, <span style="font-style:italic">&#34;Missing auth token&#34;</span>)
-</span></span><span style="display:flex;"><span>			w.WriteHeader(http.StatusForbidden)
-</span></span><span style="display:flex;"><span>			w.Header().Add(<span style="font-style:italic">&#34;Content-Type&#34;</span>, <span style="font-style:italic">&#34;application/json&#34;</span>)
-</span></span><span style="display:flex;"><span>			u.Respond(w, response)
-</span></span><span style="display:flex;"><span>			<span style="font-weight:bold">return</span>
-</span></span><span style="display:flex;"><span>		}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>		splitted := strings.Split(tokenHeader, <span style="font-style:italic">&#34; &#34;</span>) <span style="font-style:italic">//The token normally comes in format `Bearer {token-body}`, we check if the retrieved token matched this requirement</span>
-</span></span><span style="display:flex;"><span>		<span style="font-weight:bold">if</span> len(splitted) != 2 {
-</span></span><span style="display:flex;"><span>			response = u.Message(<span style="font-weight:bold">false</span>, <span style="font-style:italic">&#34;Invalid/Malformed auth token&#34;</span>)
-</span></span><span style="display:flex;"><span>			w.WriteHeader(http.StatusForbidden)
-</span></span><span style="display:flex;"><span>			w.Header().Add(<span style="font-style:italic">&#34;Content-Type&#34;</span>, <span style="font-style:italic">&#34;application/json&#34;</span>)
-</span></span><span style="display:flex;"><span>			u.Respond(w, response)
-</span></span><span style="display:flex;"><span>			<span style="font-weight:bold">return</span>
-</span></span><span style="display:flex;"><span>		}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>		tokenPart := splitted[1] <span style="font-style:italic">//Grab the token part, what we are truly interested in</span>
-</span></span><span style="display:flex;"><span>		tk := &amp;models.Token{}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>		token, err := jwt.ParseWithClaims(tokenPart, tk, <span style="font-weight:bold">func</span>(token *jwt.Token) (<span style="font-weight:bold">interface</span>{}, <span style="">error</span>) {
-</span></span><span style="display:flex;"><span>			<span style="font-weight:bold">return</span> []byte(os.Getenv(<span style="font-style:italic">&#34;token_password&#34;</span>)), <span style="font-weight:bold">nil</span>
-</span></span><span style="display:flex;"><span>		})
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>		<span style="font-weight:bold">if</span> err != <span style="font-weight:bold">nil</span> { <span style="font-style:italic">//Malformed token, returns with http code 403 as usual</span>
-</span></span><span style="display:flex;"><span>			response = u.Message(<span style="font-weight:bold">false</span>, <span style="font-style:italic">&#34;Malformed authentication token&#34;</span>)
-</span></span><span style="display:flex;"><span>			w.WriteHeader(http.StatusForbidden)
-</span></span><span style="display:flex;"><span>			w.Header().Add(<span style="font-style:italic">&#34;Content-Type&#34;</span>, <span style="font-style:italic">&#34;application/json&#34;</span>)
-</span></span><span style="display:flex;"><span>			u.Respond(w, response)
-</span></span><span style="display:flex;"><span>			<span style="font-weight:bold">return</span>
-</span></span><span style="display:flex;"><span>		}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>		<span style="font-weight:bold">if</span> !token.Valid { <span style="font-style:italic">//Token is invalid, maybe not signed on this server</span>
-</span></span><span style="display:flex;"><span>			response = u.Message(<span style="font-weight:bold">false</span>, <span style="font-style:italic">&#34;Token is not valid.&#34;</span>)
-</span></span><span style="display:flex;"><span>			w.WriteHeader(http.StatusForbidden)
-</span></span><span style="display:flex;"><span>			w.Header().Add(<span style="font-style:italic">&#34;Content-Type&#34;</span>, <span style="font-style:italic">&#34;application/json&#34;</span>)
-</span></span><span style="display:flex;"><span>			u.Respond(w, response)
-</span></span><span style="display:flex;"><span>			<span style="font-weight:bold">return</span>
-</span></span><span style="display:flex;"><span>		}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>		<span style="font-style:italic">//Everything went well, proceed with the request and set the caller to the user retrieved from the parsed token</span>
-</span></span><span style="display:flex;"><span>		fmt.Sprintf(<span style="font-style:italic">&#34;User %&#34;</span>, tk.Username) <span style="font-style:italic">//Useful for monitoring</span>
-</span></span><span style="display:flex;"><span>		ctx := context.WithValue(r.Context(), <span style="font-style:italic">&#34;user&#34;</span>, tk.UserId)
-</span></span><span style="display:flex;"><span>		r = r.WithContext(ctx)
-</span></span><span style="display:flex;"><span>		next.ServeHTTP(w, r) <span style="font-style:italic">//proceed in the middleware chain!</span>
-</span></span><span style="display:flex;"><span>	});
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><p>The comments inside the code explain everything there is to know, but basically, the code create a Middleware to intercept every requests, check for the presence of an authentication token (JWT token), verify if it is authentic and valid, then send error back to the client if we detect any deficiency in the token or proceed to serving the request otherwise(if the token is valid), you’ll see later, how we can access the user that is interacting with our API from the request.</p>
-<h3 class="heading" id="building-the-user-registration-and-login-system">
-  Building the user registration and login system
-  <a class="anchor" href="#building-the-user-registration-and-login-system">#</a>
-</h3>
-<p>We want our users to be able to register and login before backing up/storing their contacts on our system. The first thing we will need to do is connect to our database, we use a .env file to store our database credentials, my .env looks like this</p>
-<pre><code>db_name = gocontacts
+<!doctype html><html lang=en-us><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>Build and Deploy a secure REST API with Go, Postgresql, JWT and GORM · Hammed Adigun</title>
+<meta name=description content="In this tutorial, we are going to learn how to develop and deploy a secure REST api using Go Programming language.
+Why Go? Go is a very interesting programming …"><meta property="og:title" content="Build and Deploy a secure REST API with Go, Postgresql, JWT and GORM"><meta property="og:type" content="article"><meta property="og:url" content="https://hammed.live/posts/c_build_api_with_go/"><link rel=canonical href=https://hammed.live/posts/c_build_api_with_go/><link rel=icon href=/favicon.svg type=image/svg+xml><script>(function(){var e=localStorage.getItem("theme");e&&(document.documentElement.dataset.theme=e)})()</script><link rel=stylesheet href=/css/main.min.6b75c21c66200b38c007c3137bdff1aed49252b3fc892a37cc7f5e75b1a958f0.css integrity="sha256-a3XCHGYgCzjAB8MTe9/xrtSSUrP8iSo3zH9edbGpWPA="></head><body class=inner><a class=skip href=#main>Skip to content</a><header class=site-header><div class="wrap nav"><a class=brand href=/ aria-label=Home><span class=brand-mark aria-hidden=true>HA</span>
+<span class=brand-name>Hammed Adigun</span></a><nav aria-label=Main><ul><li><a href=/#about>about</a></li><li><a href=/projects/>projects</a></li><li><a href=/posts/ aria-current=page>writing</a></li><li><button class=theme-toggle type=button aria-label="Toggle colour theme" title="Toggle theme"><svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg><svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/></svg></button></li></ul></nav></div></header><main id=main><article class="wrap narrow page"><header class=page-head><p class=eyebrow><a href=/posts/>← Writing</a></p><h1>Build and Deploy a secure REST API with Go, Postgresql, JWT and GORM</h1><p class=meta><time datetime=2018-05-04>4 May 2018</time>
+· 15 min read</p></header><div class=prose><p>In this tutorial, we are going to learn how to develop and deploy a secure REST api using Go Programming language.</p><h2 id=why-go>Why Go?</h2><p>Go is a very interesting programming language, it is a strongly typed language which compiles very fast, it performance is likened to that of C++, go has goroutines — a much more efficient replacement for Threads, and also go give you the freedom to static type on the web — I understand this is not new, i just love Go’s way.</p><h2 id=what-are-we-building>What are we building?</h2><p>We are going to build a **contact/phonebook manager App, **our API will allow users to add contacts to their profiles, they will be able to retrieve it in case their phone got lost.</p><h2 id=prerequisites>Prerequisites</h2><p>This lesson assumed you already installed the following packages</p><ul><li><p>Go</p></li><li><p>Postgresql</p></li><li><p>GoLand IDE — optional(I am going to be using it for this tutorial)</p></li></ul><p>I also assumed you have setup your GOPATH. Check this if you haven’t <a href=https://github.com/golang/go/wiki/SettingGOPATH>https://github.com/golang/go/wiki/SettingGOPATH</a></p><p>Let’s do it!</p><h2 id=what-is-rest>What is REST?</h2><p>REST stands for Representational State Transfer, it is the mechanism used by modern client apps to communicate with databases and servers via http — <a href=https://en.wikipedia.org/wiki/Representational_state_transfer>https://en.wikipedia.org/wiki/Representational_state_transfer</a>
+So, you have a new startup idea or you want to build that awesome side project? REST protocol is mostly the way to go.</p><h2 id=building-the-app>Building the App</h2><p>We start by identifying the package dependencies we are going to need for this project, luckily for us, Go standard library is rich enough to build a complete website without using a third party framework(i hope i am right) — see net.http package, but to make our work easier, we are going to need the following packages,</p><ul><li><p>gorilla/mux — A powerful URL router and dispatcher. We use this package to match URL paths with their handlers.</p></li><li><p>jinzhu/gorm — The fantastic ORM library for Golang, aims to be developer friendly. We use this ORM(Object relational mapper) package to interact smoothly with our database</p></li><li><p>dgrijalva/jwt-go — Used to sign and verify JWT tokens</p></li><li><p>joho/godotenv — Used to load .env files into the project</p></li></ul><p>To install any of this package, open terminal and run</p><p>go get github.com/{package-name}</p><p>This command will install the packages into your GOPATH.</p><h3 id=project-structure>Project Structure</h3><p><img src=https://cdn-images-1.medium.com/max/2732/1*3MJjEDEI7i29eJecxxfopA.png alt="Check the left sidebar to see project structure"><em>Check the left sidebar to see project structure</em></p><p>utils.go</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=font-weight:700>package</span> utils
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=font-weight:700>import</span> (
+</span></span><span style=display:flex><span>	<span style=font-style:italic>&#34;encoding/json&#34;</span>
+</span></span><span style=display:flex><span>	<span style=font-style:italic>&#34;net/http&#34;</span>
+</span></span><span style=display:flex><span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=font-weight:700>func</span> Message(status <span>bool</span>, message <span>string</span>) (<span style=font-weight:700>map</span>[<span>string</span>]<span style=font-weight:700>interface</span>{}) {
+</span></span><span style=display:flex><span>	<span style=font-weight:700>return</span> <span style=font-weight:700>map</span>[<span>string</span>]<span style=font-weight:700>interface</span>{} {<span style=font-style:italic>&#34;status&#34;</span> : status, <span style=font-style:italic>&#34;message&#34;</span> : message}
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=font-weight:700>func</span> Respond(w http.ResponseWriter, data <span style=font-weight:700>map</span>[<span>string</span>] <span style=font-weight:700>interface</span>{})  {
+</span></span><span style=display:flex><span>	w.Header().Add(<span style=font-style:italic>&#34;Content-Type&#34;</span>, <span style=font-style:italic>&#34;application/json&#34;</span>)
+</span></span><span style=display:flex><span>	json.NewEncoder(w).Encode(data)
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>utils.go contain handy utils functions to build json messages and return a json response. Note the two function Message() and Respond() before we proceed.</p><h3 id=more-about-jwt>More about JWT</h3><p>JSON Web Tokens are an open, industry standard <a href=https://tools.ietf.org/html/rfc7519>RFC 7519</a> method for representing claims securely between two parties. It is easy to identify web application users through sessions, however, when your web apps API is interacting with say an Android or IOS client, sessions becomes unusable because of the stateless nature of the http request. With JWT, we can create a unique token for each authenticated user, this token would be included in the header of the subsequent request made to the API server, this method allow us to identify every users that make calls to our API. Lets see the implementation below</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=font-weight:700>package</span> app
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=font-weight:700>import</span> (
+</span></span><span style=display:flex><span>	<span style=font-style:italic>&#34;net/http&#34;</span>
+</span></span><span style=display:flex><span>	u <span style=font-style:italic>&#34;lens/utils&#34;</span>
+</span></span><span style=display:flex><span>	<span style=font-style:italic>&#34;strings&#34;</span>
+</span></span><span style=display:flex><span>	<span style=font-style:italic>&#34;go-contacts/models&#34;</span>
+</span></span><span style=display:flex><span>	jwt <span style=font-style:italic>&#34;github.com/dgrijalva/jwt-go&#34;</span>
+</span></span><span style=display:flex><span>	<span style=font-style:italic>&#34;os&#34;</span>
+</span></span><span style=display:flex><span>	<span style=font-style:italic>&#34;context&#34;</span>
+</span></span><span style=display:flex><span>	<span style=font-style:italic>&#34;fmt&#34;</span>
+</span></span><span style=display:flex><span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=font-weight:700>var</span> JwtAuthentication = <span style=font-weight:700>func</span>(next http.Handler) http.Handler {
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=font-weight:700>return</span> http.HandlerFunc(<span style=font-weight:700>func</span>(w http.ResponseWriter, r *http.Request) {
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>		notAuth := []<span>string</span>{<span style=font-style:italic>&#34;/api/user/new&#34;</span>, <span style=font-style:italic>&#34;/api/user/login&#34;</span>} <span style=font-style:italic>//List of endpoints that doesn&#39;t require auth</span>
+</span></span><span style=display:flex><span>		requestPath := r.URL.Path <span style=font-style:italic>//current request path</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>		<span style=font-style:italic>//check if request does not need authentication, serve the request if it doesn&#39;t need it</span>
+</span></span><span style=display:flex><span>		<span style=font-weight:700>for</span> _, value := <span style=font-weight:700>range</span> notAuth {
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>			<span style=font-weight:700>if</span> value == requestPath {
+</span></span><span style=display:flex><span>				next.ServeHTTP(w, r)
+</span></span><span style=display:flex><span>				<span style=font-weight:700>return</span>
+</span></span><span style=display:flex><span>			}
+</span></span><span style=display:flex><span>		}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>		response := make(<span style=font-weight:700>map</span>[<span>string</span>] <span style=font-weight:700>interface</span>{})
+</span></span><span style=display:flex><span>		tokenHeader := r.Header.Get(<span style=font-style:italic>&#34;Authorization&#34;</span>) <span style=font-style:italic>//Grab the token from the header</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>		<span style=font-weight:700>if</span> tokenHeader == <span style=font-style:italic>&#34;&#34;</span> { <span style=font-style:italic>//Token is missing, returns with error code 403 Unauthorized</span>
+</span></span><span style=display:flex><span>			response = u.Message(<span style=font-weight:700>false</span>, <span style=font-style:italic>&#34;Missing auth token&#34;</span>)
+</span></span><span style=display:flex><span>			w.WriteHeader(http.StatusForbidden)
+</span></span><span style=display:flex><span>			w.Header().Add(<span style=font-style:italic>&#34;Content-Type&#34;</span>, <span style=font-style:italic>&#34;application/json&#34;</span>)
+</span></span><span style=display:flex><span>			u.Respond(w, response)
+</span></span><span style=display:flex><span>			<span style=font-weight:700>return</span>
+</span></span><span style=display:flex><span>		}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>		splitted := strings.Split(tokenHeader, <span style=font-style:italic>&#34; &#34;</span>) <span style=font-style:italic>//The token normally comes in format `Bearer {token-body}`, we check if the retrieved token matched this requirement</span>
+</span></span><span style=display:flex><span>		<span style=font-weight:700>if</span> len(splitted) != 2 {
+</span></span><span style=display:flex><span>			response = u.Message(<span style=font-weight:700>false</span>, <span style=font-style:italic>&#34;Invalid/Malformed auth token&#34;</span>)
+</span></span><span style=display:flex><span>			w.WriteHeader(http.StatusForbidden)
+</span></span><span style=display:flex><span>			w.Header().Add(<span style=font-style:italic>&#34;Content-Type&#34;</span>, <span style=font-style:italic>&#34;application/json&#34;</span>)
+</span></span><span style=display:flex><span>			u.Respond(w, response)
+</span></span><span style=display:flex><span>			<span style=font-weight:700>return</span>
+</span></span><span style=display:flex><span>		}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>		tokenPart := splitted[1] <span style=font-style:italic>//Grab the token part, what we are truly interested in</span>
+</span></span><span style=display:flex><span>		tk := &amp;models.Token{}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>		token, err := jwt.ParseWithClaims(tokenPart, tk, <span style=font-weight:700>func</span>(token *jwt.Token) (<span style=font-weight:700>interface</span>{}, <span>error</span>) {
+</span></span><span style=display:flex><span>			<span style=font-weight:700>return</span> []byte(os.Getenv(<span style=font-style:italic>&#34;token_password&#34;</span>)), <span style=font-weight:700>nil</span>
+</span></span><span style=display:flex><span>		})
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>		<span style=font-weight:700>if</span> err != <span style=font-weight:700>nil</span> { <span style=font-style:italic>//Malformed token, returns with http code 403 as usual</span>
+</span></span><span style=display:flex><span>			response = u.Message(<span style=font-weight:700>false</span>, <span style=font-style:italic>&#34;Malformed authentication token&#34;</span>)
+</span></span><span style=display:flex><span>			w.WriteHeader(http.StatusForbidden)
+</span></span><span style=display:flex><span>			w.Header().Add(<span style=font-style:italic>&#34;Content-Type&#34;</span>, <span style=font-style:italic>&#34;application/json&#34;</span>)
+</span></span><span style=display:flex><span>			u.Respond(w, response)
+</span></span><span style=display:flex><span>			<span style=font-weight:700>return</span>
+</span></span><span style=display:flex><span>		}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>		<span style=font-weight:700>if</span> !token.Valid { <span style=font-style:italic>//Token is invalid, maybe not signed on this server</span>
+</span></span><span style=display:flex><span>			response = u.Message(<span style=font-weight:700>false</span>, <span style=font-style:italic>&#34;Token is not valid.&#34;</span>)
+</span></span><span style=display:flex><span>			w.WriteHeader(http.StatusForbidden)
+</span></span><span style=display:flex><span>			w.Header().Add(<span style=font-style:italic>&#34;Content-Type&#34;</span>, <span style=font-style:italic>&#34;application/json&#34;</span>)
+</span></span><span style=display:flex><span>			u.Respond(w, response)
+</span></span><span style=display:flex><span>			<span style=font-weight:700>return</span>
+</span></span><span style=display:flex><span>		}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>		<span style=font-style:italic>//Everything went well, proceed with the request and set the caller to the user retrieved from the parsed token</span>
+</span></span><span style=display:flex><span>		fmt.Sprintf(<span style=font-style:italic>&#34;User %&#34;</span>, tk.Username) <span style=font-style:italic>//Useful for monitoring</span>
+</span></span><span style=display:flex><span>		ctx := context.WithValue(r.Context(), <span style=font-style:italic>&#34;user&#34;</span>, tk.UserId)
+</span></span><span style=display:flex><span>		r = r.WithContext(ctx)
+</span></span><span style=display:flex><span>		next.ServeHTTP(w, r) <span style=font-style:italic>//proceed in the middleware chain!</span>
+</span></span><span style=display:flex><span>	});
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>The comments inside the code explain everything there is to know, but basically, the code create a Middleware to intercept every requests, check for the presence of an authentication token (JWT token), verify if it is authentic and valid, then send error back to the client if we detect any deficiency in the token or proceed to serving the request otherwise(if the token is valid), you’ll see later, how we can access the user that is interacting with our API from the request.</p><h3 id=building-the-user-registration-and-login-system>Building the user registration and login system</h3><p>We want our users to be able to register and login before backing up/storing their contacts on our system. The first thing we will need to do is connect to our database, we use a .env file to store our database credentials, my .env looks like this</p><pre><code>db_name = gocontacts
 db_pass = **** //This is default to the current user's password on windows for postgresql
 db_user = postgres
 db_type = postgres
 db_host = localhost
 db_port = 5434
 token_password = thisIsTheJwtSecretPassword //Do not commit to git!
-</code></pre>
-<p>Then, we can connect to the database using the following snippets</p>
-<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="font-weight:bold">package</span> models
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="font-weight:bold">import</span> (
-</span></span><span style="display:flex;"><span>	_ <span style="font-style:italic">&#34;github.com/jinzhu/gorm/dialects/postgres&#34;</span>
-</span></span><span style="display:flex;"><span>	<span style="font-style:italic">&#34;github.com/jinzhu/gorm&#34;</span>
-</span></span><span style="display:flex;"><span>	<span style="font-style:italic">&#34;os&#34;</span>
-</span></span><span style="display:flex;"><span>	<span style="font-style:italic">&#34;github.com/joho/godotenv&#34;</span>
-</span></span><span style="display:flex;"><span>	<span style="font-style:italic">&#34;fmt&#34;</span>
-</span></span><span style="display:flex;"><span>)
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="font-weight:bold">var</span> db *gorm.DB <span style="font-style:italic">//database</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="font-weight:bold">func</span> init() {
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	e := godotenv.Load() <span style="font-style:italic">//Load .env file</span>
-</span></span><span style="display:flex;"><span>	<span style="font-weight:bold">if</span> e != <span style="font-weight:bold">nil</span> {
-</span></span><span style="display:flex;"><span>		fmt.Print(e)
-</span></span><span style="display:flex;"><span>	}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	username := os.Getenv(<span style="font-style:italic">&#34;db_user&#34;</span>)
-</span></span><span style="display:flex;"><span>	password := os.Getenv(<span style="font-style:italic">&#34;db_pass&#34;</span>)
-</span></span><span style="display:flex;"><span>	dbName := os.Getenv(<span style="font-style:italic">&#34;db_name&#34;</span>)
-</span></span><span style="display:flex;"><span>	dbHost := os.Getenv(<span style="font-style:italic">&#34;db_host&#34;</span>)
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	dbUri := fmt.Sprintf(<span style="font-style:italic">&#34;host=%s user=%s dbname=%s sslmode=disable password=%s&#34;</span>, dbHost, username, dbName, password) <span style="font-style:italic">//Build connection string</span>
-</span></span><span style="display:flex;"><span>	fmt.Println(dbUri)
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	conn, err := gorm.Open(<span style="font-style:italic">&#34;postgres&#34;</span>, dbUri)
-</span></span><span style="display:flex;"><span>	<span style="font-weight:bold">if</span> err != <span style="font-weight:bold">nil</span> {
-</span></span><span style="display:flex;"><span>		fmt.Print(err)
-</span></span><span style="display:flex;"><span>	}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	db = conn
-</span></span><span style="display:flex;"><span>	db.Debug().AutoMigrate(&amp;Account{}, &amp;Contact{}) <span style="font-style:italic">//Database migration</span>
-</span></span><span style="display:flex;"><span>}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="font-style:italic">//returns a handle to the DB object</span>
-</span></span><span style="display:flex;"><span><span style="font-weight:bold">func</span> GetDB() *gorm.DB {
-</span></span><span style="display:flex;"><span>	<span style="font-weight:bold">return</span> db
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><p>The code does a very simple thing, on the file init() function — init() automatically get called by Go, the code retrieve connection information from .env file then build a connection string and use it to connect to the database.</p>
-<h3 class="heading" id="creating-the-application-entry-point">
-  Creating the application entry point
-  <a class="anchor" href="#creating-the-application-entry-point">#</a>
-</h3>
-<p>So far, we’ve been able to create the JWT middleware and connect to our database. The next thing is creating the application’s entry point, see the code snippet below</p>
-<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="font-weight:bold">package</span> main
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="font-weight:bold">import</span> (
-</span></span><span style="display:flex;"><span>	<span style="font-style:italic">&#34;github.com/gorilla/mux&#34;</span>
-</span></span><span style="display:flex;"><span>	<span style="font-style:italic">&#34;go-contacts/app&#34;</span>
-</span></span><span style="display:flex;"><span>	<span style="font-style:italic">&#34;os&#34;</span>
-</span></span><span style="display:flex;"><span>	<span style="font-style:italic">&#34;fmt&#34;</span>
-</span></span><span style="display:flex;"><span>	<span style="font-style:italic">&#34;net/http&#34;</span>
-</span></span><span style="display:flex;"><span>)
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="font-weight:bold">func</span> main() {
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	router := mux.NewRouter()
-</span></span><span style="display:flex;"><span>	router.Use(app.JwtAuthentication) <span style="font-style:italic">//attach JWT auth middleware</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	port := os.Getenv(<span style="font-style:italic">&#34;PORT&#34;</span>) <span style="font-style:italic">//Get port from .env file, we did not specify any port so this should return an empty string when tested locally</span>
-</span></span><span style="display:flex;"><span>	<span style="font-weight:bold">if</span> port == <span style="font-style:italic">&#34;&#34;</span> {
-</span></span><span style="display:flex;"><span>		port = <span style="font-style:italic">&#34;8000&#34;</span> <span style="font-style:italic">//localhost</span>
-</span></span><span style="display:flex;"><span>	}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	fmt.Println(port)
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	err := http.ListenAndServe(<span style="font-style:italic">&#34;:&#34;</span> + port, router) <span style="font-style:italic">//Launch the app, visit localhost:8000/api</span>
-</span></span><span style="display:flex;"><span>	<span style="font-weight:bold">if</span> err != <span style="font-weight:bold">nil</span> {
-</span></span><span style="display:flex;"><span>		fmt.Print(err)
-</span></span><span style="display:flex;"><span>	}
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><p>We create a new Router object — line 13, we attach our JWT auth middleware using router’s Use() function — line 14, and then we proceed to start listening for incoming requests.</p>
-<p>
-
-
-
-
-
-
-
-
-
-
-
-<figure class="">
-
-    <div class="img-container" >
-        <img loading="lazy" alt="" src="https://cdn-images-1.medium.com/max/2000/1*O_eTZ7RGS0uxNHpfmKPORA.png" >
-    </div>
-
-    
-</figure>
-</p>
-<p>Use the small media play button located left of func main() to compile and launch the app, if all is good, you should see no error in the console, in case there was an error, take a second look at your database connection parameters to see that they correlate.</p>
-<p>
-
-
-
-
-
-
-
-
-
-
-
-<figure class="">
-
-    <div class="img-container" >
-        <img loading="lazy" alt="Results. DB migrations has occurred, GORM converted go struct to database tables" src="https://cdn-images-1.medium.com/max/2732/1*Fdq9mK_pk92jfB8YjF5qgw.png" >
-    </div>
-
-    
-</figure>
-<em>Results. DB migrations has occurred, GORM converted go struct to database tables</em></p>
-<h3 class="heading" id="creating-and-authenticating-users">
-  Creating and authenticating Users
-  <a class="anchor" href="#creating-and-authenticating-users">#</a>
-</h3>
-<p>create a new file models/accounts.go,</p>
-<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="font-weight:bold">package</span> models
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="font-weight:bold">import</span> (
-</span></span><span style="display:flex;"><span>	<span style="font-style:italic">&#34;github.com/dgrijalva/jwt-go&#34;</span>
-</span></span><span style="display:flex;"><span>	u <span style="font-style:italic">&#34;lens/utils&#34;</span>
-</span></span><span style="display:flex;"><span>	<span style="font-style:italic">&#34;strings&#34;</span>
-</span></span><span style="display:flex;"><span>	<span style="font-style:italic">&#34;github.com/jinzhu/gorm&#34;</span>
-</span></span><span style="display:flex;"><span>	<span style="font-style:italic">&#34;os&#34;</span>
-</span></span><span style="display:flex;"><span>	<span style="font-style:italic">&#34;golang.org/x/crypto/bcrypt&#34;</span>
-</span></span><span style="display:flex;"><span>)
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="font-style:italic">/*
-</span></span></span><span style="display:flex;"><span><span style="font-style:italic">JWT claims struct
-</span></span></span><span style="display:flex;"><span><span style="font-style:italic">*/</span>
-</span></span><span style="display:flex;"><span><span style="font-weight:bold">type</span> Token <span style="font-weight:bold">struct</span> {
-</span></span><span style="display:flex;"><span>	UserId <span style="">uint</span>
-</span></span><span style="display:flex;"><span>	jwt.StandardClaims
-</span></span><span style="display:flex;"><span>}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="font-style:italic">//a struct to rep user account</span>
-</span></span><span style="display:flex;"><span><span style="font-weight:bold">type</span> Account <span style="font-weight:bold">struct</span> {
-</span></span><span style="display:flex;"><span>	gorm.Model
-</span></span><span style="display:flex;"><span>	Email <span style="">string</span> <span style="font-style:italic">`json:&#34;email&#34;`</span>
-</span></span><span style="display:flex;"><span>	Password <span style="">string</span> <span style="font-style:italic">`json:&#34;password&#34;`</span>
-</span></span><span style="display:flex;"><span>	Token <span style="">string</span> <span style="font-style:italic">`json:&#34;token&#34;;sql:&#34;-&#34;`</span>
-</span></span><span style="display:flex;"><span>}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="font-style:italic">//Validate incoming user details...</span>
-</span></span><span style="display:flex;"><span><span style="font-weight:bold">func</span> (account *Account) Validate() (<span style="font-weight:bold">map</span>[<span style="">string</span>] <span style="font-weight:bold">interface</span>{}, <span style="">bool</span>) {
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	<span style="font-weight:bold">if</span> !strings.Contains(account.Email, <span style="font-style:italic">&#34;@&#34;</span>) {
-</span></span><span style="display:flex;"><span>		<span style="font-weight:bold">return</span> u.Message(<span style="font-weight:bold">false</span>, <span style="font-style:italic">&#34;Email address is required&#34;</span>), <span style="font-weight:bold">false</span>
-</span></span><span style="display:flex;"><span>	}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	<span style="font-weight:bold">if</span> len(account.Password) &lt; 6 {
-</span></span><span style="display:flex;"><span>		<span style="font-weight:bold">return</span> u.Message(<span style="font-weight:bold">false</span>, <span style="font-style:italic">&#34;Password is required&#34;</span>), <span style="font-weight:bold">false</span>
-</span></span><span style="display:flex;"><span>	}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	<span style="font-style:italic">//Email must be unique</span>
-</span></span><span style="display:flex;"><span>	temp := &amp;Account{}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	<span style="font-style:italic">//check for errors and duplicate emails</span>
-</span></span><span style="display:flex;"><span>	err := GetDB().Table(<span style="font-style:italic">&#34;accounts&#34;</span>).Where(<span style="font-style:italic">&#34;email = ?&#34;</span>, account.Email).First(temp).Error
-</span></span><span style="display:flex;"><span>	<span style="font-weight:bold">if</span> err != <span style="font-weight:bold">nil</span> &amp;&amp; err != gorm.ErrRecordNotFound {
-</span></span><span style="display:flex;"><span>		<span style="font-weight:bold">return</span> u.Message(<span style="font-weight:bold">false</span>, <span style="font-style:italic">&#34;Connection error. Please retry&#34;</span>), <span style="font-weight:bold">false</span>
-</span></span><span style="display:flex;"><span>	}
-</span></span><span style="display:flex;"><span>	<span style="font-weight:bold">if</span> temp.Email != <span style="font-style:italic">&#34;&#34;</span> {
-</span></span><span style="display:flex;"><span>		<span style="font-weight:bold">return</span> u.Message(<span style="font-weight:bold">false</span>, <span style="font-style:italic">&#34;Email address already in use by another user.&#34;</span>), <span style="font-weight:bold">false</span>
-</span></span><span style="display:flex;"><span>	}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	<span style="font-weight:bold">return</span> u.Message(<span style="font-weight:bold">false</span>, <span style="font-style:italic">&#34;Requirement passed&#34;</span>), <span style="font-weight:bold">true</span>
-</span></span><span style="display:flex;"><span>}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="font-weight:bold">func</span> (account *Account) Create() (<span style="font-weight:bold">map</span>[<span style="">string</span>] <span style="font-weight:bold">interface</span>{}) {
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	<span style="font-weight:bold">if</span> resp, ok := account.Validate(); !ok {
-</span></span><span style="display:flex;"><span>		<span style="font-weight:bold">return</span> resp
-</span></span><span style="display:flex;"><span>	}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(account.Password), bcrypt.DefaultCost)
-</span></span><span style="display:flex;"><span>	account.Password = string(hashedPassword)
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	GetDB().Create(account)
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	<span style="font-weight:bold">if</span> account.ID &lt;= 0 {
-</span></span><span style="display:flex;"><span>		<span style="font-weight:bold">return</span> u.Message(<span style="font-weight:bold">false</span>, <span style="font-style:italic">&#34;Failed to create account, connection error.&#34;</span>)
-</span></span><span style="display:flex;"><span>	}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	<span style="font-style:italic">//Create new JWT token for the newly registered account</span>
-</span></span><span style="display:flex;"><span>	tk := &amp;Token{UserId: account.ID}
-</span></span><span style="display:flex;"><span>	token := jwt.NewWithClaims(jwt.GetSigningMethod(<span style="font-style:italic">&#34;HS256&#34;</span>), tk)
-</span></span><span style="display:flex;"><span>	tokenString, _ := token.SignedString([]byte(os.Getenv(<span style="font-style:italic">&#34;token_password&#34;</span>)))
-</span></span><span style="display:flex;"><span>	account.Token = tokenString
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	account.Password = <span style="font-style:italic">&#34;&#34;</span> <span style="font-style:italic">//delete password</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	response := u.Message(<span style="font-weight:bold">true</span>, <span style="font-style:italic">&#34;Account has been created&#34;</span>)
-</span></span><span style="display:flex;"><span>	response[<span style="font-style:italic">&#34;account&#34;</span>] = account
-</span></span><span style="display:flex;"><span>	<span style="font-weight:bold">return</span> response
-</span></span><span style="display:flex;"><span>}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="font-weight:bold">func</span> Login(email, password <span style="">string</span>) (<span style="font-weight:bold">map</span>[<span style="">string</span>]<span style="font-weight:bold">interface</span>{}) {
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	account := &amp;Account{}
-</span></span><span style="display:flex;"><span>	err := GetDB().Table(<span style="font-style:italic">&#34;accounts&#34;</span>).Where(<span style="font-style:italic">&#34;email = ?&#34;</span>, email).First(account).Error
-</span></span><span style="display:flex;"><span>	<span style="font-weight:bold">if</span> err != <span style="font-weight:bold">nil</span> {
-</span></span><span style="display:flex;"><span>		<span style="font-weight:bold">if</span> err == gorm.ErrRecordNotFound {
-</span></span><span style="display:flex;"><span>			<span style="font-weight:bold">return</span> u.Message(<span style="font-weight:bold">false</span>, <span style="font-style:italic">&#34;Email address not found&#34;</span>)
-</span></span><span style="display:flex;"><span>		}
-</span></span><span style="display:flex;"><span>		<span style="font-weight:bold">return</span> u.Message(<span style="font-weight:bold">false</span>, <span style="font-style:italic">&#34;Connection error. Please retry&#34;</span>)
-</span></span><span style="display:flex;"><span>	}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	err = bcrypt.CompareHashAndPassword([]byte(account.Password), []byte(password))
-</span></span><span style="display:flex;"><span>	<span style="font-weight:bold">if</span> err != <span style="font-weight:bold">nil</span> &amp;&amp; err == bcrypt.ErrMismatchedHashAndPassword { <span style="font-style:italic">//Password does not match!</span>
-</span></span><span style="display:flex;"><span>		<span style="font-weight:bold">return</span> u.Message(<span style="font-weight:bold">false</span>, <span style="font-style:italic">&#34;Invalid login credentials. Please try again&#34;</span>)
-</span></span><span style="display:flex;"><span>	}
-</span></span><span style="display:flex;"><span>	<span style="font-style:italic">//Worked! Logged In</span>
-</span></span><span style="display:flex;"><span>	account.Password = <span style="font-style:italic">&#34;&#34;</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	<span style="font-style:italic">//Create JWT token</span>
-</span></span><span style="display:flex;"><span>	tk := &amp;Token{UserId: account.ID}
-</span></span><span style="display:flex;"><span>	token := jwt.NewWithClaims(jwt.GetSigningMethod(<span style="font-style:italic">&#34;HS256&#34;</span>), tk)
-</span></span><span style="display:flex;"><span>	tokenString, _ := token.SignedString([]byte(os.Getenv(<span style="font-style:italic">&#34;token_password&#34;</span>)))
-</span></span><span style="display:flex;"><span>	account.Token = tokenString <span style="font-style:italic">//Store the token in the response</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	resp := u.Message(<span style="font-weight:bold">true</span>, <span style="font-style:italic">&#34;Logged In&#34;</span>)
-</span></span><span style="display:flex;"><span>	resp[<span style="font-style:italic">&#34;account&#34;</span>] = account
-</span></span><span style="display:flex;"><span>	<span style="font-weight:bold">return</span> resp
-</span></span><span style="display:flex;"><span>}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="font-weight:bold">func</span> GetUser(u <span style="">uint</span>) *Account {
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	acc := &amp;Account{}
-</span></span><span style="display:flex;"><span>	GetDB().Table(<span style="font-style:italic">&#34;accounts&#34;</span>).Where(<span style="font-style:italic">&#34;id = ?&#34;</span>, u).First(acc)
-</span></span><span style="display:flex;"><span>	<span style="font-weight:bold">if</span> acc.Email == <span style="font-style:italic">&#34;&#34;</span> { <span style="font-style:italic">//User not found!</span>
-</span></span><span style="display:flex;"><span>		<span style="font-weight:bold">return</span> <span style="font-weight:bold">nil</span>
-</span></span><span style="display:flex;"><span>	}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	acc.Password = <span style="font-style:italic">&#34;&#34;</span>
-</span></span><span style="display:flex;"><span>	<span style="font-weight:bold">return</span> acc
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><p>There is a lot of puzzle inside accounts.go, lets break it down a little bit.</p>
-<p>The first part create two structs Token and Account they represent a JWT token claim and a user account respectively. Function Validate() validates the data sent from clients and function Create() creates a new account and generate a JWT token that will be sent back to client that made the request. Function Login(username, password) authenticate an existing user, then generate a JWT token if authentication was successful.</p>
-<p><strong>authController.go</strong></p>
-<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="font-weight:bold">package</span> controllers
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="font-weight:bold">import</span> (
-</span></span><span style="display:flex;"><span>	<span style="font-style:italic">&#34;net/http&#34;</span>
-</span></span><span style="display:flex;"><span>	u <span style="font-style:italic">&#34;go-contacts/utils&#34;</span>
-</span></span><span style="display:flex;"><span>	<span style="font-style:italic">&#34;go-contacts/models&#34;</span>
-</span></span><span style="display:flex;"><span>	<span style="font-style:italic">&#34;encoding/json&#34;</span>
-</span></span><span style="display:flex;"><span>)
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="font-weight:bold">var</span> CreateAccount = <span style="font-weight:bold">func</span>(w http.ResponseWriter, r *http.Request) {
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	account := &amp;models.Account{}
-</span></span><span style="display:flex;"><span>	err := json.NewDecoder(r.Body).Decode(account) <span style="font-style:italic">//decode the request body into struct and failed if any error occur</span>
-</span></span><span style="display:flex;"><span>	<span style="font-weight:bold">if</span> err != <span style="font-weight:bold">nil</span> {
-</span></span><span style="display:flex;"><span>		u.Respond(w, u.Message(<span style="font-weight:bold">false</span>, <span style="font-style:italic">&#34;Invalid request&#34;</span>))
-</span></span><span style="display:flex;"><span>		<span style="font-weight:bold">return</span>
-</span></span><span style="display:flex;"><span>	}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	resp := account.Create() <span style="font-style:italic">//Create account</span>
-</span></span><span style="display:flex;"><span>	u.Respond(w, resp)
-</span></span><span style="display:flex;"><span>}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="font-weight:bold">var</span> Authenticate = <span style="font-weight:bold">func</span>(w http.ResponseWriter, r *http.Request) {
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	account := &amp;models.Account{}
-</span></span><span style="display:flex;"><span>	err := json.NewDecoder(r.Body).Decode(account) <span style="font-style:italic">//decode the request body into struct and failed if any error occur</span>
-</span></span><span style="display:flex;"><span>	<span style="font-weight:bold">if</span> err != <span style="font-weight:bold">nil</span> {
-</span></span><span style="display:flex;"><span>		u.Respond(w, u.Message(<span style="font-weight:bold">false</span>, <span style="font-style:italic">&#34;Invalid request&#34;</span>))
-</span></span><span style="display:flex;"><span>		<span style="font-weight:bold">return</span>
-</span></span><span style="display:flex;"><span>	}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	resp := models.Login(account.Email, account.Password)
-</span></span><span style="display:flex;"><span>	u.Respond(w, resp)
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><p>The content is very straightforward. It contains the handler for /user/new and /user/login endpoints.</p>
-<p>Add the following snippet to main.go to register our new routes</p>
-<pre><code>router.HandleFunc(**&quot;/api/user/new&quot;**, controllers.CreateAccount).Methods(**&quot;POST&quot;**)
+</code></pre><p>Then, we can connect to the database using the following snippets</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=font-weight:700>package</span> models
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=font-weight:700>import</span> (
+</span></span><span style=display:flex><span>	_ <span style=font-style:italic>&#34;github.com/jinzhu/gorm/dialects/postgres&#34;</span>
+</span></span><span style=display:flex><span>	<span style=font-style:italic>&#34;github.com/jinzhu/gorm&#34;</span>
+</span></span><span style=display:flex><span>	<span style=font-style:italic>&#34;os&#34;</span>
+</span></span><span style=display:flex><span>	<span style=font-style:italic>&#34;github.com/joho/godotenv&#34;</span>
+</span></span><span style=display:flex><span>	<span style=font-style:italic>&#34;fmt&#34;</span>
+</span></span><span style=display:flex><span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=font-weight:700>var</span> db *gorm.DB <span style=font-style:italic>//database</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=font-weight:700>func</span> init() {
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	e := godotenv.Load() <span style=font-style:italic>//Load .env file</span>
+</span></span><span style=display:flex><span>	<span style=font-weight:700>if</span> e != <span style=font-weight:700>nil</span> {
+</span></span><span style=display:flex><span>		fmt.Print(e)
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	username := os.Getenv(<span style=font-style:italic>&#34;db_user&#34;</span>)
+</span></span><span style=display:flex><span>	password := os.Getenv(<span style=font-style:italic>&#34;db_pass&#34;</span>)
+</span></span><span style=display:flex><span>	dbName := os.Getenv(<span style=font-style:italic>&#34;db_name&#34;</span>)
+</span></span><span style=display:flex><span>	dbHost := os.Getenv(<span style=font-style:italic>&#34;db_host&#34;</span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	dbUri := fmt.Sprintf(<span style=font-style:italic>&#34;host=%s user=%s dbname=%s sslmode=disable password=%s&#34;</span>, dbHost, username, dbName, password) <span style=font-style:italic>//Build connection string</span>
+</span></span><span style=display:flex><span>	fmt.Println(dbUri)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	conn, err := gorm.Open(<span style=font-style:italic>&#34;postgres&#34;</span>, dbUri)
+</span></span><span style=display:flex><span>	<span style=font-weight:700>if</span> err != <span style=font-weight:700>nil</span> {
+</span></span><span style=display:flex><span>		fmt.Print(err)
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	db = conn
+</span></span><span style=display:flex><span>	db.Debug().AutoMigrate(&amp;Account{}, &amp;Contact{}) <span style=font-style:italic>//Database migration</span>
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=font-style:italic>//returns a handle to the DB object</span>
+</span></span><span style=display:flex><span><span style=font-weight:700>func</span> GetDB() *gorm.DB {
+</span></span><span style=display:flex><span>	<span style=font-weight:700>return</span> db
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>The code does a very simple thing, on the file init() function — init() automatically get called by Go, the code retrieve connection information from .env file then build a connection string and use it to connect to the database.</p><h3 id=creating-the-application-entry-point>Creating the application entry point</h3><p>So far, we’ve been able to create the JWT middleware and connect to our database. The next thing is creating the application’s entry point, see the code snippet below</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=font-weight:700>package</span> main
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=font-weight:700>import</span> (
+</span></span><span style=display:flex><span>	<span style=font-style:italic>&#34;github.com/gorilla/mux&#34;</span>
+</span></span><span style=display:flex><span>	<span style=font-style:italic>&#34;go-contacts/app&#34;</span>
+</span></span><span style=display:flex><span>	<span style=font-style:italic>&#34;os&#34;</span>
+</span></span><span style=display:flex><span>	<span style=font-style:italic>&#34;fmt&#34;</span>
+</span></span><span style=display:flex><span>	<span style=font-style:italic>&#34;net/http&#34;</span>
+</span></span><span style=display:flex><span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=font-weight:700>func</span> main() {
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	router := mux.NewRouter()
+</span></span><span style=display:flex><span>	router.Use(app.JwtAuthentication) <span style=font-style:italic>//attach JWT auth middleware</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	port := os.Getenv(<span style=font-style:italic>&#34;PORT&#34;</span>) <span style=font-style:italic>//Get port from .env file, we did not specify any port so this should return an empty string when tested locally</span>
+</span></span><span style=display:flex><span>	<span style=font-weight:700>if</span> port == <span style=font-style:italic>&#34;&#34;</span> {
+</span></span><span style=display:flex><span>		port = <span style=font-style:italic>&#34;8000&#34;</span> <span style=font-style:italic>//localhost</span>
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	fmt.Println(port)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	err := http.ListenAndServe(<span style=font-style:italic>&#34;:&#34;</span> + port, router) <span style=font-style:italic>//Launch the app, visit localhost:8000/api</span>
+</span></span><span style=display:flex><span>	<span style=font-weight:700>if</span> err != <span style=font-weight:700>nil</span> {
+</span></span><span style=display:flex><span>		fmt.Print(err)
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>We create a new Router object — line 13, we attach our JWT auth middleware using router’s Use() function — line 14, and then we proceed to start listening for incoming requests.</p><p><img src=https://cdn-images-1.medium.com/max/2000/1*O_eTZ7RGS0uxNHpfmKPORA.png alt></p><p>Use the small media play button located left of func main() to compile and launch the app, if all is good, you should see no error in the console, in case there was an error, take a second look at your database connection parameters to see that they correlate.</p><p><img src=https://cdn-images-1.medium.com/max/2732/1*Fdq9mK_pk92jfB8YjF5qgw.png alt="Results. DB migrations has occurred, GORM converted go struct to database tables"><em>Results. DB migrations has occurred, GORM converted go struct to database tables</em></p><h3 id=creating-and-authenticating-users>Creating and authenticating Users</h3><p>create a new file models/accounts.go,</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=font-weight:700>package</span> models
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=font-weight:700>import</span> (
+</span></span><span style=display:flex><span>	<span style=font-style:italic>&#34;github.com/dgrijalva/jwt-go&#34;</span>
+</span></span><span style=display:flex><span>	u <span style=font-style:italic>&#34;lens/utils&#34;</span>
+</span></span><span style=display:flex><span>	<span style=font-style:italic>&#34;strings&#34;</span>
+</span></span><span style=display:flex><span>	<span style=font-style:italic>&#34;github.com/jinzhu/gorm&#34;</span>
+</span></span><span style=display:flex><span>	<span style=font-style:italic>&#34;os&#34;</span>
+</span></span><span style=display:flex><span>	<span style=font-style:italic>&#34;golang.org/x/crypto/bcrypt&#34;</span>
+</span></span><span style=display:flex><span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=font-style:italic>/*
+</span></span></span><span style=display:flex><span><span style=font-style:italic>JWT claims struct
+</span></span></span><span style=display:flex><span><span style=font-style:italic>*/</span>
+</span></span><span style=display:flex><span><span style=font-weight:700>type</span> Token <span style=font-weight:700>struct</span> {
+</span></span><span style=display:flex><span>	UserId <span>uint</span>
+</span></span><span style=display:flex><span>	jwt.StandardClaims
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=font-style:italic>//a struct to rep user account</span>
+</span></span><span style=display:flex><span><span style=font-weight:700>type</span> Account <span style=font-weight:700>struct</span> {
+</span></span><span style=display:flex><span>	gorm.Model
+</span></span><span style=display:flex><span>	Email <span>string</span> <span style=font-style:italic>`json:&#34;email&#34;`</span>
+</span></span><span style=display:flex><span>	Password <span>string</span> <span style=font-style:italic>`json:&#34;password&#34;`</span>
+</span></span><span style=display:flex><span>	Token <span>string</span> <span style=font-style:italic>`json:&#34;token&#34;;sql:&#34;-&#34;`</span>
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=font-style:italic>//Validate incoming user details...</span>
+</span></span><span style=display:flex><span><span style=font-weight:700>func</span> (account *Account) Validate() (<span style=font-weight:700>map</span>[<span>string</span>] <span style=font-weight:700>interface</span>{}, <span>bool</span>) {
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=font-weight:700>if</span> !strings.Contains(account.Email, <span style=font-style:italic>&#34;@&#34;</span>) {
+</span></span><span style=display:flex><span>		<span style=font-weight:700>return</span> u.Message(<span style=font-weight:700>false</span>, <span style=font-style:italic>&#34;Email address is required&#34;</span>), <span style=font-weight:700>false</span>
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=font-weight:700>if</span> len(account.Password) &lt; 6 {
+</span></span><span style=display:flex><span>		<span style=font-weight:700>return</span> u.Message(<span style=font-weight:700>false</span>, <span style=font-style:italic>&#34;Password is required&#34;</span>), <span style=font-weight:700>false</span>
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=font-style:italic>//Email must be unique</span>
+</span></span><span style=display:flex><span>	temp := &amp;Account{}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=font-style:italic>//check for errors and duplicate emails</span>
+</span></span><span style=display:flex><span>	err := GetDB().Table(<span style=font-style:italic>&#34;accounts&#34;</span>).Where(<span style=font-style:italic>&#34;email = ?&#34;</span>, account.Email).First(temp).Error
+</span></span><span style=display:flex><span>	<span style=font-weight:700>if</span> err != <span style=font-weight:700>nil</span> &amp;&amp; err != gorm.ErrRecordNotFound {
+</span></span><span style=display:flex><span>		<span style=font-weight:700>return</span> u.Message(<span style=font-weight:700>false</span>, <span style=font-style:italic>&#34;Connection error. Please retry&#34;</span>), <span style=font-weight:700>false</span>
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>	<span style=font-weight:700>if</span> temp.Email != <span style=font-style:italic>&#34;&#34;</span> {
+</span></span><span style=display:flex><span>		<span style=font-weight:700>return</span> u.Message(<span style=font-weight:700>false</span>, <span style=font-style:italic>&#34;Email address already in use by another user.&#34;</span>), <span style=font-weight:700>false</span>
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=font-weight:700>return</span> u.Message(<span style=font-weight:700>false</span>, <span style=font-style:italic>&#34;Requirement passed&#34;</span>), <span style=font-weight:700>true</span>
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=font-weight:700>func</span> (account *Account) Create() (<span style=font-weight:700>map</span>[<span>string</span>] <span style=font-weight:700>interface</span>{}) {
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=font-weight:700>if</span> resp, ok := account.Validate(); !ok {
+</span></span><span style=display:flex><span>		<span style=font-weight:700>return</span> resp
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(account.Password), bcrypt.DefaultCost)
+</span></span><span style=display:flex><span>	account.Password = string(hashedPassword)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	GetDB().Create(account)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=font-weight:700>if</span> account.ID &lt;= 0 {
+</span></span><span style=display:flex><span>		<span style=font-weight:700>return</span> u.Message(<span style=font-weight:700>false</span>, <span style=font-style:italic>&#34;Failed to create account, connection error.&#34;</span>)
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=font-style:italic>//Create new JWT token for the newly registered account</span>
+</span></span><span style=display:flex><span>	tk := &amp;Token{UserId: account.ID}
+</span></span><span style=display:flex><span>	token := jwt.NewWithClaims(jwt.GetSigningMethod(<span style=font-style:italic>&#34;HS256&#34;</span>), tk)
+</span></span><span style=display:flex><span>	tokenString, _ := token.SignedString([]byte(os.Getenv(<span style=font-style:italic>&#34;token_password&#34;</span>)))
+</span></span><span style=display:flex><span>	account.Token = tokenString
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	account.Password = <span style=font-style:italic>&#34;&#34;</span> <span style=font-style:italic>//delete password</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	response := u.Message(<span style=font-weight:700>true</span>, <span style=font-style:italic>&#34;Account has been created&#34;</span>)
+</span></span><span style=display:flex><span>	response[<span style=font-style:italic>&#34;account&#34;</span>] = account
+</span></span><span style=display:flex><span>	<span style=font-weight:700>return</span> response
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=font-weight:700>func</span> Login(email, password <span>string</span>) (<span style=font-weight:700>map</span>[<span>string</span>]<span style=font-weight:700>interface</span>{}) {
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	account := &amp;Account{}
+</span></span><span style=display:flex><span>	err := GetDB().Table(<span style=font-style:italic>&#34;accounts&#34;</span>).Where(<span style=font-style:italic>&#34;email = ?&#34;</span>, email).First(account).Error
+</span></span><span style=display:flex><span>	<span style=font-weight:700>if</span> err != <span style=font-weight:700>nil</span> {
+</span></span><span style=display:flex><span>		<span style=font-weight:700>if</span> err == gorm.ErrRecordNotFound {
+</span></span><span style=display:flex><span>			<span style=font-weight:700>return</span> u.Message(<span style=font-weight:700>false</span>, <span style=font-style:italic>&#34;Email address not found&#34;</span>)
+</span></span><span style=display:flex><span>		}
+</span></span><span style=display:flex><span>		<span style=font-weight:700>return</span> u.Message(<span style=font-weight:700>false</span>, <span style=font-style:italic>&#34;Connection error. Please retry&#34;</span>)
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	err = bcrypt.CompareHashAndPassword([]byte(account.Password), []byte(password))
+</span></span><span style=display:flex><span>	<span style=font-weight:700>if</span> err != <span style=font-weight:700>nil</span> &amp;&amp; err == bcrypt.ErrMismatchedHashAndPassword { <span style=font-style:italic>//Password does not match!</span>
+</span></span><span style=display:flex><span>		<span style=font-weight:700>return</span> u.Message(<span style=font-weight:700>false</span>, <span style=font-style:italic>&#34;Invalid login credentials. Please try again&#34;</span>)
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>	<span style=font-style:italic>//Worked! Logged In</span>
+</span></span><span style=display:flex><span>	account.Password = <span style=font-style:italic>&#34;&#34;</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=font-style:italic>//Create JWT token</span>
+</span></span><span style=display:flex><span>	tk := &amp;Token{UserId: account.ID}
+</span></span><span style=display:flex><span>	token := jwt.NewWithClaims(jwt.GetSigningMethod(<span style=font-style:italic>&#34;HS256&#34;</span>), tk)
+</span></span><span style=display:flex><span>	tokenString, _ := token.SignedString([]byte(os.Getenv(<span style=font-style:italic>&#34;token_password&#34;</span>)))
+</span></span><span style=display:flex><span>	account.Token = tokenString <span style=font-style:italic>//Store the token in the response</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	resp := u.Message(<span style=font-weight:700>true</span>, <span style=font-style:italic>&#34;Logged In&#34;</span>)
+</span></span><span style=display:flex><span>	resp[<span style=font-style:italic>&#34;account&#34;</span>] = account
+</span></span><span style=display:flex><span>	<span style=font-weight:700>return</span> resp
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=font-weight:700>func</span> GetUser(u <span>uint</span>) *Account {
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	acc := &amp;Account{}
+</span></span><span style=display:flex><span>	GetDB().Table(<span style=font-style:italic>&#34;accounts&#34;</span>).Where(<span style=font-style:italic>&#34;id = ?&#34;</span>, u).First(acc)
+</span></span><span style=display:flex><span>	<span style=font-weight:700>if</span> acc.Email == <span style=font-style:italic>&#34;&#34;</span> { <span style=font-style:italic>//User not found!</span>
+</span></span><span style=display:flex><span>		<span style=font-weight:700>return</span> <span style=font-weight:700>nil</span>
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	acc.Password = <span style=font-style:italic>&#34;&#34;</span>
+</span></span><span style=display:flex><span>	<span style=font-weight:700>return</span> acc
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>There is a lot of puzzle inside accounts.go, lets break it down a little bit.</p><p>The first part create two structs Token and Account they represent a JWT token claim and a user account respectively. Function Validate() validates the data sent from clients and function Create() creates a new account and generate a JWT token that will be sent back to client that made the request. Function Login(username, password) authenticate an existing user, then generate a JWT token if authentication was successful.</p><p><strong>authController.go</strong></p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=font-weight:700>package</span> controllers
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=font-weight:700>import</span> (
+</span></span><span style=display:flex><span>	<span style=font-style:italic>&#34;net/http&#34;</span>
+</span></span><span style=display:flex><span>	u <span style=font-style:italic>&#34;go-contacts/utils&#34;</span>
+</span></span><span style=display:flex><span>	<span style=font-style:italic>&#34;go-contacts/models&#34;</span>
+</span></span><span style=display:flex><span>	<span style=font-style:italic>&#34;encoding/json&#34;</span>
+</span></span><span style=display:flex><span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=font-weight:700>var</span> CreateAccount = <span style=font-weight:700>func</span>(w http.ResponseWriter, r *http.Request) {
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	account := &amp;models.Account{}
+</span></span><span style=display:flex><span>	err := json.NewDecoder(r.Body).Decode(account) <span style=font-style:italic>//decode the request body into struct and failed if any error occur</span>
+</span></span><span style=display:flex><span>	<span style=font-weight:700>if</span> err != <span style=font-weight:700>nil</span> {
+</span></span><span style=display:flex><span>		u.Respond(w, u.Message(<span style=font-weight:700>false</span>, <span style=font-style:italic>&#34;Invalid request&#34;</span>))
+</span></span><span style=display:flex><span>		<span style=font-weight:700>return</span>
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	resp := account.Create() <span style=font-style:italic>//Create account</span>
+</span></span><span style=display:flex><span>	u.Respond(w, resp)
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=font-weight:700>var</span> Authenticate = <span style=font-weight:700>func</span>(w http.ResponseWriter, r *http.Request) {
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	account := &amp;models.Account{}
+</span></span><span style=display:flex><span>	err := json.NewDecoder(r.Body).Decode(account) <span style=font-style:italic>//decode the request body into struct and failed if any error occur</span>
+</span></span><span style=display:flex><span>	<span style=font-weight:700>if</span> err != <span style=font-weight:700>nil</span> {
+</span></span><span style=display:flex><span>		u.Respond(w, u.Message(<span style=font-weight:700>false</span>, <span style=font-style:italic>&#34;Invalid request&#34;</span>))
+</span></span><span style=display:flex><span>		<span style=font-weight:700>return</span>
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	resp := models.Login(account.Email, account.Password)
+</span></span><span style=display:flex><span>	u.Respond(w, resp)
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>The content is very straightforward. It contains the handler for /user/new and /user/login endpoints.</p><p>Add the following snippet to main.go to register our new routes</p><pre><code>router.HandleFunc(**&quot;/api/user/new&quot;**, controllers.CreateAccount).Methods(**&quot;POST&quot;**)
 
 router.HandleFunc(**&quot;/api/user/login&quot;**, controllers.Authenticate).Methods(**&quot;POST&quot;**)
-</code></pre>
-<p>The above code register both /user/new and /user/login endpoints and pass their corresponding request handlers.</p>
-<p>Now, recompile the code and visit localhost:8000/api/user/new using postman, set the request body to application/json as shown below</p>
-<p>
-
-
-
-
-
-
-
-
-
-
-
-<figure class="">
-
-    <div class="img-container" >
-        <img loading="lazy" alt="Response from /user/new" src="https://cdn-images-1.medium.com/max/2732/1*yzjtBq5zMPrgy0GN5sQKng.png" >
-    </div>
-
-    
-</figure>
-<em>Response from /user/new</em></p>
-<p>If you try to call /user/new twice with the same payload, you’ll receive a response that the email already exists, works according to our instructions.</p>
-<h3 class="heading" id="creating-contacts">
-  Creating contacts
-  <a class="anchor" href="#creating-contacts">#</a>
-</h3>
-<p>Part of our app’s functionality is letting our users create/store contacts. Contact will have name and phone , we will define these as struct properties. The following snippets belongs to models/contact.go</p>
-<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="font-weight:bold">package</span> models
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="font-weight:bold">import</span> (
-</span></span><span style="display:flex;"><span>	u <span style="font-style:italic">&#34;go-contacts/utils&#34;</span>
-</span></span><span style="display:flex;"><span>	<span style="font-style:italic">&#34;github.com/jinzhu/gorm&#34;</span>
-</span></span><span style="display:flex;"><span>	<span style="font-style:italic">&#34;fmt&#34;</span>
-</span></span><span style="display:flex;"><span>)
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="font-weight:bold">type</span> Contact <span style="font-weight:bold">struct</span> {
-</span></span><span style="display:flex;"><span>	gorm.Model
-</span></span><span style="display:flex;"><span>	Name <span style="">string</span> <span style="font-style:italic">`json:&#34;name&#34;`</span>
-</span></span><span style="display:flex;"><span>	Phone <span style="">string</span> <span style="font-style:italic">`json:&#34;phone&#34;`</span>
-</span></span><span style="display:flex;"><span>	UserId <span style="">uint</span> <span style="font-style:italic">`json:&#34;user_id&#34;`</span> <span style="font-style:italic">//The user that this contact belongs to</span>
-</span></span><span style="display:flex;"><span>}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="font-style:italic">/*
-</span></span></span><span style="display:flex;"><span><span style="font-style:italic"> This struct function validate the required parameters sent through the http request body
-</span></span></span><span style="display:flex;"><span><span style="font-style:italic">returns message and true if the requirement is met
-</span></span></span><span style="display:flex;"><span><span style="font-style:italic">*/</span>
-</span></span><span style="display:flex;"><span><span style="font-weight:bold">func</span> (contact *Contact) Validate() (<span style="font-weight:bold">map</span>[<span style="">string</span>] <span style="font-weight:bold">interface</span>{}, <span style="">bool</span>) {
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	<span style="font-weight:bold">if</span> contact.Name == <span style="font-style:italic">&#34;&#34;</span> {
-</span></span><span style="display:flex;"><span>		<span style="font-weight:bold">return</span> u.Message(<span style="font-weight:bold">false</span>, <span style="font-style:italic">&#34;Contact name should be on the payload&#34;</span>), <span style="font-weight:bold">false</span>
-</span></span><span style="display:flex;"><span>	}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	<span style="font-weight:bold">if</span> contact.Phone == <span style="font-style:italic">&#34;&#34;</span> {
-</span></span><span style="display:flex;"><span>		<span style="font-weight:bold">return</span> u.Message(<span style="font-weight:bold">false</span>, <span style="font-style:italic">&#34;Phone number should be on the payload&#34;</span>), <span style="font-weight:bold">false</span>
-</span></span><span style="display:flex;"><span>	}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	<span style="font-weight:bold">if</span> contact.UserId &lt;= 0 {
-</span></span><span style="display:flex;"><span>		<span style="font-weight:bold">return</span> u.Message(<span style="font-weight:bold">false</span>, <span style="font-style:italic">&#34;User is not recognized&#34;</span>), <span style="font-weight:bold">false</span>
-</span></span><span style="display:flex;"><span>	}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	<span style="font-style:italic">//All the required parameters are present</span>
-</span></span><span style="display:flex;"><span>	<span style="font-weight:bold">return</span> u.Message(<span style="font-weight:bold">true</span>, <span style="font-style:italic">&#34;success&#34;</span>), <span style="font-weight:bold">true</span>
-</span></span><span style="display:flex;"><span>}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="font-weight:bold">func</span> (contact *Contact) Create() (<span style="font-weight:bold">map</span>[<span style="">string</span>] <span style="font-weight:bold">interface</span>{}) {
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	<span style="font-weight:bold">if</span> resp, ok := contact.Validate(); !ok {
-</span></span><span style="display:flex;"><span>		<span style="font-weight:bold">return</span> resp
-</span></span><span style="display:flex;"><span>	}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	GetDB().Create(contact)
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	resp := u.Message(<span style="font-weight:bold">true</span>, <span style="font-style:italic">&#34;success&#34;</span>)
-</span></span><span style="display:flex;"><span>	resp[<span style="font-style:italic">&#34;contact&#34;</span>] = contact
-</span></span><span style="display:flex;"><span>	<span style="font-weight:bold">return</span> resp
-</span></span><span style="display:flex;"><span>}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="font-weight:bold">func</span> GetContact(id <span style="">uint</span>) (*Contact) {
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	contact := &amp;Contact{}
-</span></span><span style="display:flex;"><span>	err := GetDB().Table(<span style="font-style:italic">&#34;contacts&#34;</span>).Where(<span style="font-style:italic">&#34;id = ?&#34;</span>, id).First(contact).Error
-</span></span><span style="display:flex;"><span>	<span style="font-weight:bold">if</span> err != <span style="font-weight:bold">nil</span> {
-</span></span><span style="display:flex;"><span>		<span style="font-weight:bold">return</span> <span style="font-weight:bold">nil</span>
-</span></span><span style="display:flex;"><span>	}
-</span></span><span style="display:flex;"><span>	<span style="font-weight:bold">return</span> contact
-</span></span><span style="display:flex;"><span>}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="font-weight:bold">func</span> GetContacts(user <span style="">uint</span>) ([]*Contact) {
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	contacts := make([]*Contact, 0)
-</span></span><span style="display:flex;"><span>	err := GetDB().Table(<span style="font-style:italic">&#34;contacts&#34;</span>).Where(<span style="font-style:italic">&#34;user_id = ?&#34;</span>, user).Find(&amp;contacts).Error
-</span></span><span style="display:flex;"><span>	<span style="font-weight:bold">if</span> err != <span style="font-weight:bold">nil</span> {
-</span></span><span style="display:flex;"><span>		fmt.Println(err)
-</span></span><span style="display:flex;"><span>		<span style="font-weight:bold">return</span> <span style="font-weight:bold">nil</span>
-</span></span><span style="display:flex;"><span>	}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	<span style="font-weight:bold">return</span> contacts
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><p>Same as in models/accounts.go we create a function Validate() to validate the passed inputs, we return an error with messages if anything we don’t want occur, then we wrote function Create() to insert this contact into the database.</p>
-<p>The only part left is retrieving the contacts. Lets do it!</p>
-<pre><code>router.HandleFunc(**&quot;/api/me/contacts&quot;**, controllers.GetContactsFor).Methods(**&quot;GET&quot;**)
-</code></pre>
-<p>Add the above snippet to main.go to tell the router to register /me/contacts
-endpoint. Lets create controllers.GetContactsFor handler to handle the API request.</p>
-<p><strong>contactsController.go</strong></p>
-<p>Bellow is the content of contactsController.go</p>
-<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="font-weight:bold">package</span> controllers
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="font-weight:bold">import</span> (
-</span></span><span style="display:flex;"><span>	<span style="font-style:italic">&#34;net/http&#34;</span>
-</span></span><span style="display:flex;"><span>	<span style="font-style:italic">&#34;go-contacts/models&#34;</span>
-</span></span><span style="display:flex;"><span>	<span style="font-style:italic">&#34;encoding/json&#34;</span>
-</span></span><span style="display:flex;"><span>	u <span style="font-style:italic">&#34;go-contacts/utils&#34;</span>
-</span></span><span style="display:flex;"><span>	<span style="font-style:italic">&#34;strconv&#34;</span>
-</span></span><span style="display:flex;"><span>	<span style="font-style:italic">&#34;github.com/gorilla/mux&#34;</span>
-</span></span><span style="display:flex;"><span>	<span style="font-style:italic">&#34;fmt&#34;</span>
-</span></span><span style="display:flex;"><span>)
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="font-weight:bold">var</span> CreateContact = <span style="font-weight:bold">func</span>(w http.ResponseWriter, r *http.Request) {
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	user := r.Context().Value(<span style="font-style:italic">&#34;user&#34;</span>) . (<span style="">uint</span>) <span style="font-style:italic">//Grab the id of the user that send the request</span>
-</span></span><span style="display:flex;"><span>	contact := &amp;models.Contact{}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	err := json.NewDecoder(r.Body).Decode(contact)
-</span></span><span style="display:flex;"><span>	<span style="font-weight:bold">if</span> err != <span style="font-weight:bold">nil</span> {
-</span></span><span style="display:flex;"><span>		u.Respond(w, u.Message(<span style="font-weight:bold">false</span>, <span style="font-style:italic">&#34;Error while decoding request body&#34;</span>))
-</span></span><span style="display:flex;"><span>		<span style="font-weight:bold">return</span>
-</span></span><span style="display:flex;"><span>	}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	contact.UserId = user
-</span></span><span style="display:flex;"><span>	resp := contact.Create()
-</span></span><span style="display:flex;"><span>	u.Respond(w, resp)
-</span></span><span style="display:flex;"><span>}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="font-weight:bold">var</span> GetContactsFor = <span style="font-weight:bold">func</span>(w http.ResponseWriter, r *http.Request) {
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	params := mux.Vars(r)
-</span></span><span style="display:flex;"><span>	id, err := strconv.Atoi(params[<span style="font-style:italic">&#34;id&#34;</span>])
-</span></span><span style="display:flex;"><span>	<span style="font-weight:bold">if</span> err != <span style="font-weight:bold">nil</span> {
-</span></span><span style="display:flex;"><span>		<span style="font-style:italic">//The passed path parameter is not an integer</span>
-</span></span><span style="display:flex;"><span>		u.Respond(w, u.Message(<span style="font-weight:bold">false</span>, <span style="font-style:italic">&#34;There was an error in your request&#34;</span>))
-</span></span><span style="display:flex;"><span>		<span style="font-weight:bold">return</span>
-</span></span><span style="display:flex;"><span>	}
-</span></span><span style="display:flex;"><span>	
-</span></span><span style="display:flex;"><span>	data := models.GetContacts(uint(id))
-</span></span><span style="display:flex;"><span>	resp := u.Message(<span style="font-weight:bold">true</span>, <span style="font-style:italic">&#34;success&#34;</span>)
-</span></span><span style="display:flex;"><span>	resp[<span style="font-style:italic">&#34;data&#34;</span>] = data
-</span></span><span style="display:flex;"><span>	u.Respond(w, resp)
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><p>What it does is pretty similar to authController.go&rsquo;s , but basically, it grabs the json body and decode it into Contact struct, if there was an error, return a response immediately or insert the contacts into the database if everything went well.</p>
-<p><strong>Fetching Contacts that belongs to a user</strong></p>
-<p>Now, our users have been able to store their contacts successfully, what if they want to retrieve the contact they stored, in case their phone is lost? Visiting /me/contacts should return a json structure for the contacts of the API caller(current user). Check the code snippet to have a clearer picture.</p>
-<p>Normally, retrieving user’s contacts endpoint should look like /user/{userId}/contacts , specifying userId as a path parameter is very dangerous, because every authenticated user can craft a request to this path and contacts of another users would be returned without any problem, this can lead to a brutal attack by hackers — I am trying to point out the usefulness of JWT .
-We can easily obtain the id of the API caller using r.Context().Value(&ldquo;user&rdquo;) , remember we set this value inside auth.go — Our authentication middleware</p>
-<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="font-weight:bold">package</span> controllers
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="font-weight:bold">import</span> (
-</span></span><span style="display:flex;"><span>	<span style="font-style:italic">&#34;net/http&#34;</span>
-</span></span><span style="display:flex;"><span>	<span style="font-style:italic">&#34;go-contacts/models&#34;</span>
-</span></span><span style="display:flex;"><span>	<span style="font-style:italic">&#34;encoding/json&#34;</span>
-</span></span><span style="display:flex;"><span>	u <span style="font-style:italic">&#34;go-contacts/utils&#34;</span>
-</span></span><span style="display:flex;"><span>	<span style="font-style:italic">&#34;strconv&#34;</span>
-</span></span><span style="display:flex;"><span>	<span style="font-style:italic">&#34;github.com/gorilla/mux&#34;</span>
-</span></span><span style="display:flex;"><span>	<span style="font-style:italic">&#34;fmt&#34;</span>
-</span></span><span style="display:flex;"><span>)
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="font-weight:bold">var</span> CreateContact = <span style="font-weight:bold">func</span>(w http.ResponseWriter, r *http.Request) {
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	user := r.Context().Value(<span style="font-style:italic">&#34;user&#34;</span>) . (<span style="">uint</span>) <span style="font-style:italic">//Grab the id of the user that send the request</span>
-</span></span><span style="display:flex;"><span>	contact := &amp;models.Contact{}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	err := json.NewDecoder(r.Body).Decode(contact)
-</span></span><span style="display:flex;"><span>	<span style="font-weight:bold">if</span> err != <span style="font-weight:bold">nil</span> {
-</span></span><span style="display:flex;"><span>		u.Respond(w, u.Message(<span style="font-weight:bold">false</span>, <span style="font-style:italic">&#34;Error while decoding request body&#34;</span>))
-</span></span><span style="display:flex;"><span>		<span style="font-weight:bold">return</span>
-</span></span><span style="display:flex;"><span>	}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	contact.UserId = user
-</span></span><span style="display:flex;"><span>	resp := contact.Create()
-</span></span><span style="display:flex;"><span>	u.Respond(w, resp)
-</span></span><span style="display:flex;"><span>}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="font-weight:bold">var</span> GetContactsFor = <span style="font-weight:bold">func</span>(w http.ResponseWriter, r *http.Request) {
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	params := mux.Vars(r)
-</span></span><span style="display:flex;"><span>	id, err := strconv.Atoi(params[<span style="font-style:italic">&#34;id&#34;</span>])
-</span></span><span style="display:flex;"><span>	<span style="font-weight:bold">if</span> err != <span style="font-weight:bold">nil</span> {
-</span></span><span style="display:flex;"><span>		<span style="font-style:italic">//The passed path parameter is not an integer</span>
-</span></span><span style="display:flex;"><span>		u.Respond(w, u.Message(<span style="font-weight:bold">false</span>, <span style="font-style:italic">&#34;There was an error in your request&#34;</span>))
-</span></span><span style="display:flex;"><span>		<span style="font-weight:bold">return</span>
-</span></span><span style="display:flex;"><span>	}
-</span></span><span style="display:flex;"><span>	
-</span></span><span style="display:flex;"><span>	data := models.GetContacts(uint(id))
-</span></span><span style="display:flex;"><span>	resp := u.Message(<span style="font-weight:bold">true</span>, <span style="font-style:italic">&#34;success&#34;</span>)
-</span></span><span style="display:flex;"><span>	resp[<span style="font-style:italic">&#34;data&#34;</span>] = data
-</span></span><span style="display:flex;"><span>	u.Respond(w, resp)
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><p>
-
-
-
-
-
-
-
-
-
-
-
-<figure class="">
-
-    <div class="img-container" >
-        <img loading="lazy" alt="Response for /me/contacts" src="https://cdn-images-1.medium.com/max/2732/1*NMXFN6aCXqoIiM5FSB2qIQ.png" >
-    </div>
-
-    
-</figure>
-<em>Response for /me/contacts</em></p>
-<p>The code for this project is on github — <a href="https://github.com/adigunhammedolalekan/go-contacts">https://github.com/adigunhammedolalekan/go-contacts</a></p>
-<h2 class="heading" id="deployment">
-  Deployment
-  <a class="anchor" href="#deployment">#</a>
-</h2>
-<p>We can easily deploy our app to heroku. Firstly, download godep . godep is a dependency manager for Golang, similar to npm for nodejs.</p>
-<pre><code>go get -u github.com/tools/godep
-</code></pre>
-<ul>
-<li>
-<p>Open GoLand terminal and run godep save This will create a folder call Godeps and vender . To learn more about godep, visit <a href="https://github.com/tools/godep">https://github.com/tools/godep</a></p>
-</li>
-<li>
-<p>Create account on heroku.com and download Heroku Cli then login with your credentials</p>
-</li>
-<li>
-<p>Once done, run heroku create gocontacts This will create an app for you on your heroku dashboard and also a remote git repository.</p>
-</li>
-<li>
-<p>run the following command to push your code to heroku</p>
-</li>
-<li>
-<p>git add .</p>
-</li>
-<li>
-<p>git commit -m &ldquo;First commit&rdquo;</p>
-</li>
-<li>
-<p>git push heroku master</p>
-</li>
-</ul>
-<p>
-
-
-
-
-
-
-
-
-
-
-
-<figure class="">
-
-    <div class="img-container" >
-        <img loading="lazy" alt="" src="https://cdn-images-1.medium.com/max/2732/1*w9Vm0lZANuGCzQGbNuunDQ.png" >
-    </div>
-
-    
-</figure>
-</p>
-<p>If everything went well, your screen should look like my own.</p>
-<p>Voila! Your app has been deployed. The next thing is setting up a remote Postgresql database.</p>
-<p>run heroku addons:create heroku-postgresql:hobby-dev to create the database. To learn more about this, visit <a href="https://devcenter.heroku.com/articles/heroku-postgresql">https://devcenter.heroku.com/articles/heroku-postgresql</a></p>
-<p>Great! We are almost there, next thing is to connect with our remote database.</p>
-<p>Go to heroku.com and login with your credentials, you should find your newly created app on your dashboard, click on it. After that, click on settings, then click on Reveal Config Vars
-Postgresql connection URI format postgres://username:password@host/dbName , There is a var named DATABASE_URL , this was automatically added to your .env file when you created the postgresql database (Note: Heroku automatically replace your local .env when you deploy your app), from this var, we will extract our database connection parameter.</p>
-<p>
-
-
-
-
-
-
-
-
-
-
-
-<figure class="">
-
-    <div class="img-container" >
-        <img loading="lazy" alt="" src="https://cdn-images-1.medium.com/max/2732/1*rS24jUlHUgjnIb_F2IFtXw.png" >
-    </div>
-
-    
-</figure>
-</p>
-<p>
-
-
-
-
-
-
-
-
-
-
-
-<figure class="">
-
-    <div class="img-container" >
-        <img loading="lazy" alt="I extracted database connection parameter from the auto generated DATABASE_URL vars" src="https://cdn-images-1.medium.com/max/2732/1*fw5kKwbwOxy91Xjpjbzw4A.png" >
-    </div>
-
-    
-</figure>
-<em>I extracted database connection parameter from the auto generated DATABASE_URL vars</em></p>
-<p>If all this went well, your API should be live now!</p>
-<p>
-
-
-
-
-
-
-
-
-
-
-
-<figure class="">
-
-    <div class="img-container" >
-        <img loading="lazy" alt="As you can see, the api is live!" src="https://cdn-images-1.medium.com/max/2732/1*nOTRa077OtAWIWk9ApwTFg.png" >
-    </div>
-
-    
-</figure>
-<em>As you can see, the api is live!</em></p>
-<p>I tried my best to make this lesson clear as much as possible. Please, bear with me for any error you might encountered. I am just trying to share my knowledge.</p>
-<p>Project Repo — <a href="https://github.com/adigunhammedolalekan/go-contacts">https://github.com/adigunhammedolalekan/go-contacts</a></p>
-<p>If you have any question, or a correction, i will be glad to know.</p>
-<p>Follow me on Twitter — <a href="http://www.twitter.com/L3kanAdigun">www.twitter.com/L3kanAdigun</a></p>
-<p>Hire me(I am available and actively looking for job, DM me on Twitter) —<a href="http://www.twitter.com/L3kanAdigun">www.twitter.com/L3kanAdigun</a></p>
-<p>You can mail me personally — <a href="mailto:adigunhammed.lekan@gmail.com">adigunhammed.lekan@gmail.com</a></p>
-<p>Its really a long article, Thanks for reading.</p>
-
-    
-  </div>
-
-  
-
-  
-
-  
-  
-
-<div class="single-pagination">
-    <hr />
-
-    <div class="flexnowrap">
-
-        <div class="single-pagination-prev">
-            
-            <div class="single-pagination-container-prev">
-                <div class="single-pagination-text">←</div>
-                <div class="single-pagination-text">
-                    <a href="/posts/img_rzer/">
-                        How to resize images for better upload/download performance. Android Development.
-                    </a>
-                </div>
-            </div>
-            
-        </div>
-
-        <div class="single-pagination-next">
-            
-            <div class="single-pagination-container-next">
-                <div class="single-pagination-text">
-                    <a href="/posts/b_create_dynamic_image/">
-                        Building Docker Images Dynamically with Go
-                    </a>
-                </div>
-                <div class="single-pagination-text">→</div>
-            </div>
-            
-        </div>
-
-    </div>
-
-    <hr />
-</div>
-
-
-
-  
-
-  
-
-  
-  <div class="back-to-top">
-    <a href="#top">
-      back to top
-    </a>
-  </div>
-  
-
-</div>
-
-
-    </main>
-  </div>
-
-  
-  
-
-
-
-
-
-    
-
-
-
-
-  <footer>
-    
-
-
-  </footer>
-
-  
-</body>
-
-<script src="/js/theme-switch.js"></script>
-<script defer src="/js/copy-code.js"></script>
-</html>
+</code></pre><p>The above code register both /user/new and /user/login endpoints and pass their corresponding request handlers.</p><p>Now, recompile the code and visit localhost:8000/api/user/new using postman, set the request body to application/json as shown below</p><p><img src=https://cdn-images-1.medium.com/max/2732/1*yzjtBq5zMPrgy0GN5sQKng.png alt="Response from /user/new"><em>Response from /user/new</em></p><p>If you try to call /user/new twice with the same payload, you’ll receive a response that the email already exists, works according to our instructions.</p><h3 id=creating-contacts>Creating contacts</h3><p>Part of our app’s functionality is letting our users create/store contacts. Contact will have name and phone , we will define these as struct properties. The following snippets belongs to models/contact.go</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=font-weight:700>package</span> models
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=font-weight:700>import</span> (
+</span></span><span style=display:flex><span>	u <span style=font-style:italic>&#34;go-contacts/utils&#34;</span>
+</span></span><span style=display:flex><span>	<span style=font-style:italic>&#34;github.com/jinzhu/gorm&#34;</span>
+</span></span><span style=display:flex><span>	<span style=font-style:italic>&#34;fmt&#34;</span>
+</span></span><span style=display:flex><span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=font-weight:700>type</span> Contact <span style=font-weight:700>struct</span> {
+</span></span><span style=display:flex><span>	gorm.Model
+</span></span><span style=display:flex><span>	Name <span>string</span> <span style=font-style:italic>`json:&#34;name&#34;`</span>
+</span></span><span style=display:flex><span>	Phone <span>string</span> <span style=font-style:italic>`json:&#34;phone&#34;`</span>
+</span></span><span style=display:flex><span>	UserId <span>uint</span> <span style=font-style:italic>`json:&#34;user_id&#34;`</span> <span style=font-style:italic>//The user that this contact belongs to</span>
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=font-style:italic>/*
+</span></span></span><span style=display:flex><span><span style=font-style:italic> This struct function validate the required parameters sent through the http request body
+</span></span></span><span style=display:flex><span><span style=font-style:italic>returns message and true if the requirement is met
+</span></span></span><span style=display:flex><span><span style=font-style:italic>*/</span>
+</span></span><span style=display:flex><span><span style=font-weight:700>func</span> (contact *Contact) Validate() (<span style=font-weight:700>map</span>[<span>string</span>] <span style=font-weight:700>interface</span>{}, <span>bool</span>) {
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=font-weight:700>if</span> contact.Name == <span style=font-style:italic>&#34;&#34;</span> {
+</span></span><span style=display:flex><span>		<span style=font-weight:700>return</span> u.Message(<span style=font-weight:700>false</span>, <span style=font-style:italic>&#34;Contact name should be on the payload&#34;</span>), <span style=font-weight:700>false</span>
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=font-weight:700>if</span> contact.Phone == <span style=font-style:italic>&#34;&#34;</span> {
+</span></span><span style=display:flex><span>		<span style=font-weight:700>return</span> u.Message(<span style=font-weight:700>false</span>, <span style=font-style:italic>&#34;Phone number should be on the payload&#34;</span>), <span style=font-weight:700>false</span>
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=font-weight:700>if</span> contact.UserId &lt;= 0 {
+</span></span><span style=display:flex><span>		<span style=font-weight:700>return</span> u.Message(<span style=font-weight:700>false</span>, <span style=font-style:italic>&#34;User is not recognized&#34;</span>), <span style=font-weight:700>false</span>
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=font-style:italic>//All the required parameters are present</span>
+</span></span><span style=display:flex><span>	<span style=font-weight:700>return</span> u.Message(<span style=font-weight:700>true</span>, <span style=font-style:italic>&#34;success&#34;</span>), <span style=font-weight:700>true</span>
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=font-weight:700>func</span> (contact *Contact) Create() (<span style=font-weight:700>map</span>[<span>string</span>] <span style=font-weight:700>interface</span>{}) {
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=font-weight:700>if</span> resp, ok := contact.Validate(); !ok {
+</span></span><span style=display:flex><span>		<span style=font-weight:700>return</span> resp
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	GetDB().Create(contact)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	resp := u.Message(<span style=font-weight:700>true</span>, <span style=font-style:italic>&#34;success&#34;</span>)
+</span></span><span style=display:flex><span>	resp[<span style=font-style:italic>&#34;contact&#34;</span>] = contact
+</span></span><span style=display:flex><span>	<span style=font-weight:700>return</span> resp
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=font-weight:700>func</span> GetContact(id <span>uint</span>) (*Contact) {
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	contact := &amp;Contact{}
+</span></span><span style=display:flex><span>	err := GetDB().Table(<span style=font-style:italic>&#34;contacts&#34;</span>).Where(<span style=font-style:italic>&#34;id = ?&#34;</span>, id).First(contact).Error
+</span></span><span style=display:flex><span>	<span style=font-weight:700>if</span> err != <span style=font-weight:700>nil</span> {
+</span></span><span style=display:flex><span>		<span style=font-weight:700>return</span> <span style=font-weight:700>nil</span>
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>	<span style=font-weight:700>return</span> contact
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=font-weight:700>func</span> GetContacts(user <span>uint</span>) ([]*Contact) {
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	contacts := make([]*Contact, 0)
+</span></span><span style=display:flex><span>	err := GetDB().Table(<span style=font-style:italic>&#34;contacts&#34;</span>).Where(<span style=font-style:italic>&#34;user_id = ?&#34;</span>, user).Find(&amp;contacts).Error
+</span></span><span style=display:flex><span>	<span style=font-weight:700>if</span> err != <span style=font-weight:700>nil</span> {
+</span></span><span style=display:flex><span>		fmt.Println(err)
+</span></span><span style=display:flex><span>		<span style=font-weight:700>return</span> <span style=font-weight:700>nil</span>
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=font-weight:700>return</span> contacts
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>Same as in models/accounts.go we create a function Validate() to validate the passed inputs, we return an error with messages if anything we don’t want occur, then we wrote function Create() to insert this contact into the database.</p><p>The only part left is retrieving the contacts. Lets do it!</p><pre><code>router.HandleFunc(**&quot;/api/me/contacts&quot;**, controllers.GetContactsFor).Methods(**&quot;GET&quot;**)
+</code></pre><p>Add the above snippet to main.go to tell the router to register /me/contacts
+endpoint. Lets create controllers.GetContactsFor handler to handle the API request.</p><p><strong>contactsController.go</strong></p><p>Bellow is the content of contactsController.go</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=font-weight:700>package</span> controllers
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=font-weight:700>import</span> (
+</span></span><span style=display:flex><span>	<span style=font-style:italic>&#34;net/http&#34;</span>
+</span></span><span style=display:flex><span>	<span style=font-style:italic>&#34;go-contacts/models&#34;</span>
+</span></span><span style=display:flex><span>	<span style=font-style:italic>&#34;encoding/json&#34;</span>
+</span></span><span style=display:flex><span>	u <span style=font-style:italic>&#34;go-contacts/utils&#34;</span>
+</span></span><span style=display:flex><span>	<span style=font-style:italic>&#34;strconv&#34;</span>
+</span></span><span style=display:flex><span>	<span style=font-style:italic>&#34;github.com/gorilla/mux&#34;</span>
+</span></span><span style=display:flex><span>	<span style=font-style:italic>&#34;fmt&#34;</span>
+</span></span><span style=display:flex><span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=font-weight:700>var</span> CreateContact = <span style=font-weight:700>func</span>(w http.ResponseWriter, r *http.Request) {
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	user := r.Context().Value(<span style=font-style:italic>&#34;user&#34;</span>) . (<span>uint</span>) <span style=font-style:italic>//Grab the id of the user that send the request</span>
+</span></span><span style=display:flex><span>	contact := &amp;models.Contact{}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	err := json.NewDecoder(r.Body).Decode(contact)
+</span></span><span style=display:flex><span>	<span style=font-weight:700>if</span> err != <span style=font-weight:700>nil</span> {
+</span></span><span style=display:flex><span>		u.Respond(w, u.Message(<span style=font-weight:700>false</span>, <span style=font-style:italic>&#34;Error while decoding request body&#34;</span>))
+</span></span><span style=display:flex><span>		<span style=font-weight:700>return</span>
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	contact.UserId = user
+</span></span><span style=display:flex><span>	resp := contact.Create()
+</span></span><span style=display:flex><span>	u.Respond(w, resp)
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=font-weight:700>var</span> GetContactsFor = <span style=font-weight:700>func</span>(w http.ResponseWriter, r *http.Request) {
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	params := mux.Vars(r)
+</span></span><span style=display:flex><span>	id, err := strconv.Atoi(params[<span style=font-style:italic>&#34;id&#34;</span>])
+</span></span><span style=display:flex><span>	<span style=font-weight:700>if</span> err != <span style=font-weight:700>nil</span> {
+</span></span><span style=display:flex><span>		<span style=font-style:italic>//The passed path parameter is not an integer</span>
+</span></span><span style=display:flex><span>		u.Respond(w, u.Message(<span style=font-weight:700>false</span>, <span style=font-style:italic>&#34;There was an error in your request&#34;</span>))
+</span></span><span style=display:flex><span>		<span style=font-weight:700>return</span>
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>	
+</span></span><span style=display:flex><span>	data := models.GetContacts(uint(id))
+</span></span><span style=display:flex><span>	resp := u.Message(<span style=font-weight:700>true</span>, <span style=font-style:italic>&#34;success&#34;</span>)
+</span></span><span style=display:flex><span>	resp[<span style=font-style:italic>&#34;data&#34;</span>] = data
+</span></span><span style=display:flex><span>	u.Respond(w, resp)
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>What it does is pretty similar to authController.go&rsquo;s , but basically, it grabs the json body and decode it into Contact struct, if there was an error, return a response immediately or insert the contacts into the database if everything went well.</p><p><strong>Fetching Contacts that belongs to a user</strong></p><p>Now, our users have been able to store their contacts successfully, what if they want to retrieve the contact they stored, in case their phone is lost? Visiting /me/contacts should return a json structure for the contacts of the API caller(current user). Check the code snippet to have a clearer picture.</p><p>Normally, retrieving user’s contacts endpoint should look like /user/{userId}/contacts , specifying userId as a path parameter is very dangerous, because every authenticated user can craft a request to this path and contacts of another users would be returned without any problem, this can lead to a brutal attack by hackers — I am trying to point out the usefulness of JWT .
+We can easily obtain the id of the API caller using r.Context().Value(&ldquo;user&rdquo;) , remember we set this value inside auth.go — Our authentication middleware</p><div class=highlight><pre tabindex=0 style=background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=font-weight:700>package</span> controllers
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=font-weight:700>import</span> (
+</span></span><span style=display:flex><span>	<span style=font-style:italic>&#34;net/http&#34;</span>
+</span></span><span style=display:flex><span>	<span style=font-style:italic>&#34;go-contacts/models&#34;</span>
+</span></span><span style=display:flex><span>	<span style=font-style:italic>&#34;encoding/json&#34;</span>
+</span></span><span style=display:flex><span>	u <span style=font-style:italic>&#34;go-contacts/utils&#34;</span>
+</span></span><span style=display:flex><span>	<span style=font-style:italic>&#34;strconv&#34;</span>
+</span></span><span style=display:flex><span>	<span style=font-style:italic>&#34;github.com/gorilla/mux&#34;</span>
+</span></span><span style=display:flex><span>	<span style=font-style:italic>&#34;fmt&#34;</span>
+</span></span><span style=display:flex><span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=font-weight:700>var</span> CreateContact = <span style=font-weight:700>func</span>(w http.ResponseWriter, r *http.Request) {
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	user := r.Context().Value(<span style=font-style:italic>&#34;user&#34;</span>) . (<span>uint</span>) <span style=font-style:italic>//Grab the id of the user that send the request</span>
+</span></span><span style=display:flex><span>	contact := &amp;models.Contact{}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	err := json.NewDecoder(r.Body).Decode(contact)
+</span></span><span style=display:flex><span>	<span style=font-weight:700>if</span> err != <span style=font-weight:700>nil</span> {
+</span></span><span style=display:flex><span>		u.Respond(w, u.Message(<span style=font-weight:700>false</span>, <span style=font-style:italic>&#34;Error while decoding request body&#34;</span>))
+</span></span><span style=display:flex><span>		<span style=font-weight:700>return</span>
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	contact.UserId = user
+</span></span><span style=display:flex><span>	resp := contact.Create()
+</span></span><span style=display:flex><span>	u.Respond(w, resp)
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=font-weight:700>var</span> GetContactsFor = <span style=font-weight:700>func</span>(w http.ResponseWriter, r *http.Request) {
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	params := mux.Vars(r)
+</span></span><span style=display:flex><span>	id, err := strconv.Atoi(params[<span style=font-style:italic>&#34;id&#34;</span>])
+</span></span><span style=display:flex><span>	<span style=font-weight:700>if</span> err != <span style=font-weight:700>nil</span> {
+</span></span><span style=display:flex><span>		<span style=font-style:italic>//The passed path parameter is not an integer</span>
+</span></span><span style=display:flex><span>		u.Respond(w, u.Message(<span style=font-weight:700>false</span>, <span style=font-style:italic>&#34;There was an error in your request&#34;</span>))
+</span></span><span style=display:flex><span>		<span style=font-weight:700>return</span>
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>	
+</span></span><span style=display:flex><span>	data := models.GetContacts(uint(id))
+</span></span><span style=display:flex><span>	resp := u.Message(<span style=font-weight:700>true</span>, <span style=font-style:italic>&#34;success&#34;</span>)
+</span></span><span style=display:flex><span>	resp[<span style=font-style:italic>&#34;data&#34;</span>] = data
+</span></span><span style=display:flex><span>	u.Respond(w, resp)
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p><img src=https://cdn-images-1.medium.com/max/2732/1*NMXFN6aCXqoIiM5FSB2qIQ.png alt="Response for /me/contacts"><em>Response for /me/contacts</em></p><p>The code for this project is on github — <a href=https://github.com/adigunhammedolalekan/go-contacts>https://github.com/adigunhammedolalekan/go-contacts</a></p><h2 id=deployment>Deployment</h2><p>We can easily deploy our app to heroku. Firstly, download godep . godep is a dependency manager for Golang, similar to npm for nodejs.</p><pre><code>go get -u github.com/tools/godep
+</code></pre><ul><li><p>Open GoLand terminal and run godep save This will create a folder call Godeps and vender . To learn more about godep, visit <a href=https://github.com/tools/godep>https://github.com/tools/godep</a></p></li><li><p>Create account on heroku.com and download Heroku Cli then login with your credentials</p></li><li><p>Once done, run heroku create gocontacts This will create an app for you on your heroku dashboard and also a remote git repository.</p></li><li><p>run the following command to push your code to heroku</p></li><li><p>git add .</p></li><li><p>git commit -m &ldquo;First commit&rdquo;</p></li><li><p>git push heroku master</p></li></ul><p><img src=https://cdn-images-1.medium.com/max/2732/1*w9Vm0lZANuGCzQGbNuunDQ.png alt></p><p>If everything went well, your screen should look like my own.</p><p>Voila! Your app has been deployed. The next thing is setting up a remote Postgresql database.</p><p>run heroku addons:create heroku-postgresql:hobby-dev to create the database. To learn more about this, visit <a href=https://devcenter.heroku.com/articles/heroku-postgresql>https://devcenter.heroku.com/articles/heroku-postgresql</a></p><p>Great! We are almost there, next thing is to connect with our remote database.</p><p>Go to heroku.com and login with your credentials, you should find your newly created app on your dashboard, click on it. After that, click on settings, then click on Reveal Config Vars
+Postgresql connection URI format postgres://username:password@host/dbName , There is a var named DATABASE_URL , this was automatically added to your .env file when you created the postgresql database (Note: Heroku automatically replace your local .env when you deploy your app), from this var, we will extract our database connection parameter.</p><p><img src=https://cdn-images-1.medium.com/max/2732/1*rS24jUlHUgjnIb_F2IFtXw.png alt></p><p><img src=https://cdn-images-1.medium.com/max/2732/1*fw5kKwbwOxy91Xjpjbzw4A.png alt="I extracted database connection parameter from the auto generated DATABASE_URL vars"><em>I extracted database connection parameter from the auto generated DATABASE_URL vars</em></p><p>If all this went well, your API should be live now!</p><p><img src=https://cdn-images-1.medium.com/max/2732/1*nOTRa077OtAWIWk9ApwTFg.png alt="As you can see, the api is live!"><em>As you can see, the api is live!</em></p><p>I tried my best to make this lesson clear as much as possible. Please, bear with me for any error you might encountered. I am just trying to share my knowledge.</p><p>Project Repo — <a href=https://github.com/adigunhammedolalekan/go-contacts>https://github.com/adigunhammedolalekan/go-contacts</a></p><p>If you have any question, or a correction, i will be glad to know.</p><p>Follow me on Twitter — <a href=http://www.twitter.com/L3kanAdigun>www.twitter.com/L3kanAdigun</a></p><p>Hire me(I am available and actively looking for job, DM me on Twitter) —<a href=http://www.twitter.com/L3kanAdigun>www.twitter.com/L3kanAdigun</a></p><p>You can mail me personally — <a href=mailto:adigunhammed.lekan@gmail.com>adigunhammed.lekan@gmail.com</a></p><p>Its really a long article, Thanks for reading.</p></div></article></main><footer class=site-footer><div class="wrap footer-inner"><p>© 2026 Hammed Adigun. Built with Hugo, deployed with <a href=https://github.com/adxgun/sarabi>sarabi</a>.</p><ul class=social><li><a href=https://github.com/adxgun rel="me noopener" target=_blank aria-label=Github><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentcolor" stroke="none" d="M12 .5A11.5 11.5.0 008.36 22.91c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.53-1.33-1.28-1.69-1.28-1.69-1.05-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.68.0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05.0.0.97-.31 3.17 1.18a11 11 0 015.77.0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09.0 4.41-2.69 5.38-5.26 5.67.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5.0 0012 .5z"/></svg>
+<span>GitHub</span></a></li><li><a href=https://www.linkedin.com/in/adxgun/ rel="me noopener" target=_blank aria-label=Linkedin><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentcolor" stroke="none" d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85.0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6.0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06.0 110-4.13 2.06 2.06.0 010 4.13zM7.12 20.45H3.56V9h3.56v11.45zM22.22.0H1.77C.79.0.0.77.0 1.73v20.54C0 23.23.79 24 1.77 24h20.45c.98.0 1.78-.77 1.78-1.73V1.73C24 .77 23.2.0 22.22.0z"/></svg>
+<span>LinkedIn</span></a></li></ul></div></footer><script src=/js/site.min.00d5a645332fd5dee8885b145572cb32de693c5d01238d91ccfba41fac6c36ac.js defer></script></body></html>

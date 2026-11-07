@@ -1,0 +1,86 @@
+{{ define "main" }}
+<section class="hero wrap">
+  <p class="eyebrow">{{ site.Params.location }}</p>
+  <h1>{{ site.Params.headline | safeHTML }}</h1>
+  <p class="lede">{{ site.Params.intro | markdownify }}</p>
+  <div class="hero-actions">
+    <a class="btn" href="#projects">See my work</a>
+    <a class="btn ghost" href="#contact">Get in touch</a>
+  </div>
+  <ul class="focus">
+    {{ range site.Params.focus }}<li>{{ . }}</li>{{ end }}
+  </ul>
+</section>
+
+<section class="section wrap" id="about">
+  <div class="section-head">
+    <p class="eyebrow">01 — About</p>
+    <h2>{{ site.Params.aboutTitle }}</h2>
+  </div>
+  <div class="about-grid">
+    <div class="prose">{{ site.Params.about | markdownify }}</div>
+    <aside class="strengths">
+      <h4>What I bring</h4>
+      <ul>
+        {{ range site.Params.strengths }}
+        <li><strong>{{ .title }}</strong><span>{{ .text }}</span></li>
+        {{ end }}
+      </ul>
+    </aside>
+  </div>
+  <div class="toolkit">
+    <h4>Toolkit</h4>
+    {{ range site.Params.skills }}
+    <div class="toolkit-row"><span>{{ .group }}</span><ul class="chips small">{{ range .items }}<li>{{ . }}</li>{{ end }}</ul></div>
+    {{ end }}
+  </div>
+</section>
+
+<section class="section wrap" id="experience">
+  <div class="section-head">
+    <p class="eyebrow">02 — Experience</p>
+    <h2>Where I've spent my time</h2>
+  </div>
+  <ol class="timeline">
+    {{ range site.Data.experience }}
+    <li>
+      <div class="tl-head">
+        <h3>{{ .role }}</h3>
+        <p class="tl-context">{{ .context }}</p>
+      </div>
+      <ul class="tl-points">{{ range .points }}<li>{{ . }}</li>{{ end }}</ul>
+      <ul class="chips small">{{ range .tags }}<li>{{ . }}</li>{{ end }}</ul>
+    </li>
+    {{ end }}
+  </ol>
+  <p class="edu"><strong>Education</strong> — BSc Computer Science</p>
+</section>
+
+<section class="section wrap" id="projects">
+  <div class="section-head">
+    <p class="eyebrow">03 — Open source</p>
+    <h2>Things I've built in the open</h2>
+  </div>
+  {{ partial "featured-project.html" . }}
+  <div class="cards">
+    {{ range first 6 site.Data.projects.items }}{{ partial "project-card.html" . }}{{ end }}
+  </div>
+  <p class="more"><a href="{{ "/projects/" | relURL }}">All projects →</a></p>
+</section>
+
+<section class="section wrap" id="writing">
+  <div class="section-head">
+    <p class="eyebrow">04 — Writing</p>
+    <h2>Notes &amp; tutorials</h2>
+  </div>
+  {{ partial "post-list.html" (first 5 (where site.RegularPages "Section" "posts")) }}
+  <p class="more"><a href="{{ "/posts/" | relURL }}">All posts →</a></p>
+</section>
+
+<section class="section wrap contact" id="contact">
+  <p class="eyebrow">05 — Contact</p>
+  <h2>Let's build something.</h2>
+  <p class="lede">{{ site.Params.contact | markdownify }}</p>
+  {{ partial "social.html" . }}
+</section>
+{{ end }}

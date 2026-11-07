@@ -1,0 +1,10 @@
+<ul class="post-list">
+  {{ range . }}
+  <li>
+    <a href="{{ .RelPermalink }}">
+      <span class="post-title">{{ .Title }}</span>
+      <time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "Jan 2006" }}</time>
+    </a>
+  </li>
+  {{ end }}
+</ul>
